@@ -30,9 +30,14 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -44,14 +49,44 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Form1.cs">
+    <Compile Include="Checksums.cs" />
+    <Compile Include="Core.cs" />
+    <Compile Include="MCrypt-Decrypt.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <Compile Include="MCrypt-Decrypt.Designer.cs">
+      <DependentUpon>MCrypt-Decrypt.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MCrypt.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MCrypt.Designer.cs">
+      <DependentUpon>MCrypt.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MCrypt-Encrypt.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MCrypt-Encrypt.Designer.cs">
+      <DependentUpon>MCrypt-Encrypt.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SecureAES.cs" />
+    <Compile Include="WarnPlaceholder.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="WarnPlaceholder.Designer.cs">
+      <DependentUpon>WarnPlaceholder.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="MCrypt-Decrypt.resx">
+      <DependentUpon>MCrypt-Decrypt.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MCrypt-Encrypt.resx">
+      <DependentUpon>MCrypt-Encrypt.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MCrypt.resx">
+      <DependentUpon>MCrypt.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -61,6 +96,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="WarnPlaceholder.resx">
+      <DependentUpon>WarnPlaceholder.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -73,6 +111,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Icon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

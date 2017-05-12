@@ -10,11 +10,19 @@ using System.Windows.Forms;
 
 namespace MCrypt
 {
-    public partial class Form1 : Form
+    public partial class WarnPlaceholder : Form
     {
-        public Form1()
+        Core core = new Core();
+
+        public WarnPlaceholder()
         {
             InitializeComponent();
+            versionLabel.Text = core.getVersionInfo();
+        }
+
+        private void closeButton_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
         }
     }
 }
