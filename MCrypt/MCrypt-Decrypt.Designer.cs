@@ -131,6 +131,7 @@
             this.versionLabel.Size = new System.Drawing.Size(158, 13);
             this.versionLabel.TabIndex = 18;
             this.versionLabel.Text = "v0.0.0.0";
+            this.versionLabel.Click += new System.EventHandler(this.versionLabel_Click);
             // 
             // MCrypt_Decrypt
             // 
@@ -151,6 +152,7 @@
             this.Name = "MCrypt_Decrypt";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "MCrypt: Decrypt";
+            this.Load += new System.EventHandler(this.MCrypt_Decrypt_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

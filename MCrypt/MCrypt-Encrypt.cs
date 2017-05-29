@@ -16,6 +16,7 @@ namespace MCrypt
     {
         Core core = new Core();
         SecureAES aes = new SecureAES();
+        MCrypt_Update update = new MCrypt_Update();
         private bool inProgress = false;
 
         public MCrypt_Encrypt()
@@ -24,6 +25,11 @@ namespace MCrypt
             versionLabel.Text = core.getVersionInfo();
             if (Program.doEncryptFile) fileName.Text = Path.GetFileName(Program.fileName);
             else if (Program.doEncryptFolder) fileName.Text = Path.GetFileName(Program.fileName.TrimEnd(Path.DirectorySeparatorChar));
+        }
+
+        private void MCrypt_Encrypt_Load(object sender, EventArgs e)
+        {
+            update.checkForUpdate();
         }
 
         private void setNoteLabel(string note, int severity)
@@ -135,7 +141,13 @@ namespace MCrypt
                     }
                 }
                 else e.Cancel = true;
+                update.Dispose();
             }
+        }
+
+        private void versionLabel_Click(object sender, EventArgs e)
+        {
+            update.Show();
         }
     }
 }

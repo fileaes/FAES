@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -13,6 +14,7 @@ namespace MCrypt
     public partial class WarnPlaceholder : Form
     {
         Core core = new Core();
+        MCrypt_Update update = new MCrypt_Update();
 
         public WarnPlaceholder()
         {
@@ -20,9 +22,20 @@ namespace MCrypt
             versionLabel.Text = core.getVersionInfo();
         }
 
+        private void WarnPlaceholder_Load(object sender, EventArgs e)
+        {
+            update.checkForUpdate();
+        }
+
         private void closeButton_Click(object sender, EventArgs e)
         {
-            Application.Exit();
+            update.Close();
+            this.Close();
+        }
+
+        private void versionLabel_Click(object sender, EventArgs e)
+        {
+            update.Show();
         }
     }
 }

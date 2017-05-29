@@ -10,7 +10,8 @@ using System.Windows.Forms;
 
 class Core
 {
-    private bool flagIsDevBuild = true;
+    private bool flagIsDevBuild = false;
+    private int betaNum = 1;
 
     public bool isEncryptFileValid(string path)
     {
@@ -44,7 +45,7 @@ class Core
 
     private string buildHash()
     {
-        return (buildDate.Day).ToString("00") + (buildDate.Month).ToString("00") + (buildDate.Year % 100).ToString() + (buildDate.Hour).ToString("00") + (buildDate.Minute).ToString("00") + (buildDate.Second).ToString("00");
+        return (buildDate.Year % 100).ToString() + (buildDate.Month).ToString("00") + (buildDate.Day).ToString("00") + (buildDate.Hour).ToString("00") + (buildDate.Minute).ToString("00");
     }
 
     public string tempFolderNameGen(string sourceFolder)
@@ -58,12 +59,18 @@ class Core
         return this.GetType().Assembly.GetCustomAttributes(false).OfType<DebuggableAttribute>().Select(da => da.IsJITTrackingEnabled).FirstOrDefault();
     }
 
-    public string getVersionInfo(bool raw = false)
+    public string getVersionInfo(bool raw = false, bool formatted = false)
     {
+        if (formatted)
+        {
+            if (isDebugBuild() && !flagIsDevBuild) return "v" + Application.ProductVersion + "-BETA" + betaNum.ToString();
+            else if (isDebugBuild() && flagIsDevBuild) return "v" + Application.ProductVersion + "-DEV" + buildHash();
+            else return "v" + Application.ProductVersion;
+        }
         if (!raw)
         {
-            if (isDebugBuild() && !flagIsDevBuild) return "v" + Application.ProductVersion + " BETA";
-            else if (isDebugBuild() && flagIsDevBuild) return "v" + Application.ProductVersion + " DEV-" + buildHash();
+            if (isDebugBuild() && !flagIsDevBuild) return "v" + Application.ProductVersion + "-BETA" + betaNum.ToString();
+            else if (isDebugBuild() && flagIsDevBuild) return "v" + Application.ProductVersion + "-DEV" + buildHash();
             else return "v" + Application.ProductVersion;
         }
         else return Application.ProductVersion;
@@ -88,5 +95,39 @@ class Core
 
         foreach (FileInfo file in files) file.CopyTo(Path.Combine(destDirName, file.Name), false);
         if (copySubDirs) foreach (DirectoryInfo subdir in dirs) DirectoryCopy(subdir.FullName, Path.Combine(destDirName, subdir.Name), copySubDirs);
+    }
+
+    public void setIgnoreUpdate(bool state)
+    {
+        string path = null;
+        if (File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\MCrypt\config\launchParams.cfg"))) path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\MCrypt\config\launchParams.cfg");
+        else if (File.Exists(@"Config\launchParams.cfg")) path = @"Config\launchParams.cfg";
+        if (path != null)
+        {
+            if (state)
+            {
+                string[] param = File.ReadAllLines(path);
+
+                for (int i = 0; i < param.Length; i++)
+                {
+                    if (param[i] == "--skipupdate") return;
+                }
+                File.AppendAllText(path, "--skipupdate");
+            }
+            else
+            {
+                string[] param = File.ReadAllLines(path);
+
+                for (int i = 0; i < param.Length; i++)
+                {
+                    if (param[i] == "--skipupdate")
+                    {
+                        string text = File.ReadAllText(path);
+                        text = text.Replace("--skipupdate", "");
+                        File.WriteAllText(path, text);
+                    }
+                }
+            }
+        }
     }
 }

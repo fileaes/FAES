@@ -60,6 +60,7 @@
             this.versionLabel.Size = new System.Drawing.Size(158, 13);
             this.versionLabel.TabIndex = 20;
             this.versionLabel.Text = "v0.0.0.0";
+            this.versionLabel.Click += new System.EventHandler(this.versionLabel_Click);
             // 
             // copyrightLabel
             // 
@@ -83,7 +84,9 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "WarnPlaceholder";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "MCrypt: Dev";
+            this.Load += new System.EventHandler(this.WarnPlaceholder_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

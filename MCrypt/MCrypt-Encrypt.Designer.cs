@@ -151,6 +151,7 @@
             this.versionLabel.Size = new System.Drawing.Size(160, 13);
             this.versionLabel.TabIndex = 19;
             this.versionLabel.Text = "v0.0.0.0";
+            this.versionLabel.Click += new System.EventHandler(this.versionLabel_Click);
             // 
             // MCrypt_Encrypt
             // 
@@ -174,6 +175,7 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "MCrypt: Encrypt";
             this.TopMost = true;
+            this.Load += new System.EventHandler(this.MCrypt_Encrypt_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
