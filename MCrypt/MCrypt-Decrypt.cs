@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO.Compression;
+using System.Threading;
 
 namespace MCrypt
 {
@@ -18,12 +19,17 @@ namespace MCrypt
         SecureAES aes = new SecureAES();
         MCrypt_Update update = new MCrypt_Update();
         private bool inProgress = false;
+        private string fileToDecrypt;
 
-        public MCrypt_Decrypt()
+        public MCrypt_Decrypt(string file)
         {
+            if (!String.IsNullOrEmpty(file)) fileToDecrypt = file;
+            else throw new System.ArgumentException("Parameter cannot be null", "file");
             InitializeComponent();
             versionLabel.Text = core.getVersionInfo();
-            if (Program.doDecrypt) fileName.Text = Path.GetFileName(Program.fileName);
+            if (Program.doDecrypt) fileName.Text = Path.GetFileName(fileToDecrypt);
+            this.Focus();
+            this.ActiveControl = passwordInput;
         }
 
         private void MCrypt_Decrypt_Load(object sender, EventArgs e)
@@ -35,7 +41,7 @@ namespace MCrypt
         {
             if (decryptButton.Enabled)
             {
-                if (core.isDecryptFileValid(Program.fileName) && !inProgress) backgroundDecrypt.RunWorkerAsync();
+                if (core.isDecryptFileValid(fileToDecrypt) && !inProgress) backgroundDecrypt.RunWorkerAsync();
                 else if (inProgress) setNoteLabel("Decryption already in progress.", 1);
                 else setNoteLabel("Decryption Failed. Try again later.", 1);
             }
@@ -43,9 +49,7 @@ namespace MCrypt
 
         private void setNoteLabel(string note, int severity)
         {
-            if (severity == 1) noteLabel.Text = "Note: " + note;
-            else if (severity == 3) noteLabel.Text = "Note: " + note;
-            else noteLabel.Text = "Note: " + note;
+            noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Note: " + note; }));
         }
 
         private void doDecrypt()
@@ -54,15 +58,16 @@ namespace MCrypt
             {
                 inProgress = true;
                 setNoteLabel("Decrypting... Please wait.", 0);
-                aes.AES_Decrypt(Program.fileName, passwordInput.Text, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".zip");
-                File.SetAttributes(fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".zip", FileAttributes.Hidden);                
+                aes.AES_Decrypt(fileToDecrypt, passwordInput.Text, fileToDecrypt.Replace(".mcrypt", ".zip"));
+                Thread.Sleep(1000);
+                File.SetAttributes(Path.Combine(Directory.GetParent(fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".zip"), FileAttributes.Hidden);                
                 if (aes.getLastError() != "decryptIncorrectPassword")
                 {
-                    ZipFile.ExtractToDirectory(Path.Combine(Directory.GetParent(Program.fileName).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".zip"), Directory.GetParent(Program.fileName).FullName);
-                    File.SetAttributes(Directory.GetParent(Program.fileName).FullName, FileAttributes.Hidden);
-                    File.Delete(Path.Combine(Directory.GetParent(Program.fileName).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".zip"));
-                    File.Delete(Program.fileName);
-                    File.SetAttributes(Directory.GetParent(Program.fileName).FullName, FileAttributes.Normal);
+                    ZipFile.ExtractToDirectory(Path.Combine(Directory.GetParent(fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".zip"), Directory.GetParent(fileToDecrypt).FullName);
+                    File.SetAttributes(Directory.GetParent(fileToDecrypt).FullName, FileAttributes.Hidden);
+                    File.Delete(Path.Combine(Directory.GetParent(fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".zip"));
+                    File.Delete(fileToDecrypt);
+                    File.SetAttributes(Directory.GetParent(fileToDecrypt).FullName, FileAttributes.Normal);
                 }
             }
             backgroundDecrypt.CancelAsync();
@@ -83,7 +88,7 @@ namespace MCrypt
 
         private void runtime_Tick(object sender, EventArgs e)
         {
-            if (core.isDecryptFileValid(Program.fileName) && passwordInput.Text.Length > 3 && !inProgress) decryptButton.Enabled = true;
+            if (core.isDecryptFileValid(fileToDecrypt) && passwordInput.Text.Length > 3 && !inProgress) decryptButton.Enabled = true;
             else decryptButton.Enabled = false;
         }
 
@@ -106,8 +111,8 @@ namespace MCrypt
                     backgroundDecrypt.CancelAsync();
                     try
                     {
-                        if (File.Exists(Path.Combine(Directory.GetParent(Program.fileName).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".zip")))
-                            File.Delete(Path.Combine(Directory.GetParent(Program.fileName).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".zip"));
+                        if (File.Exists(Path.Combine(Directory.GetParent(fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".zip")))
+                            File.Delete(Path.Combine(Directory.GetParent(fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".zip"));
                     }
                     catch (Exception)
                     {
@@ -123,6 +128,16 @@ namespace MCrypt
         private void versionLabel_Click(object sender, EventArgs e)
         {
             update.Show();
+        }
+
+        protected override bool ProcessDialogKey(Keys keyData)
+        {
+            if (Form.ModifierKeys == Keys.None && keyData == Keys.Escape)
+            {
+                Application.Exit();
+                return true;
+            }
+            return base.ProcessDialogKey(keyData);
         }
     }
 }

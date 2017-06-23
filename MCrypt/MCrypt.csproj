@@ -57,6 +57,12 @@
     <Compile Include="MCrypt-Decrypt.Designer.cs">
       <DependentUpon>MCrypt-Decrypt.cs</DependentUpon>
     </Compile>
+    <Compile Include="MCrypt-Main.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MCrypt-Main.Designer.cs">
+      <DependentUpon>MCrypt-Main.cs</DependentUpon>
+    </Compile>
     <Compile Include="MCrypt.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -89,6 +95,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="MCrypt-Encrypt.resx">
       <DependentUpon>MCrypt-Encrypt.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MCrypt-Main.resx">
+      <DependentUpon>MCrypt-Main.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MCrypt.resx">
       <DependentUpon>MCrypt.cs</DependentUpon>

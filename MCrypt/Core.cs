@@ -10,8 +10,7 @@ using System.Windows.Forms;
 
 class Core
 {
-    private bool flagIsDevBuild = false;
-    private int betaNum = 1;
+    private bool flagIsDevBuild = true;
 
     public bool isEncryptFileValid(string path)
     {
@@ -63,14 +62,12 @@ class Core
     {
         if (formatted)
         {
-            if (isDebugBuild() && !flagIsDevBuild) return "v" + Application.ProductVersion + "-BETA" + betaNum.ToString();
-            else if (isDebugBuild() && flagIsDevBuild) return "v" + Application.ProductVersion + "-DEV" + buildHash();
+            if (isDebugBuild() && flagIsDevBuild) return "v" + Application.ProductVersion + "-DEV" + buildHash();
             else return "v" + Application.ProductVersion;
         }
         if (!raw)
         {
-            if (isDebugBuild() && !flagIsDevBuild) return "v" + Application.ProductVersion + "-BETA" + betaNum.ToString();
-            else if (isDebugBuild() && flagIsDevBuild) return "v" + Application.ProductVersion + "-DEV" + buildHash();
+            if (isDebugBuild() && flagIsDevBuild) return "v" + Application.ProductVersion + "-DEV" + buildHash();
             else return "v" + Application.ProductVersion;
         }
         else return Application.ProductVersion;

@@ -20,9 +20,6 @@ namespace MCrypt
     {
         Core core = new Core();
 
-        bool updateAvailible = false;
-        bool remindLaterSkip = false;
-
         public MCrypt_Update()
         {
             InitializeComponent();
@@ -56,24 +53,19 @@ namespace MCrypt
             try
             {
                 bool isLatestDevBuild = false;
-                bool isLatestBetaBuild = false;
                 bool isCurrentDevBuild = false;
-                bool isCurrentBetaBuild = false;
                 Int64 latestSubVersion, currentSubVersion;
                 if (getLatestVersion().Contains("DEV")) isLatestDevBuild = true;
-                if (getLatestVersion().Contains("BETA")) isLatestBetaBuild = true;
                 string latestVerStripped = getLatestVersion();
-                if (core.getVersionInfo(false, true).Contains("DEV") || core.getVersionInfo(false, true).Contains("BETA"))
+                if (core.getVersionInfo(false, true).Contains("DEV"))
                 {
                     isCurrentDevBuild = true;
                     latestVerStripped = latestVerStripped.Substring(0, latestVerStripped.LastIndexOf("-"));
                     latestVerStripped = latestVerStripped.Replace("v", "");
                 }
                 if (isLatestDevBuild) latestSubVersion = Convert.ToInt64(getLatestVersion().Substring(getLatestVersion().LastIndexOf("V") + 1));
-                else if (isLatestBetaBuild) latestSubVersion = Convert.ToInt64(getLatestVersion().Substring(getLatestVersion().LastIndexOf("A") + 1));
                 else latestSubVersion = 0;
                 if (isCurrentDevBuild) currentSubVersion = Convert.ToInt64(core.getVersionInfo(false, true).Substring(core.getVersionInfo(false, true).LastIndexOf("V") + 1));
-                else if (isCurrentBetaBuild) currentSubVersion = Convert.ToInt64(core.getVersionInfo(false, true).Substring(core.getVersionInfo(false, true).LastIndexOf("A") + 1));
                 else currentSubVersion = 0;
 
                 int[] latestServerVer = ToIntArray(latestVerStripped, '.');
@@ -88,10 +80,6 @@ namespace MCrypt
                 else if (latestServerVer[2] > currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
                     return true;
                 else if (latestServerVer[3] > currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
-                    return true;
-                else if (isLatestBetaBuild && isCurrentDevBuild && latestServerVer[3] == currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
-                    return true;
-                else if ((isLatestBetaBuild && isLatestBetaBuild) || (isLatestDevBuild && isCurrentDevBuild) && latestSubVersion > currentSubVersion && latestServerVer[3] == currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
                     return true;
                 else if ((isLatestDevBuild && isCurrentDevBuild) && latestSubVersion > currentSubVersion && latestServerVer[3] == currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
                     return true;
@@ -109,24 +97,19 @@ namespace MCrypt
             try
             {
                 bool isLatestDevBuild = false;
-                bool isLatestBetaBuild = false;
                 bool isCurrentDevBuild = false;
-                bool isCurrentBetaBuild = false;
                 Int64 latestSubVersion, currentSubVersion;
                 if (getLatestVersion().Contains("DEV")) isLatestDevBuild = true;
-                if (getLatestVersion().Contains("BETA")) isLatestBetaBuild = true;
                 string latestVerStripped = getLatestVersion();
-                if (core.getVersionInfo(false, true).Contains("DEV") || core.getVersionInfo(false, true).Contains("BETA"))
+                if (core.getVersionInfo(false, true).Contains("DEV"))
                 {
                     isCurrentDevBuild = true;
                     latestVerStripped = latestVerStripped.Substring(0, latestVerStripped.LastIndexOf("-"));
                     latestVerStripped = latestVerStripped.Replace("v", "");
                 }
                 if (isLatestDevBuild) latestSubVersion = Convert.ToInt64(getLatestVersion().Substring(getLatestVersion().LastIndexOf("V") + 1));
-                else if (isLatestBetaBuild) latestSubVersion = Convert.ToInt64(getLatestVersion().Substring(getLatestVersion().LastIndexOf("A") + 1));
                 else latestSubVersion = 0;
                 if (isCurrentDevBuild) currentSubVersion = Convert.ToInt64(core.getVersionInfo(false, true).Substring(core.getVersionInfo(false, true).LastIndexOf("V") + 1));
-                else if (isCurrentBetaBuild) currentSubVersion = Convert.ToInt64(core.getVersionInfo(false, true).Substring(core.getVersionInfo(false, true).LastIndexOf("A") + 1));
                 else currentSubVersion = 0;
 
                 int[] latestServerVer = ToIntArray(latestVerStripped, '.');
@@ -139,10 +122,6 @@ namespace MCrypt
                 else if (latestServerVer[2] < currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
                     return true;
                 else if (latestServerVer[3] < currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
-                    return true;
-                else if (isLatestBetaBuild && isCurrentDevBuild && latestServerVer[3] == currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
-                    return true;
-                else if ((isLatestBetaBuild && isLatestBetaBuild) || (isLatestDevBuild && isCurrentDevBuild) && latestSubVersion < currentSubVersion && latestServerVer[3] == currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
                     return true;
                 else if ((isLatestDevBuild && isCurrentDevBuild) && latestSubVersion < currentSubVersion && latestServerVer[3] == currentAppVer[3] && latestServerVer[2] == currentAppVer[2] && latestServerVer[1] == currentAppVer[1] && latestServerVer[0] == currentAppVer[0])
                     return true;

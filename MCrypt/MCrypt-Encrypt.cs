@@ -18,13 +18,18 @@ namespace MCrypt
         SecureAES aes = new SecureAES();
         MCrypt_Update update = new MCrypt_Update();
         private bool inProgress = false;
+        private string fileToEncrypt;
 
-        public MCrypt_Encrypt()
+        public MCrypt_Encrypt(string file)
         {
+            if (!String.IsNullOrEmpty(file)) fileToEncrypt = file;
+            else throw new System.ArgumentException("Parameter cannot be null", "file");
             InitializeComponent();
             versionLabel.Text = core.getVersionInfo();
-            if (Program.doEncryptFile) fileName.Text = Path.GetFileName(Program.fileName);
-            else if (Program.doEncryptFolder) fileName.Text = Path.GetFileName(Program.fileName.TrimEnd(Path.DirectorySeparatorChar));
+            if (Program.doEncryptFile) fileName.Text = Path.GetFileName(fileToEncrypt);
+            else if (Program.doEncryptFolder) fileName.Text = Path.GetFileName(fileToEncrypt.TrimEnd(Path.DirectorySeparatorChar));
+            this.Focus();
+            this.ActiveControl = passwordInput;
         }
 
         private void MCrypt_Encrypt_Load(object sender, EventArgs e)
@@ -34,16 +39,14 @@ namespace MCrypt
 
         private void setNoteLabel(string note, int severity)
         {
-            if (severity == 1) noteLabel.Text = "Note: " + note;
-            else if (severity == 3) noteLabel.Text = "Note: " + note;
-            else noteLabel.Text = "Note: " + note;
+            noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Note: " + note; }));
         }
 
         private void encryptButton_Click(object sender, EventArgs e)
         {
             if (encryptButton.Enabled)
             {
-                if (core.isEncryptFileValid(Program.fileName) && !inProgress && passwordInputConf.Text == passwordInput.Text) backgroundEncrypt.RunWorkerAsync();
+                if (core.isEncryptFileValid(fileToEncrypt) && !inProgress && passwordInputConf.Text == passwordInput.Text) backgroundEncrypt.RunWorkerAsync();
                 else if (passwordInputConf.Text != passwordInput.Text) setNoteLabel("Passwords do not match!", 2);
                 else if (inProgress) setNoteLabel("Encryption already in progress.", 1);
                 else setNoteLabel("Encryption Failed. Try again later.", 1);
@@ -61,13 +64,13 @@ namespace MCrypt
                 {
                     if (!Directory.Exists(Path.Combine(Path.GetTempPath(), "MCrypt"))) Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "MCrypt"));
 
-                    using (ZipArchive zip = ZipFile.Open(Path.Combine(Path.GetTempPath(), "MCrypt", fileName.Text) + ".zip", ZipArchiveMode.Create)) zip.CreateEntryFromFile(Program.fileName, fileName.Text);
+                    using (ZipArchive zip = ZipFile.Open(Path.Combine(Path.GetTempPath(), "MCrypt", fileName.Text) + ".zip", ZipArchiveMode.Create)) zip.CreateEntryFromFile(fileToEncrypt, fileName.Text);
                 }
                 else
                 {
                     tempFolderName = core.tempFolderNameGen(fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length));
                     if (Directory.Exists(Path.Combine(Path.GetTempPath(), "MCrypt", tempFolderName))) Directory.Delete(Path.Combine(Path.GetTempPath(), "MCrypt", tempFolderName), true);
-                    core.DirectoryCopy(Program.fileName, Path.Combine(Path.GetTempPath(), "MCrypt", tempFolderName, fileName.Text), true);
+                    core.DirectoryCopy(fileToEncrypt, Path.Combine(Path.GetTempPath(), "MCrypt", tempFolderName, fileName.Text), true);
                     ZipFile.CreateFromDirectory(Path.Combine(Path.GetTempPath(), "MCrypt", tempFolderName), Path.Combine(Path.GetTempPath(), "MCrypt", fileName.Text) + ".zip");
                 }
 
@@ -76,9 +79,9 @@ namespace MCrypt
                 File.Delete(Path.Combine(Path.GetTempPath(), "MCrypt", fileName.Text) + ".zip");
                 if (Directory.Exists(Path.Combine(Path.GetTempPath(), "MCrypt", tempFolderName))) Directory.Delete(Path.Combine(Path.GetTempPath(), "MCrypt", tempFolderName), true);
                 if (Program.doEncryptFolder && Directory.Exists(Path.Combine(Path.GetTempPath(), "MCrypt", tempFolderName))) Directory.Delete(Path.Combine(Path.GetTempPath(), "MCrypt", tempFolderName), true);
-                if (Program.doEncryptFile) File.Delete(Program.fileName);
-                else Directory.Delete(Program.fileName, true);
-                File.Move(Path.Combine(Path.GetTempPath(), fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".mcrypt"), Path.Combine(Directory.GetParent(Program.fileName).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".mcrypt"));
+                if (Program.doEncryptFile) File.Delete(fileToEncrypt);
+                else Directory.Delete(fileToEncrypt, true);
+                File.Move(Path.Combine(Path.GetTempPath(), fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".mcrypt"), Path.Combine(Directory.GetParent(fileToEncrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".mcrypt"));
                 File.SetAttributes(fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".mcrypt", FileAttributes.Encrypted);
             }
             backgroundEncrypt.CancelAsync();
@@ -98,7 +101,7 @@ namespace MCrypt
 
         private void runtime_Tick(object sender, EventArgs e)
         {
-            if (core.isEncryptFileValid(Program.fileName) && passwordInput.Text.Length > 3 && passwordInputConf.Text.Length > 3 && !inProgress) encryptButton.Enabled = true;
+            if (core.isEncryptFileValid(fileToEncrypt) && passwordInput.Text.Length > 3 && passwordInputConf.Text.Length > 3 && !inProgress) encryptButton.Enabled = true;
             else encryptButton.Enabled = false;
         }
 
@@ -123,14 +126,14 @@ namespace MCrypt
                     {
                         if (Program.doEncryptFile)
                         {
-                            if (File.Exists(Path.Combine(Path.GetDirectoryName(Program.fileName), fileName.Text) + ".zip")) File.Delete(Path.Combine(Path.GetDirectoryName(Program.fileName), fileName.Text) + ".zip");
-                            if (File.Exists(Path.Combine(Path.GetDirectoryName(Program.fileName), fileName.Text) + ".zip")) File.Delete(Path.Combine(Path.GetDirectoryName(Program.fileName), fileName.Text) + ".zip");
+                            if (File.Exists(Path.Combine(Path.GetDirectoryName(fileToEncrypt), fileName.Text) + ".zip")) File.Delete(Path.Combine(Path.GetDirectoryName(fileToEncrypt), fileName.Text) + ".zip");
+                            if (File.Exists(Path.Combine(Path.GetDirectoryName(fileToEncrypt), fileName.Text) + ".zip")) File.Delete(Path.Combine(Path.GetDirectoryName(fileToEncrypt), fileName.Text) + ".zip");
 
                         }
                         else if (Program.doEncryptFolder)
                         {
-                            if (File.Exists(Path.Combine(Directory.GetParent(Program.fileName).FullName, fileName.Text) + ".zip")) File.Delete(Path.Combine(Directory.GetParent(Program.fileName).FullName, fileName.Text) + ".zip");
-                            if (File.Exists(Path.Combine(Directory.GetParent(Program.fileName).FullName, fileName.Text) + ".zip")) File.Delete(Path.Combine(Directory.GetParent(Program.fileName).FullName, fileName.Text) + ".zip");
+                            if (File.Exists(Path.Combine(Directory.GetParent(fileToEncrypt).FullName, fileName.Text) + ".zip")) File.Delete(Path.Combine(Directory.GetParent(fileToEncrypt).FullName, fileName.Text) + ".zip");
+                            if (File.Exists(Path.Combine(Directory.GetParent(fileToEncrypt).FullName, fileName.Text) + ".zip")) File.Delete(Path.Combine(Directory.GetParent(fileToEncrypt).FullName, fileName.Text) + ".zip");
                             if (core.IsDirectoryEmpty(Path.Combine(Path.GetTempPath(), "MCrypt"))) Directory.Delete(Path.Combine(Path.GetTempPath(), "MCrypt"), true);
                         }
                     }
@@ -148,6 +151,16 @@ namespace MCrypt
         private void versionLabel_Click(object sender, EventArgs e)
         {
             update.Show();
+        }
+
+        protected override bool ProcessDialogKey(Keys keyData)
+        {
+            if (Form.ModifierKeys == Keys.None && keyData == Keys.Escape)
+            {
+                Application.Exit();
+                return true;
+            }
+            return base.ProcessDialogKey(keyData);
         }
     }
 }

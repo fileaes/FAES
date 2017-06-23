@@ -19,7 +19,7 @@ namespace MCrypt
         static bool cleanUpdates = false;
         static string branch = "";
 
-        private static bool isValidFiletype(string path)
+        public static bool isValidFiletype(string path)
         {
             if (Path.GetExtension(path) == ".mcrypt")
                 return true;
@@ -57,7 +57,6 @@ namespace MCrypt
                 }
                 if (param[i].Equals("-fullinstall") || param[i].Equals("--fullinstall") || param[i].Equals("-f") || param[i].Equals("--f")) fullInstall = true;
                 if (param[i] == "--dev") branch = "dev";
-                else if (param[i] == "--beta") branch = "beta";
                 else if (param[i] == "--stable") branch = "stable";
                 if (param[i] == "--skipupdate" || param[i] == "-skipupdate") skipUpdate = true;
 
@@ -71,9 +70,9 @@ namespace MCrypt
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            if (doEncryptFile || doEncryptFolder) Application.Run(new MCrypt_Encrypt());
-            else if (doDecrypt) Application.Run(new MCrypt_Decrypt());
-            else Application.Run(new WarnPlaceholder()); //Placeholder
+            if (doEncryptFile || doEncryptFolder) Application.Run(new MCrypt_Encrypt(fileName));
+            else if (doDecrypt) Application.Run(new MCrypt_Decrypt(fileName));
+            else Application.Run(new MCrypt_Main()); //Placeholder
             //else Application.Run(new MCrypt());
 
         }

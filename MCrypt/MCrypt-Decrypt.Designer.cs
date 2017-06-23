@@ -56,6 +56,7 @@
             // 
             // decryptButton
             // 
+            this.decryptButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.decryptButton.Enabled = false;
             this.decryptButton.Location = new System.Drawing.Point(12, 82);
             this.decryptButton.Name = "decryptButton";
@@ -135,6 +136,7 @@
             // 
             // MCrypt_Decrypt
             // 
+            this.AcceptButton = this.decryptButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(251, 125);
