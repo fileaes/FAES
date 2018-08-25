@@ -224,7 +224,7 @@
             this.copyrightLabel.Name = "copyrightLabel";
             this.copyrightLabel.Size = new System.Drawing.Size(141, 13);
             this.copyrightLabel.TabIndex = 12;
-            this.copyrightLabel.Text = "Copyright © mullak99 - 2017";
+            this.copyrightLabel.Text = "Copyright © mullak99 - 2018";
             // 
             // pictureBox1
             // 
@@ -236,7 +236,7 @@
             this.pictureBox1.TabIndex = 9;
             this.pictureBox1.TabStop = false;
             // 
-            // MCryptInstaller
+            // FAESInstaller
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -252,7 +252,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
-            this.Name = "MCryptInstaller";
+            this.Name = "FAESInstaller";
             this.Text = "FileAES: Installer";
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();

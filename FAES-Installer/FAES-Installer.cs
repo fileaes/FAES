@@ -18,9 +18,9 @@ namespace FAESInstaller
     public partial class FAESInstaller : Form
     {
 
-        private bool isInstallComplete = false;
-        private bool canInstall = false;
-        private bool hasAccepted = false;
+        private bool _isInstallComplete = false;
+        private bool _canInstall = false;
+        private bool _hasAccepted = false;
 
         public FAESInstaller()
         {
@@ -46,16 +46,16 @@ namespace FAESInstaller
         {
             if (getLatestVersion(branchConvert()) == "SERVER ERROR!")
             {
-                canInstall = false;
+                _canInstall = false;
                 versionInstalling.Text = "No Version Found!";
             }
             else
             {
-                canInstall = true;
+                _canInstall = true;
                 versionInstalling.Text = "Installing Version: v" + getLatestVersion(branchConvert());
             }
             
-            if (canInstall && hasAccepted) installButton.Enabled = true;
+            if (_canInstall && _hasAccepted) installButton.Enabled = true;
             else installButton.Enabled = false;
         }
 
@@ -78,7 +78,7 @@ namespace FAESInstaller
             try
             {
                 using (var client = new WebClient())
-                using (var stream = client.OpenRead("http://mullak99.co.uk/"))
+                using (var stream = client.OpenRead("https://mullak99.co.uk/"))
                     return true;
             }
             catch
@@ -89,7 +89,7 @@ namespace FAESInstaller
 
         private void doInstall()
         {
-            if (checkServerConnection() && canInstall && hasAccepted)
+            if (checkServerConnection() && _canInstall && _hasAccepted)
             {
                 cleanInstallFiles();
                 try
@@ -107,7 +107,7 @@ namespace FAESInstaller
                 try
                 {
                     WebClient webClient = new WebClient();
-                    webClient.DownloadFile(new Uri("http://builds.mullak99.co.uk/FileAES/updater/latest"), Path.Combine(installDir.Text, "updater.pack"));
+                    webClient.DownloadFile(new Uri("https://builds.mullak99.co.uk/FileAES/updater/latest"), Path.Combine(installDir.Text, "updater.pack"));
                 }
                 catch (Exception)
                 {
@@ -141,7 +141,7 @@ namespace FAESInstaller
                     p.WaitForExit();
 
                     cleanInstallFiles();
-                    isInstallComplete = true;
+                    _isInstallComplete = true;
                     if (MessageBox.Show("Installation Complete!\n\nDo you want to close the installer?", "Done", MessageBoxButtons.YesNo) == DialogResult.Yes)
                         Application.Exit();
                 }
@@ -188,7 +188,7 @@ namespace FAESInstaller
             {
                 WebClient client = new WebClient();
 
-                string url = "http://builds.mullak99.co.uk/FileAES/checkupdate.php?branch=" + sBranch;
+                string url = "https://builds.mullak99.co.uk/FileAES/checkupdate.php?branch=" + sBranch;
 
                 byte[] html = client.DownloadData(url);
                 UTF8Encoding utf = new UTF8Encoding();
@@ -213,13 +213,13 @@ namespace FAESInstaller
 
         private void passAccept_CheckedChanged(object sender, EventArgs e)
         {
-            hasAccepted = true;
+            _hasAccepted = true;
             updateInstaller();
         }
 
         private void failAccept_CheckedChanged(object sender, EventArgs e)
         {
-            hasAccepted = false;
+            _hasAccepted = false;
             updateInstaller();
         }
 
@@ -244,7 +244,7 @@ namespace FAESInstaller
 
             if (e.CloseReason == CloseReason.WindowsShutDown) return;
 
-            if (!isInstallComplete)
+            if (!_isInstallComplete)
             {
                 switch (MessageBox.Show("Are you sure you wish to cancel the installation?", "Cancel Installation", MessageBoxButtons.YesNo))
                 {

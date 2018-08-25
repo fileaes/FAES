@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 class Core
 {
-    private bool flagIsDevBuild = true;
+    private bool flagIsDevBuild = false;
 
     public static bool isEncryptFileValid(string path)
     {
@@ -93,6 +93,11 @@ class Core
 
         foreach (FileInfo file in files) file.CopyTo(Path.Combine(destDirName, file.Name), false);
         if (copySubDirs) foreach (DirectoryInfo subdir in dirs) DirectoryCopy(subdir.FullName, Path.Combine(destDirName, subdir.Name), copySubDirs);
+    }
+
+    public bool isFileLegacy(string pathFileToDecrypt)
+    {
+        return (String.Equals(Path.GetExtension(pathFileToDecrypt), "mcrypt"));
     }
 
     public void setIgnoreUpdate(bool state)

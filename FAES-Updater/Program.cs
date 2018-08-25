@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -11,7 +9,6 @@ using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FileAESUpdater
@@ -20,23 +17,22 @@ namespace FileAESUpdater
     {
         private static bool flagIsDevBuild = true;
 
-        private static bool cleanInstall = false;
-        private static bool runAfter = true;
-        private static string installDir = Directory.GetCurrentDirectory() + "..";
-        private static bool verbose = false;
-        private static string packDir = "";
-        private static bool customPack = false;
-        private static bool cancelUpdateOperation = false;
-        private static bool fullInstall = false;
-        private static bool developer = false;
-        //private static bool urlInstall = false;
-        private static string branch = "stable";
-        private static string url = "http://builds.mullak99.co.uk/FileAES/latest?branch=stable";
-        private static bool createLog = false;
-        private static string logLoc = "";
+        private static bool _cleanInstall = false;
+        private static bool _runAfter = true;
+        private static string _installDir = Directory.GetCurrentDirectory() + "..";
+        private static bool _verbose = false;
+        private static string _packDir = "";
+        private static bool _customPack = false;
+        private static bool _cancelUpdate = false;
+        private static bool _fullInstall = false;
+        private static bool _developer = false;
+        private static string _branch = "stable";
+        private static string _url = "https://builds.mullak99.co.uk/FileAES/latest?branch=stable";
+        private static bool _createLog = false;
+        private static string _loggingLocation = "";
 
 
-        private static string help = "'--branch' or '-b' can be used to specify the branch that FileAES will be downloaded from (Default: Stable).\n'--clean' or '-c' can be used to perform a clean install.\n'--run' or '-r' will install the program and run it.\n'--directory' or '-dir' or '-d' followed by a directory, will set the install directory.\n'--package' or '-pack' or '-p' followed by the location of a pack file, will install a local package file.\n'--signedchecksums' or '-sc' will show a list of all valid files that can be installed.\n'--verify' or '-v' proceded by a package selection will check if that chosen file is valid and can be installed.";
+        private static string _helpText = "'--branch' or '-b' can be used to specify the branch that FileAES will be downloaded from (Default: Stable).\n'--clean' or '-c' can be used to perform a clean install.\n'--run' or '-r' will install the program and run it.\n'--directory' or '-dir' or '-d' followed by a directory, will set the install directory.\n'--package' or '-pack' or '-p' followed by the location of a pack file, will install a local package file.\n'--signedchecksums' or '-sc' will show a list of all valid files that can be installed.\n'--verify' or '-v' proceded by a package selection will check if that chosen file is valid and can be installed.";
 
 
         [DllImport("kernel32.dll")]
@@ -66,76 +62,75 @@ namespace FileAESUpdater
             for (int i = 0; i < args.Length; i++)
             {
                 args[i].ToLower();
-                if (args[i].Equals("-verbose") || args[i].Equals("--verbose")) verbose = true;
-                if (args[i].Equals("-clean") || args[i].Equals("--clean") || args[i].Equals("-c") || args[i].Equals("--c")) cleanInstall = true;
-                if (args[i].Equals("-fullinstall") || args[i].Equals("--fullinstall") || args[i].Equals("-f") || args[i].Equals("--f")) fullInstall = true;
-                if (args[i].Equals("-run") || args[i].Equals("--run") || args[i].Equals("-r") || args[i].Equals("--r")) runAfter = false;
-                if (args[i].Equals("-directory") || args[i].Equals("--directory") || args[i].Equals("-dir") || args[i].Equals("--dir") || args[i].Equals("-d") || args[i].Equals("--d") && !String.IsNullOrEmpty(args[i + 1])) installDir = args[i + 1];
-                if (args[i].Equals("-developer") || args[i].Equals("--developer") || args[i].Equals("-dev") || args[i].Equals("--dev") && !String.IsNullOrEmpty(args[i + 1])) developer = true;
+                if (args[i].Equals("-verbose") || args[i].Equals("--verbose")) _verbose = true;
+                if (args[i].Equals("-clean") || args[i].Equals("--clean") || args[i].Equals("-c") || args[i].Equals("--c")) _cleanInstall = true;
+                if (args[i].Equals("-fullinstall") || args[i].Equals("--fullinstall") || args[i].Equals("-f") || args[i].Equals("--f")) _fullInstall = true;
+                if (args[i].Equals("-run") || args[i].Equals("--run") || args[i].Equals("-r") || args[i].Equals("--r")) _runAfter = false;
+                if (args[i].Equals("-directory") || args[i].Equals("--directory") || args[i].Equals("-dir") || args[i].Equals("--dir") || args[i].Equals("-d") || args[i].Equals("--d") && !String.IsNullOrEmpty(args[i + 1])) _installDir = args[i + 1];
+                if (args[i].Equals("-developer") || args[i].Equals("--developer") || args[i].Equals("-dev") || args[i].Equals("--dev") && !String.IsNullOrEmpty(args[i + 1])) _developer = true;
                 if (args[i].Equals("-package") || args[i].Equals("--package") || args[i].Equals("-pack") || args[i].Equals("--pack") || args[i].Equals("-p") || args[i].Equals("--p") && !String.IsNullOrEmpty(args[i + 1]))
                 {
-                    if (args[i + 1].Contains("http://") || args[i + 1].Contains("https://"))
+                    if (args[i + 1].Contains("https://") || args[i + 1].Contains("https://"))
                     {
-                        //urlInstall = true;
-                        url = args[i + 1];
+                        _url = args[i + 1];
                     }
                     else
                     {
-                        customPack = true;
-                        packDir = args[i + 1];
+                        _customPack = true;
+                        _packDir = args[i + 1];
                     }
                 }
                 if (args[i].Equals("-branch") || args[i].Equals("--branch") || args[i].Equals("-b") || args[i].Equals("--b") && !String.IsNullOrEmpty(args[i + 1]))
                 {
-                    if (args[i + 1] == "dev" || args[i + 1] == "developer") branch = "dev";
-                    else branch = "stable";
+                    if (args[i + 1] == "dev" || args[i + 1] == "developer") _branch = "dev";
+                    else _branch = "stable";
 
-                    url = "http://builds.mullak99.co.uk/FileAES/latest?branch=" + branch;
+                    _url = "https://builds.mullak99.co.uk/FileAES/latest?branch=" + _branch;
                 }
                 if (args[i].Equals("-help") || args[i].Equals("--help") || args[i].Equals("-h") || args[i].Equals("--h") || args[i].Equals("-?") || args[i].Equals("--?"))
                 {
-                    Console.WriteLine(help);
-                    cancelUpdateOperation = true;
+                    Console.WriteLine(_helpText);
+                    _cancelUpdate = true;
                 }
                 if (args[i].Equals("-signedchecksums") || args[i].Equals("--signedchecksums") || args[i].Equals("-sc") || args[i].Equals("--sc"))
                 {
                     if (checkServerConnection()) logWrite("Signed Checksums (SHA256):\n" + String.Join("\n", getChecksums()), "", false, true);
-                    else logWrite("Could not connect to the update server! Please try again later.", "FAIL: Update Server ('http://builds.mullak99.co.uk/FileAES') is not availible!");
-                    cancelUpdateOperation = true;
+                    else logWrite("Could not connect to the update server! Please try again later.", "FAIL: Update Server ('https://builds.mullak99.co.uk/FileAES') is not availible!");
+                    _cancelUpdate = true;
                 }
                 if (args[i].Equals("-verify") || args[i].Equals("--verify") || args[i].Equals("-v") || args[i].Equals("--v"))
                 {
                     try
                     {
-                        if (!String.IsNullOrEmpty(packDir))
+                        if (!String.IsNullOrEmpty(_packDir))
                         {
-                            if (doChecksumValidation(packDir)) logWrite(Path.GetFileName(packDir) + "\nChecksum: '" + getSHA256(packDir) + "' is VALID!", "", false, true);
-                            else logWrite(Path.GetFileName(packDir) + "\nChecksum: '" + getSHA256(packDir) + "' is INVALID!", "", false, true);
+                            if (doChecksumValidation(_packDir)) logWrite(Path.GetFileName(_packDir) + "\nChecksum: '" + getSHA256(_packDir) + "' is VALID!", "", false, true);
+                            else logWrite(Path.GetFileName(_packDir) + "\nChecksum: '" + getSHA256(_packDir) + "' is INVALID!", "", false, true);
                         }
                         else
                         {
                             logWrite("Please specify a pack file with '--package' or '-p'.", "FAIL: A pack file was not specified with the '--package' or '-p' argument!");
                         }
 
-                        cancelUpdateOperation = true;
+                        _cancelUpdate = true;
                     }
                     catch
                     {
-                        logWrite("Invalid filetype selected! Please select a '.PACK' or '.ZIP' file.", "FAIL: '" + packDir + "' is not a valid filetype!");
-                        cancelUpdateOperation = true;
+                        logWrite("Invalid filetype selected! Please select a '.PACK' or '.ZIP' file.", "FAIL: '" + _packDir + "' is not a valid filetype!");
+                        _cancelUpdate = true;
                     }
                 }
                 if (args[i].Equals("-log") || args[i].Equals("--log") || args[i].Equals("-l") || args[i].Equals("--l"))
                 {
-                    createLog = true;
+                    _createLog = true;
 
                     DateTime dt = DateTime.Now;
                     string time = dt.Day.ToString("00") + "-" + dt.Month.ToString("00") + "-" + dt.Year.ToString("00") + "--" + dt.Hour.ToString("00") + "." + dt.Minute.ToString("00") + "." + dt.Second.ToString("00");
-                    logLoc = Path.Combine(Directory.GetCurrentDirectory(), "logs", ("FileAES_Log[" + time + "].log"));
+                    _loggingLocation = Path.Combine(Directory.GetCurrentDirectory(), "logs", ("FileAES_Log[" + time + "].log"));
                     if (!Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "logs"))) Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "logs"));
-                    File.AppendAllText(logLoc, "FileAESUpdater " + getVersionInfo() + Environment.NewLine);
-                    File.AppendAllText(logLoc, "IsAdmin: " + isAdmin() + Environment.NewLine);
-                    File.AppendAllText(logLoc, "Log Created on: " + dt.Day.ToString("00") + "/" + dt.Month.ToString("00") + "/" + dt.Year.ToString("00") + " | " + dt.Hour.ToString("00") + ":" + dt.Minute.ToString("00") + ":" + dt.Second.ToString("00") + Environment.NewLine);
+                    File.AppendAllText(_loggingLocation, "FileAESUpdater " + getVersionInfo() + Environment.NewLine);
+                    File.AppendAllText(_loggingLocation, "IsAdmin: " + isAdmin() + Environment.NewLine);
+                    File.AppendAllText(_loggingLocation, "Log Created on: " + dt.Day.ToString("00") + "/" + dt.Month.ToString("00") + "/" + dt.Year.ToString("00") + " | " + dt.Hour.ToString("00") + ":" + dt.Minute.ToString("00") + ":" + dt.Second.ToString("00") + Environment.NewLine);
                 }
                 if (args[i].Equals("-silent") || args[i].Equals("--silent") || args[i].Equals("-s") || args[i].Equals("--s")) ShowWindow(handle, SW_HIDE);
                 else ShowWindow(handle, SW_SHOW);
@@ -143,23 +138,23 @@ namespace FileAESUpdater
 
             try
             {
-                if (!installDir.Contains(":") && !String.IsNullOrEmpty(installDir)) installDir = Path.Combine(Directory.GetCurrentDirectory(), installDir);
-                if (installDir[0] == '\\') installDir.TrimStart('\\');
-                if (installDir[0] == '/') installDir.TrimStart('/');
+                if (!_installDir.Contains(":") && !String.IsNullOrEmpty(_installDir)) _installDir = Path.Combine(Directory.GetCurrentDirectory(), _installDir);
+                if (_installDir[0] == '\\') _installDir.TrimStart('\\');
+                if (_installDir[0] == '/') _installDir.TrimStart('/');
             }
             catch
             { }
 
             try
             {
-                if (!packDir.Contains(":") && !String.IsNullOrEmpty(packDir)) packDir = Path.Combine(Directory.GetCurrentDirectory(), packDir);
-                if (packDir[0] == '\\') packDir.TrimStart('\\');
-                if (packDir[0] == '/') packDir.TrimStart('/');
+                if (!_packDir.Contains(":") && !String.IsNullOrEmpty(_packDir)) _packDir = Path.Combine(Directory.GetCurrentDirectory(), _packDir);
+                if (_packDir[0] == '\\') _packDir.TrimStart('\\');
+                if (_packDir[0] == '/') _packDir.TrimStart('/');
             }
             catch
             { }
 
-            if (!IsDirectoryWritable(installDir))
+            if (!IsDirectoryWritable(_installDir))
             {
                 try
                 {
@@ -170,7 +165,7 @@ namespace FileAESUpdater
                 runAsAdmin();
             }
 
-            if (!cancelUpdateOperation) updateFileAES();
+            if (!_cancelUpdate) updateFileAES();
 
         }
 
@@ -186,30 +181,30 @@ namespace FileAESUpdater
 
             try
             {
-                if (!Directory.Exists(installDir))
+                if (!Directory.Exists(_installDir))
                 {
-                    Directory.CreateDirectory(installDir);
-                    logWrite("Install directory has been created!", "PASS: '" + installDir + "' has been created!");
+                    Directory.CreateDirectory(_installDir);
+                    logWrite("Install directory has been created!", "PASS: '" + _installDir + "' has been created!");
                 }
                 
             }
             catch
             {
-                logWrite("Directory is not writable! Please choose another or launch as admin.", "FAIL: '" + installDir + "' is not writable!");
+                logWrite("Directory is not writable! Please choose another or launch as admin.", "FAIL: '" + _installDir + "' is not writable!");
                 return;
             }
 
-            if (customPack)
+            if (_customPack)
             {
-                if (File.Exists(packDir) && (Path.GetExtension(packDir) == ".pack" || Path.GetExtension(packDir) == ".zip"))
+                if (File.Exists(_packDir) && (Path.GetExtension(_packDir) == ".pack" || Path.GetExtension(_packDir) == ".zip"))
                 {
-                    ZipFile.ExtractToDirectory(packDir, installDir);
-                    logWrite("Extraction Complete!", "Extracted '" + packDir + "' to '" + installDir + "'.");
+                    ZipFile.ExtractToDirectory(_packDir, _installDir);
+                    logWrite("Extraction Complete!", "Extracted '" + _packDir + "' to '" + _installDir + "'.");
                 }   
                 else
                 {
                     purgeInstallFiles();
-                    logWrite("Invalid filetype selected! Please select a '.PACK' or '.ZIP' file.", "FAIL: '" + packDir + "' is not a valid filetype!");
+                    logWrite("Invalid filetype selected! Please select a '.PACK' or '.ZIP' file.", "FAIL: '" + _packDir + "' is not a valid filetype!");
                     return;
                 }
             }
@@ -224,11 +219,11 @@ namespace FileAESUpdater
                 {
                     string fDir;
                     WebClient webClient = new WebClient();
-                    if (branch == "dev") fDir = "data/FileAES-Dev.pack";
+                    if (_branch == "dev") fDir = "data/FileAES-Dev.pack";
                     else fDir = "data/FileAES-Latest.pack";
-                    webClient.DownloadFile(new Uri(url), fDir);
-                    if (url.Contains("http://builds.mullak99.co.uk/FileAES/latest")) logWrite("Download Complete!", "Downloaded 'v" + getLatestVersion() + "' from 'http://builds.mullak99.co.uk/FileAES/latest' (BRANCH: " + branch.ToUpper() + ")");
-                    else logWrite("Download Complete!", "Downloaded file from '" + url + "'.");
+                    webClient.DownloadFile(new Uri(_url), fDir);
+                    if (_url.Contains("https://builds.mullak99.co.uk/FileAES/latest")) logWrite("Download Complete!", "Downloaded 'v" + getLatestVersion() + "' from 'https://builds.mullak99.co.uk/FileAES/latest' (BRANCH: " + _branch.ToUpper() + ")");
+                    else logWrite("Download Complete!", "Downloaded file from '" + _url + "'.");
                     if (!doChecksumValidation(fDir))
                     {
                         purgeInstallFiles();
@@ -236,8 +231,8 @@ namespace FileAESUpdater
                     }
                     else
                     {
-                        ZipFile.ExtractToDirectory(fDir, installDir);
-                        logWrite("Extraction Complete!", "Extracted PACK to '" + installDir + "'.");
+                        ZipFile.ExtractToDirectory(fDir, _installDir);
+                        logWrite("Extraction Complete!", "Extracted PACK to '" + _installDir + "'.");
                         string path = null;
                         if (File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\FileAES\config\launchParams.cfg"))) path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\FileAES\config\launchParams.cfg");
                         else if (File.Exists(@"Config\launchParams.cfg")) path = @"Config\launchParams.cfg";
@@ -259,7 +254,7 @@ namespace FileAESUpdater
                 }
                 catch (WebException)
                 {
-                    logWrite("Download failed! No files exist in the '" + branch.ToUpper() + "' branch.", "FAIL: No files found in the '" + branch.ToUpper() + "' branch.");
+                    logWrite("Download failed! No files exist in the '" + _branch.ToUpper() + "' branch.", "FAIL: No files found in the '" + _branch.ToUpper() + "' branch.");
                     purgeInstallFiles();
                     return;
                 }
@@ -271,42 +266,42 @@ namespace FileAESUpdater
             }
             else
             {
-                logWrite("Could not connect to the update server! Please try again later.", "FAIL: Update Server ('http://builds.mullak99.co.uk/FileAES') is not availible!");
+                logWrite("Could not connect to the update server! Please try again later.", "FAIL: Update Server ('https://builds.mullak99.co.uk/FileAES') is not availible!");
                 purgeInstallFiles();
                 return;
             }
 
-            if (File.Exists("FileAES.exe") || File.Exists(installDir + "/FileAES.exe"))
+            if (File.Exists("FileAES.exe") || File.Exists(_installDir + "/FileAES.exe"))
             {
                 purgeExtraFiles();
-                if (fullInstall)
+                if (_fullInstall)
                 {
                     if (!Directory.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\FileAES\config"))) Directory.CreateDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\FileAES\config"));
                     StreamWriter sw = File.CreateText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\FileAES\config\launchParams.cfg"));
-                    if (cleanInstall) sw.WriteLine("-c");
-                    if (fullInstall) sw.WriteLine("-f");
-                    if (developer) sw.WriteLine("-d");
-                    if (branch == "dev") sw.WriteLine("--dev");
+                    if (_cleanInstall) sw.WriteLine("-c");
+                    if (_fullInstall) sw.WriteLine("-f");
+                    if (_developer) sw.WriteLine("-d");
+                    if (_branch == "dev") sw.WriteLine("--dev");
                     else sw.WriteLine("--stable");
                     sw.Close();
                     logWrite("", @"Created Config files in '" + Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"mullak99\FileAES") + "'.", true);
                 }
-                else if (!fullInstall)
+                else if (!_fullInstall)
                 {
-                    if (!Directory.Exists(Path.Combine(installDir, "config"))) Directory.CreateDirectory(Path.Combine(installDir, "config"));
-                    StreamWriter sw = File.CreateText(Path.Combine(installDir, "config/launchParams.cfg"));
-                    if (cleanInstall) sw.Write("-c ");
-                    if (developer) sw.Write("-d ");
+                    if (!Directory.Exists(Path.Combine(_installDir, "config"))) Directory.CreateDirectory(Path.Combine(_installDir, "config"));
+                    StreamWriter sw = File.CreateText(Path.Combine(_installDir, "config/launchParams.cfg"));
+                    if (_cleanInstall) sw.Write("-c ");
+                    if (_developer) sw.Write("-d ");
                     sw.Close();
-                    logWrite("", @"Created Config files in '" + installDir + "'.", true);
+                    logWrite("", @"Created Config files in '" + _installDir + "'.", true);
                 }
                 purgeInstallFiles();
 
-                if (!runAfter)
+                if (!_runAfter)
                 {
                     if (File.Exists("FileAES.exe")) Process.Start("FileAES.exe");
-                    else if (File.Exists(installDir + "/FileAES.exe")) Process.Start(installDir + "/FileAES.exe");
-                    else logWrite("Could not find 'FileAES.exe'.", "FAIL: Could not find 'FileAES.exe' in '" + installDir + "'.");
+                    else if (File.Exists(_installDir + "/FileAES.exe")) Process.Start(_installDir + "/FileAES.exe");
+                    else logWrite("Could not find 'FileAES.exe'.", "FAIL: Could not find 'FileAES.exe' in '" + _installDir + "'.");
                 }
                 logWrite("Done!", "", false, true);
             }
@@ -314,7 +309,7 @@ namespace FileAESUpdater
             {
                 purgeInstallFiles();
                 purgeExtraFiles();
-                logWrite("Extraction Failed: FileAES could not be found!", "FAIL: 'FileAES.exe' could not be found in '" + installDir + "'. Extraction assumed to have failed!");
+                logWrite("Extraction Failed: FileAES could not be found!", "FAIL: 'FileAES.exe' could not be found in '" + _installDir + "'. Extraction assumed to have failed!");
             }
         }
 
@@ -324,7 +319,7 @@ namespace FileAESUpdater
             {
                 if (File.Exists("updaterParams.temp")) File.Delete("updaterParams.temp");
 
-                if (installDir == Directory.GetCurrentDirectory() + "..")
+                if (_installDir == Directory.GetCurrentDirectory() + "..")
                 {
                     if (File.Exists("ChangeLog.txt")) File.Delete("ChangeLog.txt");
                     if (File.Exists("LICENSE")) File.Delete("LICENSE");
@@ -332,9 +327,9 @@ namespace FileAESUpdater
                 }
                 else
                 {
-                    if (File.Exists(installDir + "/ChangeLog.txt")) File.Delete(installDir + "/ChangeLog.txt");
-                    if (File.Exists(installDir + "/LICENSE")) File.Delete(installDir + "/LICENSE");
-                    if (File.Exists(installDir + "/README.md")) File.Delete(installDir + "/README.md");
+                    if (File.Exists(_installDir + "/ChangeLog.txt")) File.Delete(_installDir + "/ChangeLog.txt");
+                    if (File.Exists(_installDir + "/LICENSE")) File.Delete(_installDir + "/LICENSE");
+                    if (File.Exists(_installDir + "/README.md")) File.Delete(_installDir + "/README.md");
                 }
             }
             catch (Exception e)
@@ -364,12 +359,12 @@ namespace FileAESUpdater
         {
             try
             {
-                if (installDir == Directory.GetCurrentDirectory() + ".." && File.Exists("FileAES.exe")) File.Delete("FileAES.exe");
-                else if (File.Exists(installDir + "/FileAES.exe")) File.Delete(installDir + "/FileAES.exe");
+                if (_installDir == Directory.GetCurrentDirectory() + ".." && File.Exists("FileAES.exe")) File.Delete("FileAES.exe");
+                else if (File.Exists(_installDir + "/FileAES.exe")) File.Delete(_installDir + "/FileAES.exe");
             }
             catch
             {
-                logWrite("An error occured while removing existing install of FileAES.", "FAIL: Could not remove 'FileAES.exe' from '" + installDir + "'.");
+                logWrite("An error occured while removing existing install of FileAES.", "FAIL: Could not remove 'FileAES.exe' from '" + _installDir + "'.");
             }
         }
 
@@ -378,7 +373,7 @@ namespace FileAESUpdater
             try
             {
                 using (var client = new WebClient())
-                using (var stream = client.OpenRead("http://mullak99.co.uk/"))
+                using (var stream = client.OpenRead("https://mullak99.co.uk/"))
                     return true;
             }
             catch
@@ -406,7 +401,7 @@ namespace FileAESUpdater
             {
                 WebClient client = new WebClient();
 
-                string url = "http://builds.mullak99.co.uk/FileAES/checksums.php";
+                string url = "https://builds.mullak99.co.uk/FileAES/checksums.php";
 
                 byte[] html = client.DownloadData(url);
                 UTF8Encoding utf = new UTF8Encoding();
@@ -487,7 +482,7 @@ namespace FileAESUpdater
             try
             {
                 WebClient client = new WebClient();
-                string url = "http://builds.mullak99.co.uk/FileAES/checkupdate.php?branch=" + branch;
+                string url = "https://builds.mullak99.co.uk/FileAES/checkupdate.php?branch=" + _branch;
                 byte[] html = client.DownloadData(url);
                 UTF8Encoding utf = new UTF8Encoding();
                 if (String.IsNullOrEmpty(utf.GetString(html))) return "SERVER ERROR!";
@@ -510,13 +505,13 @@ namespace FileAESUpdater
 
         private static void logWrite(string normalText, string verboseText, bool verboseExclusive = false, bool normalEqualsVerbose = false)
         {
-            if (verbose && !normalEqualsVerbose) Console.WriteLine(verboseText);
+            if (_verbose && !normalEqualsVerbose) Console.WriteLine(verboseText);
             else if (!verboseExclusive) Console.WriteLine(normalText);
 
-            if (createLog)
+            if (_createLog)
             {
-                if (normalEqualsVerbose) File.AppendAllText(logLoc, Environment.NewLine + ("[" + DateTime.Now.Hour.ToString("00") + ":" + DateTime.Now.Minute.ToString("00") + ":" + DateTime.Now.Second.ToString("00") + "] ") + normalText);
-                else File.AppendAllText(logLoc, Environment.NewLine + ("[" + DateTime.Now.Hour.ToString("00") + ":" + DateTime.Now.Minute.ToString("00") + ":" + DateTime.Now.Second.ToString("00") + "] ") + verboseText);
+                if (normalEqualsVerbose) File.AppendAllText(_loggingLocation, Environment.NewLine + ("[" + DateTime.Now.Hour.ToString("00") + ":" + DateTime.Now.Minute.ToString("00") + ":" + DateTime.Now.Second.ToString("00") + "] ") + normalText);
+                else File.AppendAllText(_loggingLocation, Environment.NewLine + ("[" + DateTime.Now.Hour.ToString("00") + ":" + DateTime.Now.Minute.ToString("00") + ":" + DateTime.Now.Second.ToString("00") + "] ") + verboseText);
             }
         }
 

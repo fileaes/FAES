@@ -18,31 +18,40 @@ namespace FileAES
         Core core = new Core();
         SecureAES aes = new SecureAES();
         FileAES_Update update = new FileAES_Update();
-        private bool inProgress = false;
-        private string fileToDecrypt;
+        private bool _inProgress = false;
+        private string _fileToDecrypt;
+        private string _autoPassword;
 
-        public FileAES_Decrypt(string file)
+        public FileAES_Decrypt(string file, string password = null)
         {
-            if (!String.IsNullOrEmpty(file)) fileToDecrypt = file;
+            if (!String.IsNullOrEmpty(file)) _fileToDecrypt = file;
             else throw new System.ArgumentException("Parameter cannot be null", "file");
             InitializeComponent();
             versionLabel.Text = core.getVersionInfo();
-            if (Program.doDecrypt) fileName.Text = Path.GetFileName(fileToDecrypt);
+            if (Program.doDecrypt) fileName.Text = Path.GetFileName(_fileToDecrypt);
             this.Focus();
             this.ActiveControl = passwordInput;
+            _autoPassword = password;
         }
 
         private void FileAES_Decrypt_Load(object sender, EventArgs e)
         {
             update.checkForUpdate();
+
+            if (_autoPassword != null && _autoPassword.Length > 3)
+            {
+                passwordInput.Text = _autoPassword;
+                runtime_Tick(null, null);
+                decryptButton_Click(null, null);
+            }
         }
 
         private void decryptButton_Click(object sender, EventArgs e)
         {
             if (decryptButton.Enabled)
             {
-                if (Core.isDecryptFileValid(fileToDecrypt) && !inProgress) backgroundDecrypt.RunWorkerAsync();
-                else if (inProgress) setNoteLabel("Decryption already in progress.", 1);
+                if (Core.isDecryptFileValid(_fileToDecrypt) && !_inProgress) backgroundDecrypt.RunWorkerAsync();
+                else if (_inProgress) setNoteLabel("Decryption already in progress.", 1);
                 else setNoteLabel("Decryption Failed. Try again later.", 1);
             }
         }
@@ -56,18 +65,23 @@ namespace FileAES
         {
             while (!backgroundDecrypt.CancellationPending)
             {
-                inProgress = true;
+                _inProgress = true;
                 setNoteLabel("Decrypting... Please wait.", 0);
-                aes.AES_Decrypt(fileToDecrypt, passwordInput.Text, fileToDecrypt.Replace(".faes", ".faeszip"));
+
+                if (!core.isFileLegacy(_fileToDecrypt))
+                    aes.AES_Decrypt(_fileToDecrypt, passwordInput.Text, _fileToDecrypt.Replace(".faes", ".faeszip"));
+                else
+                    aes.AES_Decrypt(_fileToDecrypt, passwordInput.Text, _fileToDecrypt.Replace(".mcrypt", ".faeszip"));
+
                 Thread.Sleep(1000);
-                File.SetAttributes(Path.Combine(Directory.GetParent(fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".faeszip"), FileAttributes.Hidden);                
+                File.SetAttributes(Path.Combine(Directory.GetParent(_fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".faeszip"), FileAttributes.Hidden);                
                 if (aes.getLastError() != "decryptIncorrectPassword")
                 {
-                    ZipFile.ExtractToDirectory(Path.Combine(Directory.GetParent(fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".faeszip"), Directory.GetParent(fileToDecrypt).FullName);
-                    File.SetAttributes(Directory.GetParent(fileToDecrypt).FullName, FileAttributes.Hidden);
-                    File.Delete(Path.Combine(Directory.GetParent(fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".faeszip"));
-                    File.Delete(fileToDecrypt);
-                    File.SetAttributes(Directory.GetParent(fileToDecrypt).FullName, FileAttributes.Normal);
+                    ZipFile.ExtractToDirectory(Path.Combine(Directory.GetParent(_fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".faeszip"), Directory.GetParent(_fileToDecrypt).FullName);
+                    File.SetAttributes(Directory.GetParent(_fileToDecrypt).FullName, FileAttributes.Hidden);
+                    File.Delete(Path.Combine(Directory.GetParent(_fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".faeszip"));
+                    File.Delete(_fileToDecrypt);
+                    File.SetAttributes(Directory.GetParent(_fileToDecrypt).FullName, FileAttributes.Normal);
                 }
             }
             backgroundDecrypt.CancelAsync();
@@ -80,7 +94,7 @@ namespace FileAES
 
         private void backgroundDecrypt_Complete(object sender, RunWorkerCompletedEventArgs e)
         {
-            inProgress = false;
+            _inProgress = false;
             if (aes.getLastError() == "decryptSuccess") setNoteLabel("Done!", 0);
             if (aes.getLastError() == "decryptIncorrectPassword") setNoteLabel("Password Incorrect!", 3);
             else Application.Exit();
@@ -88,7 +102,7 @@ namespace FileAES
 
         private void runtime_Tick(object sender, EventArgs e)
         {
-            if (Core.isDecryptFileValid(fileToDecrypt) && passwordInput.Text.Length > 3 && !inProgress) decryptButton.Enabled = true;
+            if (Core.isDecryptFileValid(_fileToDecrypt) && passwordInput.Text.Length > 3 && !_inProgress) decryptButton.Enabled = true;
             else decryptButton.Enabled = false;
         }
 
@@ -104,15 +118,15 @@ namespace FileAES
             if (e.CloseReason == CloseReason.WindowsShutDown) return;
             if (e.CloseReason == CloseReason.ApplicationExitCall) return;
 
-            if (inProgress)
+            if (_inProgress)
             {
                 if (MessageBox.Show(this, "Are you sure you want to stop decrypting?", "Closing", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     backgroundDecrypt.CancelAsync();
                     try
                     {
-                        if (File.Exists(Path.Combine(Directory.GetParent(fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".faeszip")))
-                            File.Delete(Path.Combine(Directory.GetParent(fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".faeszip"));
+                        if (File.Exists(Path.Combine(Directory.GetParent(_fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".faeszip")))
+                            File.Delete(Path.Combine(Directory.GetParent(_fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".faeszip"));
                     }
                     catch (Exception)
                     {

@@ -20,6 +20,7 @@ namespace FileAES
         static bool cleanUpdates = false;
         static string branch = "";
         static string launchTimeStamp = DateTime.Now.ToString("yyyyMMddHHmmssffffff");
+        static string _autoPassword = null;
 
         [STAThread]
         static void Main(string[] args)
@@ -59,14 +60,17 @@ namespace FileAES
                     cleanUpdates = true;
                 if (param[i].Equals("-update") || param[i].Equals("--update") || param[i].Equals("-u") || param[i].Equals("--u"))
                     FileAES_Update.selfUpdate(cleanUpdates);
-                
+
+                if (param[i].Equals("-password") || param[i].Equals("--password") || param[i].Equals("-p") || param[i].Equals("--p") && !String.IsNullOrEmpty(param[i + 1]))
+                    _autoPassword = param[i + 1];
+
             }
             if (String.IsNullOrEmpty(branch)) branch = "stable";
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            if (doEncryptFile || doEncryptFolder) Application.Run(new FileAES_Encrypt(fileName));
-            else if (doDecrypt) Application.Run(new FileAES_Decrypt(fileName));
+            if (doEncryptFile || doEncryptFolder) Application.Run(new FileAES_Encrypt(fileName, _autoPassword));
+            else if (doDecrypt) Application.Run(new FileAES_Decrypt(fileName, _autoPassword));
             else Application.Run(new FileAES_Main());
 
         }

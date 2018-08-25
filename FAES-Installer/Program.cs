@@ -16,7 +16,6 @@ namespace FAESInstaller
             for (int i = 0; i < args.Length; i++)
             {
                 args[i].ToLower();
-                
             }
 
             Application.EnableVisualStyles();
