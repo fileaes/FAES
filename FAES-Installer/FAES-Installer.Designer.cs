@@ -34,7 +34,7 @@
             this.installDir = new System.Windows.Forms.TextBox();
             this.browseInstallDir = new System.Windows.Forms.Button();
             this.installButton = new System.Windows.Forms.Button();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.tosTextbox = new System.Windows.Forms.TextBox();
             this.passAccept = new System.Windows.Forms.RadioButton();
             this.failAccept = new System.Windows.Forms.RadioButton();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
@@ -92,17 +92,17 @@
             this.installButton.UseVisualStyleBackColor = true;
             this.installButton.Click += new System.EventHandler(this.installButton_Click);
             // 
-            // textBox1
+            // tosTextbox
             // 
-            this.textBox1.Location = new System.Drawing.Point(12, 97);
-            this.textBox1.MaxLength = 0;
-            this.textBox1.Multiline = true;
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBox1.Size = new System.Drawing.Size(469, 141);
-            this.textBox1.TabIndex = 5;
-            this.textBox1.Text = resources.GetString("textBox1.Text");
+            this.tosTextbox.Location = new System.Drawing.Point(12, 97);
+            this.tosTextbox.MaxLength = 0;
+            this.tosTextbox.Multiline = true;
+            this.tosTextbox.Name = "tosTextbox";
+            this.tosTextbox.ReadOnly = true;
+            this.tosTextbox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.tosTextbox.Size = new System.Drawing.Size(469, 141);
+            this.tosTextbox.TabIndex = 5;
+            this.tosTextbox.Text = resources.GetString("tosTextbox.Text");
             // 
             // passAccept
             // 
@@ -248,7 +248,7 @@
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.failAccept);
             this.Controls.Add(this.passAccept);
-            this.Controls.Add(this.textBox1);
+            this.Controls.Add(this.tosTextbox);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
@@ -269,7 +269,7 @@
         private System.Windows.Forms.TextBox installDir;
         private System.Windows.Forms.Button browseInstallDir;
         private System.Windows.Forms.Button installButton;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox tosTextbox;
         private System.Windows.Forms.RadioButton passAccept;
         private System.Windows.Forms.RadioButton failAccept;
         private System.Windows.Forms.GroupBox groupBox1;

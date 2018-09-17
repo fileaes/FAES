@@ -120,7 +120,7 @@
   <metadata name="folderBrowserDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <data name="textBox1.Text" xml:space="preserve">
+  <data name="tosTextbox.Text" xml:space="preserve">
     <value>FileAES - Terms and conditions
 
 1. Preamble: This Agreement, signed on May 24, 2017 (hereinafter: Effective Date) governs the relationship between you, a user, (hereinafter: Licensee) and mullak99, a private person (hereinafter: Licensor). This Agreement sets the terms, rights, restrictions and obligations on using FileAES (hereinafter: The Software) created and owned by Licensor, as detailed herein.

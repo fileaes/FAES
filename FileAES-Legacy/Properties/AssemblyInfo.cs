@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("FileAES: Installer")]
-[assembly: AssemblyDescription("An installer for FileAES.")]
+[assembly: AssemblyTitle("FileAES")]
+[assembly: AssemblyDescription("A tool used to encrypt and decrypt files or folders using SecureAES.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("mullak99")]
-[assembly: AssemblyProduct("FileAES: Installer")]
-[assembly: AssemblyCopyright("Copyright © mullak99 | 2018")]
+[assembly: AssemblyProduct("FileAES")]
+[assembly: AssemblyCopyright("Copyright © 2018 | mullak99")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("b506a302-a7f4-4ffd-8dd6-22119f9af6fe")]
+[assembly: Guid("eb18b785-8d8f-4446-b9da-3f9505cf580f")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.1.1.0")]
-[assembly: AssemblyFileVersion("1.1.1.0")]
+[assembly: AssemblyVersion("1.1.0.0")]
+[assembly: AssemblyFileVersion("1.1.0.0")]

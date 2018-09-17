@@ -26,7 +26,14 @@ namespace FAESInstaller
         {
             InitializeComponent();
             versionLabel.Text = getVersionInfo();
-            branchComboBox.SelectedIndex = 0;
+            tosTextbox.Text = Program.getUpdatedTOS();
+            if (Program.getAccepted()) passAccept.Checked = true;
+
+            if (Program.getBranch() == "dev")
+                branchComboBox.SelectedIndex = 1;
+            else
+                branchComboBox.SelectedIndex = 0;
+
             this.ActiveControl = installDir;
             installDir.Text = ProgramFiles86() + @"\mullak99\FileAES";
             installDir.Select(installDir.Text.Length + 1, installDir.Text.Length + 1);
@@ -73,95 +80,24 @@ namespace FAESInstaller
                 return Environment.GetEnvironmentVariable("ProgramFiles");
         }
 
-        public bool checkServerConnection()
-        {
-            try
-            {
-                using (var client = new WebClient())
-                using (var stream = client.OpenRead("https://mullak99.co.uk/"))
-                    return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
         private void doInstall()
         {
-            if (checkServerConnection() && _canInstall && _hasAccepted)
+            string result = Installer.doInstall(_canInstall, _hasAccepted, installDir.Text, branchConvert());
+
+            if (result.Contains("Installation Completed!"))
             {
-                cleanInstallFiles();
-                try
-                {
-                    if (!Directory.Exists(installDir.Text))
-                        Directory.CreateDirectory(installDir.Text);
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    MessageBox.Show("You do not have permission to write to this location!\nPlease choose another or start with admin privilages.", "Error");
-                    cleanInstallFiles();
-                    return;
-                }
-                
-                try
-                {
-                    WebClient webClient = new WebClient();
-                    webClient.DownloadFile(new Uri("https://builds.mullak99.co.uk/FileAES/updater/latest"), Path.Combine(installDir.Text, "updater.pack"));
-                }
-                catch (Exception)
-                {
-                    MessageBox.Show("You do not have permission to write to this location!\nPlease choose another or start with admin privilages.", "Error");
-                    cleanInstallFiles();
-                    return;
-                }
-                try
-                {
-                    if (File.Exists(Path.Combine(installDir.Text, "FAES-Updater.exe")))
-                        File.Delete(Path.Combine(installDir.Text, "FAES-Updater.exe"));
-
-                    ZipFile.ExtractToDirectory(Path.Combine(installDir.Text, "updater.pack"), installDir.Text);
-                }
-                catch (Exception e)
-                {
-                    MessageBox.Show(e.ToString(), "Error");
-                    return;
-                }
-
-                try
-                {
-                    Process p = new Process();
-                    p.StartInfo.FileName = Path.Combine(installDir.Text, @"FAES-Updater.exe");
-                    p.StartInfo.Arguments = "-c -f -b " + branchConvert() + " -d \"" + installDir.Text + "\"";
-                    p.StartInfo.UseShellExecute = false;
-                    p.StartInfo.CreateNoWindow = true;
-                    p.StartInfo.RedirectStandardOutput = true;
-                    p.StartInfo.Verb = "runas";
-                    p.Start();
-                    p.WaitForExit();
-
-                    cleanInstallFiles();
-                    _isInstallComplete = true;
-                    if (MessageBox.Show("Installation Complete!\n\nDo you want to close the installer?", "Done", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                        Application.Exit();
-                }
-                catch (Exception e)
-                {
-                    MessageBox.Show(e.ToString(), "Error");
-                    return;
-                }
+                if (MessageBox.Show("Installation Complete!\n\nDo you want to close the installer?", "Done", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    Application.Exit();
             }
-            else
+            else if (result.Contains("A connection could not be established with the download server."))
             {
                 if (MessageBox.Show("A connection could not be established with the download server.\nPlease check your internet connection or try again later.", "Error", MessageBoxButtons.RetryCancel) == DialogResult.Retry)
                     doInstall();
             }
-        }
-
-        private void cleanInstallFiles()
-        {
-            if (File.Exists(Path.Combine(installDir.Text, "updater.pack")))
-                File.Delete(Path.Combine(installDir.Text, "updater.pack"));
+            else
+            {
+                MessageBox.Show(result, "Error");
+            }
         }
 
         public string getVersionInfo(bool raw = false)

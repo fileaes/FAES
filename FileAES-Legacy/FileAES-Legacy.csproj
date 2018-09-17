@@ -4,27 +4,12 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{B506A302-A7F4-4FFD-8DD6-22119F9AF6FD}</ProjectGuid>
+    <ProjectGuid>{EB18B785-8D8F-4446-B9DA-3F9505CF580F}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>FAESInstaller</RootNamespace>
-    <AssemblyName>FAES-Installer</AssemblyName>
+    <RootNamespace>FileAES</RootNamespace>
+    <AssemblyName>FileAES</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -45,7 +30,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup />
   <PropertyGroup>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
   </PropertyGroup>
@@ -65,17 +49,50 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FAES-Installer.cs">
+    <Compile Include="Libs\Checksums.cs" />
+    <Compile Include="Core.cs" />
+    <Compile Include="FileAES-Decrypt.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FAES-Installer.Designer.cs">
-      <DependentUpon>FAES-Installer.cs</DependentUpon>
+    <Compile Include="FileAES-Decrypt.Designer.cs">
+      <DependentUpon>FileAES-Decrypt.cs</DependentUpon>
     </Compile>
-    <Compile Include="Installer.cs" />
+    <Compile Include="FileAES-Main.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileAES-Main.Designer.cs">
+      <DependentUpon>FileAES-Main.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileAES-Encrypt.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileAES-Encrypt.Designer.cs">
+      <DependentUpon>FileAES-Encrypt.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Libs\XmlSettings.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="FAES-Installer.resx">
-      <DependentUpon>FAES-Installer.cs</DependentUpon>
+    <Compile Include="Libs\SecureAES.cs" />
+    <Compile Include="FileAES-Update.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileAES-Update.Designer.cs">
+      <DependentUpon>FileAES-Update.cs</DependentUpon>
+    </Compile>
+    <Compile Include="WarnPlaceholder.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="WarnPlaceholder.Designer.cs">
+      <DependentUpon>WarnPlaceholder.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="FileAES-Decrypt.resx">
+      <DependentUpon>FileAES-Decrypt.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileAES-Encrypt.resx">
+      <DependentUpon>FileAES-Encrypt.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileAES-Main.resx">
+      <DependentUpon>FileAES-Main.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -87,6 +104,13 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="FileAES-Update.resx">
+      <DependentUpon>FileAES-Update.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="WarnPlaceholder.resx">
+      <DependentUpon>WarnPlaceholder.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -99,19 +123,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\App.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Icon1.png" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Icon.ico" />
