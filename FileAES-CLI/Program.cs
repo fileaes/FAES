@@ -13,6 +13,7 @@ namespace FileAES_CLI
     {
         private static bool _verbose = false;
         private static bool _purgeTemp = false;
+        private static bool _help = false;
         private static string _directory = null;
         private static string _password;
         private static List<string> _strippedArgs = new List<string>();
@@ -35,8 +36,19 @@ namespace FileAES_CLI
                 if (strippedArg == "verbose" || strippedArg == "v") _verbose = true;
                 else if (strippedArg == "password" || strippedArg == "p" && !string.IsNullOrEmpty(args[i + 1])) _password = args[i + 1];
                 else if (strippedArg == "purgetemp" || strippedArg == "deletetemp") _purgeTemp = true;
+                else if (strippedArg == "help" || strippedArg == "h") _help = true;
 
                 _strippedArgs.Add(strippedArg);
+            }
+
+            if (_help)
+            {
+                Console.WriteLine("A FAES-based tool for encrypting and decrypting files using the command-line.\n\nPossible Launch Parameters:\n'--verbose' or '-v': Show more debugging information in the console (WIP)." +
+                    "\n'--purgeTemp' or '-p': Purge the FileAES Temp folder to resolve possible errors.\n'--password <password>' or '-p <password>': Set the password that will be used to encrypt/decrypt the file/folder.\n\n" +
+                    "File/Folder names can be entered as a launch parameter to select what to encrypt/decrypt (also allows for dragging/dropping a file/folder on the .exe).\n\n" +
+                    "Example: 'FileAES-CLI.exe File.txt -p password123'");
+
+                return;
             }
 
             if (_purgeTemp)
