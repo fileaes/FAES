@@ -114,26 +114,9 @@ namespace FileAES_CLI
                     if (!successful && fileAES.isFileDecryptable()) Console.WriteLine("Ensure that you entered the correct password!");
 
                 }
-                catch (IOException e)
-                {
-                    if (e.ToString().Contains("Error occured in creating the FAESZIP file."))
-                        Console.WriteLine("ERROR: The chosen file(s) could not be compressed as a compressed version already exists in the Temp files! Consider using '--purgeTemp' if you are not using another instance of FileAES and this error persists.");
-                    else if (e.ToString().Contains("Error occured in encrypting the FAESZIP file."))
-                        Console.WriteLine("ERROR: The compressed file could not be encrypted. Please close any other instances of FileAES and try again. Consider using '--purgeTemp' if you are not using another instance of FileAES and this error persists.");
-                    else if (e.ToString().Contains("Error occured in deleting the FAESZIP file."))
-                        Console.WriteLine("ERROR: The compressed file could not be deleted. Please close any other instances of FileAES and try again. Consider using '--purgeTemp' if you are not using another instance of FileAES and this error persists.");
-                    else if (e.ToString().Contains("Error occured in moving the FAES file after encryption."))
-                        Console.WriteLine("ERROR: The encrypted file could not be moved to the original destination! Please ensure that a file with the same name does not already exist.");
-                    else if (e.ToString().Contains("Error occured in decrypting the FAES file."))
-                        Console.WriteLine("ERROR: The encrypted file could not be decrypted. Please try again.");
-                    else if (e.ToString().Contains("Error occured in extracting the FAESZIP file."))
-                        Console.WriteLine("ERROR: The compressed file could not be extracted! Consider using '--purgeTemp' if you are not using another instance of FileAES and this error persists.");
-                    else
-                        Console.WriteLine(e.ToString());
-                }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.ToString());
+                    Console.WriteLine(FileAES_Utilities.FAES_ExceptionHandling(e));
                 }
             }
         }

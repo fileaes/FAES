@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace FAES_GUI
 {
-    public partial class Form1 : Form
+    public partial class DecryptForm : Form
     {
-        public Form1()
+        public DecryptForm()
         {
             InitializeComponent();
         }

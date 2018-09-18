@@ -49,14 +49,74 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Form1.cs">
+    <Compile Include="CustomControls\SubMenuButton.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CustomControls\SubMenuButton.Designer.cs">
+      <DependentUpon>SubMenuButton.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DecryptForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <Compile Include="DecryptForm.Designer.cs">
+      <DependentUpon>DecryptForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EncryptForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EncryptForm.Designer.cs">
+      <DependentUpon>EncryptForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MenuPanels\SettingsPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MenuPanels\SettingsPanel.Designer.cs">
+      <DependentUpon>SettingsPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MenuPanels\DecryptPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MenuPanels\DecryptPanel.Designer.cs">
+      <DependentUpon>DecryptPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MenuPanels\EncryptPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MenuPanels\EncryptPanel.Designer.cs">
+      <DependentUpon>EncryptPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MenuPanels\AutoSelectPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MenuPanels\AutoSelectPanel.Designer.cs">
+      <DependentUpon>AutoSelectPanel.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="CustomControls\SubMenuButton.resx">
+      <DependentUpon>SubMenuButton.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MenuPanels\SettingsPanel.resx">
+      <DependentUpon>SettingsPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MenuPanels\DecryptPanel.resx">
+      <DependentUpon>DecryptPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MenuPanels\EncryptPanel.resx">
+      <DependentUpon>EncryptPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MenuPanels\AutoSelectPanel.resx">
+      <DependentUpon>AutoSelectPanel.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -65,6 +125,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
@@ -83,14 +144,18 @@
   <ItemGroup>
     <None Include="FodyWeavers.xml" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Icon.ico" />
+    <None Include="Resources\Icon.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\Costura.Fody.3.1.0\build\Costura.Fody.targets" Condition="Exists('..\packages\Costura.Fody.3.1.0\build\Costura.Fody.targets')" />
+  <Import Project="..\packages\Costura.Fody.3.1.1\build\Costura.Fody.targets" Condition="Exists('..\packages\Costura.Fody.3.1.1\build\Costura.Fody.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Costura.Fody.3.1.0\build\Costura.Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Costura.Fody.3.1.0\build\Costura.Fody.targets'))" />
-    <Error Condition="!Exists('..\packages\Fody.3.2.1\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.3.2.1\build\Fody.targets'))" />
+    <Error Condition="!Exists('..\packages\Costura.Fody.3.1.1\build\Costura.Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Costura.Fody.3.1.1\build\Costura.Fody.targets'))" />
+    <Error Condition="!Exists('..\packages\Fody.3.2.3\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.3.2.3\build\Fody.targets'))" />
   </Target>
-  <Import Project="..\packages\Fody.3.2.1\build\Fody.targets" Condition="Exists('..\packages\Fody.3.2.1\build\Fody.targets')" />
+  <Import Project="..\packages\Fody.3.2.3\build\Fody.targets" Condition="Exists('..\packages\Fody.3.2.3\build\Fody.targets')" />
 </Project>
