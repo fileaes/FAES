@@ -77,17 +77,26 @@ namespace FileAES_CLI
                     Console.Write("Password: ");
                     string password = passwordInput();
 
-                    Console.Write("\nConf. Password: ");
-                    string passwordConf = passwordInput();
-
-                    Console.Write(Environment.NewLine);
-
-                    if (password == passwordConf)
+                    if (new FAES_File(_directory).isFileEncryptable())
                     {
+                        Console.Write("\nConf. Password: ");
+                        string passwordConf = passwordInput();
+
+                        Console.Write(Environment.NewLine);
+
+                        if (password == passwordConf)
+                        {
+                            _password = password;
+                            break;
+                        }
+                        Console.WriteLine("Passwords do not match!");
+                    }
+                    else
+                    {
+                        Console.Write(Environment.NewLine);
                         _password = password;
                         break;
                     }
-                    Console.WriteLine("Passwords do not match!");
                 }
             }
 
