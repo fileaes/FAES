@@ -1,8 +1,7 @@
-﻿using System;
+﻿using FAES;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FileAES
@@ -15,12 +14,13 @@ namespace FileAES
         public static bool doEncryptFile = false;
         public static bool doEncryptFolder = false;
         public static bool doDecrypt = false;
-        static bool skipUpdate = false;
-        static bool fullInstall = false;
-        static bool cleanUpdates = false;
-        static string branch = "";
-        static string launchTimeStamp = DateTime.Now.ToString("yyyyMMddHHmmssffffff");
-        static string _autoPassword = null;
+        private static bool _skipUpdate = false;
+        private static bool _fullInstall = false;
+        private static bool _cleanUpdates = false;
+        private static bool _purgeTemp = false;
+        private static string branch = "";
+        private static string _launchTimeStamp = DateTime.Now.ToString("yyyyMMddHHmmssffffff");
+        private static string _autoPassword = null;
 
         [STAThread]
         static void Main(string[] args)
@@ -36,6 +36,7 @@ namespace FileAES
             for (int i = 0; i < param.Length; i++)
             {
                 param[i].ToLower();
+
                 if (File.Exists(param[i]) && Core.isValidFiletype(Path.GetExtension(param[i])) && !doEncryptFile && !doEncryptFolder)
                 {
                     doDecrypt = true;
@@ -51,21 +52,19 @@ namespace FileAES
                     doEncryptFile = true;
                     fileName = param[i];
                 }
-                if (param[i].Equals("-fullinstall") || param[i].Equals("--fullinstall") || param[i].Equals("-f") || param[i].Equals("--f")) fullInstall = true;
-                if (param[i] == "--dev") branch = "dev";
+
+                if (param[i].Equals("-fullinstall") || param[i].Equals("--fullinstall") || param[i].Equals("-f") || param[i].Equals("--f")) _fullInstall = true;
+                else if (param[i] == "--dev") branch = "dev";
                 else if (param[i] == "--stable") branch = "stable";
-                if (param[i] == "--skipupdate" || param[i] == "-skipupdate") skipUpdate = true;
-
-                if (param[i].Equals("-cleanupdates") || param[i].Equals("--cleanupdates") || param[i].Equals("-c") || param[i].Equals("--c"))
-                    cleanUpdates = true;
-                if (param[i].Equals("-update") || param[i].Equals("--update") || param[i].Equals("-u") || param[i].Equals("--u"))
-                    FileAES_Update.selfUpdate(cleanUpdates);
-
-                if (param[i].Equals("-password") || param[i].Equals("--password") || param[i].Equals("-p") || param[i].Equals("--p") && !String.IsNullOrEmpty(param[i + 1]))
-                    _autoPassword = param[i + 1];
-
+                else if (param[i] == "--skipupdate" || param[i] == "-skipupdate") _skipUpdate = true;
+                else if (param[i].Equals("-cleanupdates") || param[i].Equals("--cleanupdates") || param[i].Equals("-c") || param[i].Equals("--c")) _cleanUpdates = true;
+                else if (param[i].Equals("-update") || param[i].Equals("--update") || param[i].Equals("-u") || param[i].Equals("--u")) FileAES_Update.selfUpdate(_cleanUpdates);
+                else if (param[i].Equals("-password") || param[i].Equals("--password") || param[i].Equals("-p") || param[i].Equals("--p") && !String.IsNullOrEmpty(param[i + 1])) _autoPassword = param[i + 1];
+                else if (param[i].Equals("-purgetemp") || param[i].Equals("--purgetemp") || param[i].Equals("-deletetemp") || param[i].Equals("--deletetemp")) _purgeTemp = true;
             }
             if (String.IsNullOrEmpty(branch)) branch = "stable";
+
+            if (_purgeTemp) FileAES_Utilities.PurgeTempFolder();
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -93,17 +92,17 @@ namespace FileAES
 
         public static bool getCleanUpdates()
         {
-            return cleanUpdates;
+            return _cleanUpdates;
         }
 
         public static bool getFullInstall()
         {
-            return fullInstall;
+            return _fullInstall;
         }
 
         public static bool getSkipUpdate()
         {
-            return skipUpdate;
+            return _skipUpdate;
         }
     }
 }

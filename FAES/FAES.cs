@@ -363,6 +363,11 @@ namespace FAES
             if (copySubDirs) foreach (DirectoryInfo subdir in dirs) DirectoryCopy(subdir.FullName, Path.Combine(destDirName, subdir.Name), copySubDirs);
         }
 
+        public static void PurgeTempFolder()
+        {
+            if (Directory.Exists(Path.Combine(Path.GetTempPath(), "FileAES"))) Directory.Delete(Path.Combine(Path.GetTempPath(), "FileAES"), true);
+        }
+
         public static string FAES_ExceptionHandling(Exception e)
         {
             if (e.ToString().Contains("Error occured in creating the FAESZIP file."))

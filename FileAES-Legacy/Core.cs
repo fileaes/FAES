@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 class Core
 {
-    private bool flagIsDevBuild = false;
+    private const bool flagIsDevBuild = false;
 
     public static bool isEncryptFileValid(string path)
     {
@@ -31,27 +28,11 @@ class Core
         else return false;
     }
 
-    public static void MoveFolder(string folderToMove, string destination)
-    {
-        String destinationFolder = CreateDestinationFolderName(folderToMove, destination);
-        Directory.Move(folderToMove, destinationFolder);
-    }
-    private static string CreateDestinationFolderName(string folderToMove, string destination)
-    {
-        return Path.Combine(destination, new DirectoryInfo(folderToMove).Name);
-    }
-
     DateTime buildDate = new FileInfo(Assembly.GetExecutingAssembly().Location).LastWriteTime;
 
     private string buildHash()
     {
         return (buildDate.Year % 100).ToString() + (buildDate.Month).ToString("00") + (buildDate.Day).ToString("00") + (buildDate.Hour).ToString("00") + (buildDate.Minute).ToString("00");
-    }
-
-    public string tempFolderNameGen(string sourceFolder)
-    {
-        DateTime now = DateTime.Now;
-        return sourceFolder + "_" + (now.Day).ToString("00") + (now.Month).ToString("00") + (now.Year % 100).ToString() + (now.Hour).ToString("00") + (now.Minute).ToString("00") + (now.Second).ToString("00");
     }
 
     private bool isDebugBuild()
@@ -77,27 +58,6 @@ class Core
     public bool IsDirectoryEmpty(string path)
     {
         return !Directory.EnumerateFiles(path).Any();
-    }
-
-    public void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
-    {
-        DirectoryInfo dir = new DirectoryInfo(sourceDirName);
-
-        if (!dir.Exists) return;
-
-        DirectoryInfo[] dirs = dir.GetDirectories();
-
-        if (!Directory.Exists(destDirName)) Directory.CreateDirectory(destDirName);
-
-        FileInfo[] files = dir.GetFiles();
-
-        foreach (FileInfo file in files) file.CopyTo(Path.Combine(destDirName, file.Name), false);
-        if (copySubDirs) foreach (DirectoryInfo subdir in dirs) DirectoryCopy(subdir.FullName, Path.Combine(destDirName, subdir.Name), copySubDirs);
-    }
-
-    public bool isFileLegacy(string pathFileToDecrypt)
-    {
-        return (String.Equals(Path.GetExtension(pathFileToDecrypt), "mcrypt"));
     }
 
     public void setIgnoreUpdate(bool state)

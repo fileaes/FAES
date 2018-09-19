@@ -123,12 +123,12 @@ namespace SecureAES
                 if (Encoding.UTF8.GetString(faesCBCMode) == _faesCBCModeIdentifier)
                 {
                     AES.Mode = CipherMode.CBC;
-                    Console.WriteLine("FileAESv2 Identifier Detected! Decrypting using FAESv2 Mode.");
+                    Console.WriteLine("FAESv1 Identifier Detected! Decrypting using FAESv1 Mode.");
                 }
                 else
                 {
                     AES.Mode = CipherMode.CFB;
-                    Console.WriteLine("Version Identifier not found! Decrypting using FAESv1 Mode.");
+                    Console.WriteLine("Version Identifier not found! Decrypting using Legacy Mode.");
                     fsCrypt.Seek(-(faesCBCMode.Length), SeekOrigin.Current);
                 }
                 

@@ -1,8 +1,7 @@
-﻿using System;
+﻿using FAES;
+using System;
 using System.ComponentModel;
 using System.IO;
-using System.IO.Compression;
-using System.Threading;
 using System.Windows.Forms;
 
 namespace FileAES
@@ -10,16 +9,17 @@ namespace FileAES
     public partial class FileAES_Encrypt : Form
     {
         Core core = new Core();
-        SecureAES aes = new SecureAES();
+        FAES_File fileAES;
         FileAES_Update update = new FileAES_Update();
+
         private bool _inProgress = false;
-        private string _fileToEncrypt;
-        private string _autoPassword;
+        private bool _encryptSuccessful;
+        private string _fileToEncrypt, _autoPassword;
 
         public FileAES_Encrypt(string file, string password = null)
         {
             if (!String.IsNullOrEmpty(file)) _fileToEncrypt = file;
-            else throw new System.ArgumentException("Parameter cannot be null", "file");
+            else throw new ArgumentException("Parameter cannot be null", "file");
             InitializeComponent();
             versionLabel.Text = core.getVersionInfo();
             if (Program.doEncryptFile) fileName.Text = Path.GetFileName(_fileToEncrypt);
@@ -44,7 +44,10 @@ namespace FileAES
 
         private void setNoteLabel(string note, int severity)
         {
-            noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Note: " + note; }));
+            if (severity == 1) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Warning: " + note; }));
+            else if (severity == 2) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Important: " + note; }));
+            else if (severity == 3) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Error: " + note; }));
+            else noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Note: " + note; }));
         }
 
         private void encryptButton_Click(object sender, EventArgs e)
@@ -60,51 +63,22 @@ namespace FileAES
 
         private void doEncrypt()
         {
-            string rawName = fileName.Text;
-            string fileToDelete = Path.Combine(Program.tempPathInstance, rawName + ".faeszip");
             try
             {
+                setNoteLabel("Encrypting... Please wait.", 0);
+
+                _inProgress = true;
+                _encryptSuccessful = false;
+
                 while (!backgroundEncrypt.CancellationPending)
                 {
-                    _inProgress = true;
-                    string tempFolderName = "";
-                    setNoteLabel("Encrypting... Please wait.", 0);
-                    if (Program.doEncryptFile)
-                    {
-                        if (!Directory.Exists(Path.Combine(Program.tempPathInstance))) Directory.CreateDirectory(Path.Combine(Program.tempPathInstance));
-
-                        using (ZipArchive zip = ZipFile.Open(Path.Combine(Program.tempPathInstance, rawName) + ".faeszip", ZipArchiveMode.Create))
-                        {
-                            zip.CreateEntryFromFile(_fileToEncrypt, rawName);
-                            zip.Dispose();
-                        }
-                    }
-                    else
-                    {
-                        tempFolderName = core.tempFolderNameGen(rawName.Substring(0, rawName.Length - Path.GetExtension(rawName).Length));
-                        if (Directory.Exists(Path.Combine(Program.tempPathInstance, tempFolderName))) Directory.Delete(Path.Combine(Program.tempPathInstance, tempFolderName), true);
-                        core.DirectoryCopy(_fileToEncrypt, Path.Combine(Program.tempPathInstance, tempFolderName, rawName), true);
-                        ZipFile.CreateFromDirectory(Path.Combine(Program.tempPathInstance, tempFolderName), Path.Combine(Program.tempPathInstance, rawName) + ".faeszip");
-                    }
-
-                    aes.AES_Encrypt(Path.Combine(Program.tempPathInstance, rawName) + ".faeszip", passwordInput.Text, Path.Combine(Program.tempPathInstance, rawName.Substring(0, rawName.Length - Path.GetExtension(rawName).Length) + ".faes"));
-                    setNoteLabel("Encrypting...", 0);
-                    if (File.Exists(fileToDelete))
-                        File.Delete(fileToDelete);
-                    if (Program.doEncryptFile) File.Move(Path.Combine(Program.tempPathInstance, rawName.Substring(0, rawName.Length - Path.GetExtension(rawName).Length) + ".faes"), Path.Combine(Directory.GetParent(_fileToEncrypt).FullName, rawName.Substring(0, rawName.Length - Path.GetExtension(rawName).Length) + ".faes"));
-                    if (Directory.Exists(Path.Combine(Program.tempPathInstance, tempFolderName))) Directory.Delete(Path.Combine(Program.tempPathInstance, tempFolderName), true);
-                    if (Program.doEncryptFolder && Directory.Exists(Path.Combine(Program.tempPathInstance, tempFolderName))) Directory.Delete(Path.Combine(Program.tempPathInstance, tempFolderName), true);
-                    if (Program.doEncryptFile) File.Delete(_fileToEncrypt);
-                    else Directory.Delete(_fileToEncrypt, true);
-                    if (Program.doEncryptFolder) File.Move(Path.Combine(Program.tempPathInstance, rawName.Substring(0, rawName.Length - Path.GetExtension(rawName).Length) + ".faes"), Path.Combine(Directory.GetParent(_fileToEncrypt).FullName, rawName.Substring(0, rawName.Length - Path.GetExtension(rawName).Length) + ".faes"));
-                    File.SetAttributes(rawName.Substring(0, rawName.Length - Path.GetExtension(rawName).Length) + ".faes", FileAttributes.Encrypted);
+                    fileAES = new FAES_File(_fileToEncrypt, passwordInput.Text, ref _encryptSuccessful);
+                    backgroundEncrypt.CancelAsync();
                 }
-                backgroundEncrypt.CancelAsync();
             }
-            finally
+            catch (Exception e)
             {
-                if (File.Exists(fileToDelete))
-                    File.Delete(fileToDelete);
+                setNoteLabel(FileAES_Utilities.FAES_ExceptionHandling(e), 3);
             }
         }
 
@@ -115,9 +89,13 @@ namespace FileAES
 
         private void backgroundEncrypt_Complete(object sender, RunWorkerCompletedEventArgs e)
         {
-            setNoteLabel("Done!", 0);
             _inProgress = false;
-            Application.Exit();
+
+            if (_encryptSuccessful)
+            {
+                setNoteLabel("Done!", 0);
+                Application.Exit();
+            }
         }
 
         private void runtime_Tick(object sender, EventArgs e)
@@ -149,7 +127,6 @@ namespace FileAES
                         {
                             if (File.Exists(Path.Combine(Path.GetDirectoryName(_fileToEncrypt), fileName.Text) + ".faeszip")) File.Delete(Path.Combine(Path.GetDirectoryName(_fileToEncrypt), fileName.Text) + ".faeszip");
                             if (File.Exists(Path.Combine(Path.GetDirectoryName(_fileToEncrypt), fileName.Text) + ".faeszip")) File.Delete(Path.Combine(Path.GetDirectoryName(_fileToEncrypt), fileName.Text) + ".faeszip");
-
                         }
                         else if (Program.doEncryptFolder)
                         {
@@ -168,9 +145,7 @@ namespace FileAES
                 update.Dispose();
             }
             else
-            {
                 Directory.Delete(Program.tempPathInstance, true);
-            }
         }
 
         private void versionLabel_Click(object sender, EventArgs e)
@@ -181,10 +156,8 @@ namespace FileAES
         protected override bool ProcessDialogKey(Keys keyData)
         {
             if (Form.ModifierKeys == Keys.None && keyData == Keys.Escape)
-            {
                 Application.Exit();
-                return true;
-            }
+
             return base.ProcessDialogKey(keyData);
         }
     }

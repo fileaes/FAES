@@ -53,7 +53,7 @@ namespace FileAES_CLI
 
             if (_purgeTemp)
             {
-                if (Directory.Exists(Path.Combine(Path.GetTempPath(), "FileAES"))) Directory.Delete(Path.Combine(Path.GetTempPath(), "FileAES"), true);
+                FileAES_Utilities.PurgeTempFolder();
             }
 
             if (String.IsNullOrEmpty(_directory))

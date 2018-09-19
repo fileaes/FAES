@@ -1,31 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.IO.Compression;
-using System.Threading;
+using FAES;
 
 namespace FileAES
 {
     public partial class FileAES_Decrypt : Form
     {
         Core core = new Core();
-        SecureAES aes = new SecureAES();
+        FAES_File fileAES;
         FileAES_Update update = new FileAES_Update();
+
         private bool _inProgress = false;
-        private string _fileToDecrypt;
-        private string _autoPassword;
+        private bool _decryptSuccessful;
+        private string _fileToDecrypt, _autoPassword;
 
         public FileAES_Decrypt(string file, string password = null)
         {
             if (!String.IsNullOrEmpty(file)) _fileToDecrypt = file;
-            else throw new System.ArgumentException("Parameter cannot be null", "file");
+            else throw new ArgumentException("Parameter cannot be null", "file");
             InitializeComponent();
             versionLabel.Text = core.getVersionInfo();
             if (Program.doDecrypt) fileName.Text = Path.GetFileName(_fileToDecrypt);
@@ -58,33 +52,31 @@ namespace FileAES
 
         private void setNoteLabel(string note, int severity)
         {
-            noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Note: " + note; }));
+            if (severity == 1) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Warning: " + note; }));
+            else if (severity == 2) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Important: " + note; }));
+            else if (severity == 3) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Error: " + note; }));
+            else noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Note: " + note; }));
         }
 
         private void doDecrypt()
         {
-            while (!backgroundDecrypt.CancellationPending)
+            try
             {
-                _inProgress = true;
                 setNoteLabel("Decrypting... Please wait.", 0);
 
-                if (!core.isFileLegacy(_fileToDecrypt))
-                    aes.AES_Decrypt(_fileToDecrypt, passwordInput.Text, _fileToDecrypt.Replace(".faes", ".faeszip"));
-                else
-                    aes.AES_Decrypt(_fileToDecrypt, passwordInput.Text, _fileToDecrypt.Replace(".mcrypt", ".faeszip"));
+                _inProgress = true;
+                _decryptSuccessful = false;
 
-                Thread.Sleep(1000);
-                File.SetAttributes(Path.Combine(Directory.GetParent(_fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".faeszip"), FileAttributes.Hidden);                
-                if (aes.getLastError() != "decryptIncorrectPassword")
+                while (!backgroundDecrypt.CancellationPending)
                 {
-                    ZipFile.ExtractToDirectory(Path.Combine(Directory.GetParent(_fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".faeszip"), Directory.GetParent(_fileToDecrypt).FullName);
-                    File.SetAttributes(Directory.GetParent(_fileToDecrypt).FullName, FileAttributes.Hidden);
-                    File.Delete(Path.Combine(Directory.GetParent(_fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".faeszip"));
-                    File.Delete(_fileToDecrypt);
-                    File.SetAttributes(Directory.GetParent(_fileToDecrypt).FullName, FileAttributes.Normal);
+                    fileAES = new FAES_File(_fileToDecrypt, passwordInput.Text, ref _decryptSuccessful);
+                    backgroundDecrypt.CancelAsync();
                 }
             }
-            backgroundDecrypt.CancelAsync();
+            catch (Exception e)
+            {
+                setNoteLabel(FileAES_Utilities.FAES_ExceptionHandling(e), 3);
+            }
         }
 
         private void backgroundDecrypt_DoWork(object sender, DoWorkEventArgs e)
@@ -95,9 +87,8 @@ namespace FileAES
         private void backgroundDecrypt_Complete(object sender, RunWorkerCompletedEventArgs e)
         {
             _inProgress = false;
-            if (aes.getLastError() == "decryptSuccess") setNoteLabel("Done!", 0);
-            if (aes.getLastError() == "decryptIncorrectPassword") setNoteLabel("Password Incorrect!", 3);
-            else Application.Exit();
+            if (_decryptSuccessful) Application.Exit();
+            else setNoteLabel("Password Incorrect!", 3);
         }
 
         private void runtime_Tick(object sender, EventArgs e)
@@ -147,10 +138,8 @@ namespace FileAES
         protected override bool ProcessDialogKey(Keys keyData)
         {
             if (Form.ModifierKeys == Keys.None && keyData == Keys.Escape)
-            {
                 Application.Exit();
-                return true;
-            }
+
             return base.ProcessDialogKey(keyData);
         }
     }

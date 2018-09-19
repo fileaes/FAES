@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("FileAES")]
-[assembly: AssemblyDescription("A tool used to encrypt and decrypt files or folders using SecureAES.")]
+[assembly: AssemblyTitle("FileAES-Legacy")]
+[assembly: AssemblyDescription("A tool used to encrypt and decrypt files or folders using FAES.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("mullak99")]
-[assembly: AssemblyProduct("FileAES")]
+[assembly: AssemblyProduct("FileAES-Legacy")]
 [assembly: AssemblyCopyright("Copyright © 2018 | mullak99")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.1.0.0")]
-[assembly: AssemblyFileVersion("1.1.0.0")]
+[assembly: AssemblyVersion("1.2.0.0")]
+[assembly: AssemblyFileVersion("1.2.0.0")]
