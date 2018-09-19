@@ -1,6 +1,6 @@
 ﻿namespace FAES_GUI.MenuPanels
 {
-    partial class AutoSelectPanel
+    partial class encryptPanel
     {
         /// <summary> 
         /// Required designer variable.
@@ -30,11 +30,12 @@
         {
             this.SuspendLayout();
             // 
-            // AutoSelectPanel
+            // encryptPanel
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Name = "AutoSelectPanel";
+            this.BackColor = System.Drawing.SystemColors.ControlDark;
+            this.Name = "encryptPanel";
             this.Size = new System.Drawing.Size(494, 380);
             this.ResumeLayout(false);
 

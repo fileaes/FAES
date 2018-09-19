@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace FAES_GUI.MenuPanels
 {
-    public partial class AutoSelectPanel : UserControl
+    public partial class autoPanel : UserControl
     {
-        public AutoSelectPanel()
+        public autoPanel()
         {
             InitializeComponent();
         }

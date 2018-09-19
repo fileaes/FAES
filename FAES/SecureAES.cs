@@ -13,7 +13,7 @@ namespace SecureAES
     {
         protected byte[] _specifiedSalt;
 
-        private const string _faesCBCModeIdentifier = "FAESv2-CBC";
+        private const string _faesCBCModeIdentifier = "FAESv1-CBC";
 
         public SecureAES(byte[] salt = null)
         {
