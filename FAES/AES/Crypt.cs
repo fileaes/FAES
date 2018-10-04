@@ -1,38 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
 using CoreChecksums;
 
-namespace SecureAES
+namespace FAES.AES
 {
-    public class SecureAES
+    public class Crypt
     {
         protected byte[] _specifiedSalt;
 
-        private const string _faesCBCModeIdentifier = "FAESv1-CBC";
+        private const string _faesCBCModeIdentifier = "FAESv2-CBC";
 
-        public SecureAES(byte[] salt = null)
+        public Crypt(byte[] salt = null)
         {
             if (salt != null) _specifiedSalt = salt;
         }
 
-        public string CreateRandomPassword(int length)
-        {
-            const string valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-=_+[]{}:;@'~#,<.>/?`¬!$%^&*()";
-            StringBuilder res = new StringBuilder();
-            Random rnd = new Random();
-            while (0 < length--)
-            {
-                res.Append(valid[rnd.Next(valid.Length)]);
-            }
-            return res.ToString();
-        }
-
-        public static byte[] GenerateRandomSalt()
+        private static byte[] GenerateRandomSalt()
         {
             byte[] data = new byte[32];
 
@@ -46,11 +31,14 @@ namespace SecureAES
             return data;
         }
 
-        public bool AES_Encrypt(string inputFile, string password)
+        public bool Encrypt(string inputFile, string password, string passwordHint = null)
         {
+            if (String.IsNullOrEmpty(passwordHint)) passwordHint = "No Password Hint Set";
+            MetaDataFAES fMD = new MetaDataFAES(passwordHint);
             string outputName;
             byte[] hash = Checksums.getSHA1(inputFile);
             byte[] salt = GenerateRandomSalt();
+            byte[] metaData = fMD.getMetaData();
 
             if (inputFile.Contains(".faeszip")) outputName = inputFile.Replace(".faeszip", "");
             else outputName = inputFile;
@@ -77,6 +65,7 @@ namespace SecureAES
             fsCrypt.Write(hash, 0, hash.Length);
             fsCrypt.Write(salt, 0, salt.Length);
             fsCrypt.Write(faesCBCMode, 0, faesCBCMode.Length);
+            fsCrypt.Write(metaData, 0, metaData.Length);
 
             CryptoStream cs = new CryptoStream(fsCrypt, AES.CreateEncryptor(), CryptoStreamMode.Write);
 
@@ -97,20 +86,60 @@ namespace SecureAES
             return true;
         }
 
-        public bool AES_Decrypt(string inputFile, string password, bool isValidationTool = false)
+        private FileStream DecryptModeHandler(FileStream fsCrypt, ref byte[] dHash, ref byte[] dSalt, ref byte[] dFaesMode, ref byte[] dMetaData, ref CipherMode cipherMode, bool hideWriteLine = false)
         {
-            if (Path.GetExtension(inputFile) == ".faes")
+            byte[] hash = new byte[20];
+            byte[] salt = new byte[32];
+            byte[] faesCBCMode = new byte[10];
+            byte[] metaData = new byte[256];
+
+            fsCrypt.Read(hash, 0, hash.Length);
+            fsCrypt.Read(salt, 0, salt.Length);
+            fsCrypt.Read(faesCBCMode, 0, faesCBCMode.Length);
+            fsCrypt.Read(metaData, 0, metaData.Length);
+
+            dHash = hash;
+            dSalt = salt;
+            dFaesMode = faesCBCMode;
+            dMetaData = metaData;
+
+            switch (Encoding.UTF8.GetString(faesCBCMode))
+            {
+                case "FAESv2-CBC":
+                    cipherMode = CipherMode.CBC;
+                    if (!hideWriteLine) Console.WriteLine("FAESv2 Identifier Detected! Decrypting using FAESv2 Mode.");
+                    dMetaData = metaData;
+                    break;
+                case "FAESv1-CBC":
+                    cipherMode = CipherMode.CBC;
+                    if (!hideWriteLine) Console.WriteLine("FAESv1 Identifier Detected! Decrypting using FAESv1 Mode.");
+                    fsCrypt.Position = hash.Length + salt.Length + faesCBCMode.Length;
+                    break;
+                default:
+                    cipherMode = CipherMode.CFB;
+                    if (!hideWriteLine) Console.WriteLine("Version Identifier not found! Decrypting using Legacy Mode.");
+                    fsCrypt.Position = hash.Length + salt.Length;
+                    break;
+            }
+
+            return fsCrypt;
+        }
+
+        public bool Decrypt(string inputFile, string password)
+        {
+            if (Path.GetExtension(inputFile) == ".faes" || Path.GetExtension(inputFile) == ".mcrypt")
             {
                 string outputName;
+                CipherMode cipher = CipherMode.CBC;
                 byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
                 byte[] hash = new byte[20];
                 byte[] salt = new byte[32];
                 byte[] faesCBCMode = new byte[10];
+                byte[] faesMetaData = new byte[256];
 
                 FileStream fsCrypt = new FileStream(inputFile, FileMode.Open);
-                fsCrypt.Read(hash, 0, hash.Length);
-                fsCrypt.Read(salt, 0, salt.Length);
-                fsCrypt.Read(faesCBCMode, 0, faesCBCMode.Length);
+
+                fsCrypt = DecryptModeHandler(fsCrypt, ref hash, ref salt, ref faesCBCMode, ref faesMetaData, ref cipher);
 
                 RijndaelManaged AES = new RijndaelManaged();
                 AES.KeySize = 256;
@@ -119,25 +148,16 @@ namespace SecureAES
                 AES.Key = key.GetBytes(AES.KeySize / 8);
                 AES.IV = key.GetBytes(AES.BlockSize / 8);
                 AES.Padding = PaddingMode.PKCS7;
+                AES.Mode = cipher;
 
-                if (Encoding.UTF8.GetString(faesCBCMode) == _faesCBCModeIdentifier)
-                {
-                    AES.Mode = CipherMode.CBC;
-                    Console.WriteLine("FAESv1 Identifier Detected! Decrypting using FAESv1 Mode.");
-                }
-                else
-                {
-                    AES.Mode = CipherMode.CFB;
-                    Console.WriteLine("Version Identifier not found! Decrypting using Legacy Mode.");
-                    fsCrypt.Seek(-(faesCBCMode.Length), SeekOrigin.Current);
-                }
-                
                 try
                 {
                     CryptoStream cs = new CryptoStream(fsCrypt, AES.CreateDecryptor(), CryptoStreamMode.Read);
 
-                    outputName = inputFile.Replace(".faes", ".faeszip");
-                    if (isValidationTool) outputName += ".faesvalidation";
+                    if (Path.GetExtension(inputFile) == ".faes")
+                        outputName = inputFile.Replace(".faes", ".faeszip");
+                    else
+                        outputName = inputFile.Replace(".mcrypt", ".faeszip");
 
                     try
                     {
@@ -157,7 +177,7 @@ namespace SecureAES
                         {
                             fsOut.Close();
                         }
-                        
+
                         cs.Close();
                         fsOut.Close();
                         fsCrypt.Close();
@@ -181,6 +201,32 @@ namespace SecureAES
                 }
             }
 
+            return false;
+        }
+
+        public bool GetPasswordHint(string inputFile, ref string PasswordHint)
+        {
+            if (Path.GetExtension(inputFile) == ".faes" || Path.GetExtension(inputFile) == ".mcrypt")
+            {
+                CipherMode cipher = CipherMode.CBC;
+                byte[] hash = new byte[20];
+                byte[] salt = new byte[32];
+                byte[] faesCBCMode = new byte[10];
+                byte[] faesMetaData = new byte[256];
+
+                FileStream fsCrypt = new FileStream(inputFile, FileMode.Open);
+                fsCrypt = DecryptModeHandler(fsCrypt, ref hash, ref salt, ref faesCBCMode, ref faesMetaData, ref cipher, true);
+                fsCrypt.Close();
+
+                if (Encoding.UTF8.GetString(faesCBCMode) == "FAESv2-CBC")
+                {
+                    MetaDataFAES fMD = new MetaDataFAES(faesMetaData);
+                    PasswordHint = fMD.getPasswordHint();
+                }
+                else PasswordHint = "No Password Hint Set";
+
+                return true;
+            }
             return false;
         }
     }

@@ -15,6 +15,7 @@ namespace FileAES_CLI
         private static bool _purgeTemp = false;
         private static bool _help = false;
         private static string _directory = null;
+        private static string _passwordHint = null;
         private static string _password;
         private static List<string> _strippedArgs = new List<string>();
 
@@ -36,7 +37,8 @@ namespace FileAES_CLI
                 if (strippedArg == "verbose" || strippedArg == "v") _verbose = true;
                 else if (strippedArg == "password" || strippedArg == "p" && !string.IsNullOrEmpty(args[i + 1])) _password = args[i + 1];
                 else if (strippedArg == "purgetemp" || strippedArg == "deletetemp") _purgeTemp = true;
-                else if (strippedArg == "help" || strippedArg == "h") _help = true;
+                else if (strippedArg == "help") _help = true;
+                else if (strippedArg == "hint" || strippedArg == "passwordhint" || strippedArg == "h" && !string.IsNullOrEmpty(args[i + 1])) _passwordHint = args[i + 1];
 
                 _strippedArgs.Add(strippedArg);
             }
@@ -115,17 +117,27 @@ namespace FileAES_CLI
 
                 try
                 {
-                    fileAES = new FAES_File(_directory, _password, ref successful);
+                    fileAES = new FAES_File(_directory, _password, ref successful, _passwordHint);
 
                     if (successful) Console.WriteLine("{0}ion on {1} succeded!", fileAES.getOperation(), fileAES.getFaesType().ToLower());
                     else Console.WriteLine("{0}ion on {1} failed!", fileAES.getOperation(), fileAES.getFaesType().ToLower());
 
-                    if (!successful && fileAES.isFileDecryptable()) Console.WriteLine("Ensure that you entered the correct password!");
+                    if (!successful && fileAES.isFileDecryptable())
+                    {
+                        Console.WriteLine("Ensure that you entered the correct password!");
+                        Console.WriteLine("Password Hint: {0}", fileAES.getPasswordHint());
+                    }
 
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(FileAES_Utilities.FAES_ExceptionHandling(e));
+                    if (!_verbose)
+                        Console.WriteLine(FileAES_Utilities.FAES_ExceptionHandling(e));
+                    else
+                    {
+                        Console.WriteLine("Verbose Mode: Showing Full Exception...");
+                        Console.WriteLine(e.ToString());
+                    }
                 }
             }
         }

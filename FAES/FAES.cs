@@ -2,10 +2,8 @@
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Threading;
 using CoreChecksums;
-using SecureAES;
+using FAES.AES;
 
 namespace FAES
 {
@@ -25,7 +23,7 @@ namespace FAES
             FOLDER
         };
 
-        protected string _filePath, _password, _fileName, _fullPath;
+        protected string _filePath, _password, _fileName, _fullPath, _passwordHint;
         protected Operation _op = Operation.NULL;
         protected FAES_Type _type = FAES_Type.NULL;
         protected string _sha1Hash;
@@ -40,13 +38,16 @@ namespace FAES
             else throw new FileNotFoundException();
         }
 
-        public FAES_File(string filePath, string password, ref bool success)
+        public FAES_File(string filePath, string password, ref bool success, string passwordHint = null)
         {
             if (File.Exists(filePath) || Directory.Exists(filePath))
             {
                 _filePath = filePath;
                 _password = password;
+                _passwordHint = passwordHint;
                 Initialise();
+
+                if (isFileDecryptable()) _passwordHint = FileAES_Utilities.GetPasswordHint(_filePath);
             }
             else throw new FileNotFoundException();
 
@@ -69,7 +70,7 @@ namespace FAES
                 if (isFileEncryptable())
                 {
                     Console.WriteLine("Encrypting '{0}'...", _filePath);
-                    FileAES_Encrypt encrypt = new FileAES_Encrypt(new FAES_File(_filePath), _password);
+                    FileAES_Encrypt encrypt = new FileAES_Encrypt(new FAES_File(_filePath), _password, _passwordHint);
                     success = encrypt.encryptFile();
                 }
                 else if (isFileDecryptable())
@@ -102,10 +103,7 @@ namespace FAES
         {
             if (_op == Operation.NULL)
             {
-                if (Path.GetExtension(getPath()) == ".mcrypt")
-                    Path.ChangeExtension(getPath(), ".faes");
-
-                if (Path.GetExtension(getPath()) == ".faes")
+                if (Path.GetExtension(getPath()) == ".faes" || Path.GetExtension(getPath()) == ".mcrypt")
                     _op = Operation.DECRYPT;
                 else
                     _op = Operation.ENCRYPT;
@@ -176,21 +174,27 @@ namespace FAES
             if (_op == Operation.ENCRYPT) return "Encrypt";
             else return "Decrypt";
         }
+
+        public string getPasswordHint()
+        {
+            return _passwordHint;
+        }
     }
 
     public class FileAES_Encrypt
     {
         protected string tempPath = FileAES_Utilities.getDynamicTempFolder("Encrypt");
         protected FAES_File _file;
-        protected string _password;
-        protected SecureAES.SecureAES aes = new SecureAES.SecureAES();
+        protected string _password, _passwordHint;
+        protected Crypt crypt = new Crypt();
 
-        public FileAES_Encrypt(FAES_File file, string password)
+        public FileAES_Encrypt(FAES_File file, string password, string passwordHint = null)
         {
             if (file.isFileEncryptable())
             {
                 _file = file;
                 _password = password;
+                _passwordHint = passwordHint;
             }
             else throw new Exception("This filetype cannot be encrypted!");
         }
@@ -229,7 +233,7 @@ namespace FAES
 
                 try
                 {
-                    success = aes.AES_Encrypt(Path.Combine(tempPath, _file.getFileName()) + ".faeszip", _password);
+                    success = crypt.Encrypt(Path.Combine(tempPath, _file.getFileName()) + ".faeszip", _password, _passwordHint);
                 }
                 catch
                 {
@@ -278,7 +282,7 @@ namespace FAES
         protected string tempPath = FileAES_Utilities.getDynamicTempFolder("Decrypt");
         protected FAES_File _file;
         protected string _password;
-        protected SecureAES.SecureAES aes = new SecureAES.SecureAES();
+        protected Crypt crypt = new Crypt();
 
         public FileAES_Decrypt(FAES_File file, string password)
         {
@@ -294,7 +298,7 @@ namespace FAES
         {
             bool success = false;
 
-            success = aes.AES_Decrypt(_file.getPath(), _password);
+            success = crypt.Decrypt(_file.getPath(), _password);
 
             File.SetAttributes(Path.Combine(Directory.GetParent(_file.getPath()).FullName, _file.getFileName().Substring(0, _file.getFileName().Length - Path.GetExtension(_file.getFileName()).Length) + ".faeszip"), FileAttributes.Hidden);
 
@@ -326,6 +330,14 @@ namespace FAES
             if (File.Exists(Path.ChangeExtension(_file.getPath(), "faeszip"))) File.Delete(Path.ChangeExtension(_file.getPath(), "faeszip"));
 
             return success;
+        }
+
+        public string getPasswordHint()
+        {
+            string passwordHint = "";
+            crypt.GetPasswordHint(_file.getPath(), ref passwordHint);
+
+            return passwordHint;
         }
     }
 
@@ -366,6 +378,16 @@ namespace FAES
         public static void PurgeTempFolder()
         {
             if (Directory.Exists(Path.Combine(Path.GetTempPath(), "FileAES"))) Directory.Delete(Path.Combine(Path.GetTempPath(), "FileAES"), true);
+        }
+
+        public static string GetPasswordHint(string filePath)
+        {
+            string passwordHint = "";
+
+            Crypt crypt = new Crypt();
+            crypt.GetPasswordHint(filePath, ref passwordHint);
+
+            return passwordHint;
         }
 
         public static string FAES_ExceptionHandling(Exception e)
