@@ -42,6 +42,8 @@
             this.fileName = new System.Windows.Forms.Label();
             this.copyrightLabel = new System.Windows.Forms.Label();
             this.versionLabel = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.hintInput = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // pathLabel
@@ -92,10 +94,10 @@
             // encryptButton
             // 
             this.encryptButton.Enabled = false;
-            this.encryptButton.Location = new System.Drawing.Point(12, 129);
+            this.encryptButton.Location = new System.Drawing.Point(12, 170);
             this.encryptButton.Name = "encryptButton";
             this.encryptButton.Size = new System.Drawing.Size(228, 23);
-            this.encryptButton.TabIndex = 6;
+            this.encryptButton.TabIndex = 7;
             this.encryptButton.Text = "Encrypt";
             this.encryptButton.UseVisualStyleBackColor = true;
             this.encryptButton.Click += new System.EventHandler(this.encryptButton_Click);
@@ -117,7 +119,7 @@
             this.noteLabel.AutoSize = true;
             this.noteLabel.BackColor = System.Drawing.SystemColors.Control;
             this.noteLabel.ForeColor = System.Drawing.Color.Black;
-            this.noteLabel.Location = new System.Drawing.Point(9, 108);
+            this.noteLabel.Location = new System.Drawing.Point(9, 149);
             this.noteLabel.Name = "noteLabel";
             this.noteLabel.Size = new System.Drawing.Size(235, 13);
             this.noteLabel.TabIndex = 7;
@@ -138,7 +140,7 @@
             // copyrightLabel
             // 
             this.copyrightLabel.AutoSize = true;
-            this.copyrightLabel.Location = new System.Drawing.Point(165, 155);
+            this.copyrightLabel.Location = new System.Drawing.Point(165, 196);
             this.copyrightLabel.Name = "copyrightLabel";
             this.copyrightLabel.Size = new System.Drawing.Size(88, 13);
             this.copyrightLabel.TabIndex = 18;
@@ -146,19 +148,40 @@
             // 
             // versionLabel
             // 
-            this.versionLabel.Location = new System.Drawing.Point(-1, 155);
+            this.versionLabel.Location = new System.Drawing.Point(-1, 196);
             this.versionLabel.Name = "versionLabel";
             this.versionLabel.Size = new System.Drawing.Size(160, 13);
             this.versionLabel.TabIndex = 19;
             this.versionLabel.Text = "v0.0.0.0";
             this.versionLabel.Click += new System.EventHandler(this.versionLabel_Click);
             // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(12, 108);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(53, 26);
+            this.label1.TabIndex = 20;
+            this.label1.Text = "Password\r\nHint:";
+            // 
+            // hintInput
+            // 
+            this.hintInput.Location = new System.Drawing.Point(74, 108);
+            this.hintInput.MaxLength = 64;
+            this.hintInput.Multiline = true;
+            this.hintInput.Name = "hintInput";
+            this.hintInput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.hintInput.Size = new System.Drawing.Size(167, 26);
+            this.hintInput.TabIndex = 6;
+            // 
             // FileAES_Encrypt
             // 
             this.AcceptButton = this.encryptButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(252, 169);
+            this.ClientSize = new System.Drawing.Size(252, 211);
+            this.Controls.Add(this.hintInput);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.versionLabel);
             this.Controls.Add(this.copyrightLabel);
             this.Controls.Add(this.fileName);
@@ -196,5 +219,7 @@
         private System.Windows.Forms.Label fileName;
         private System.Windows.Forms.Label copyrightLabel;
         private System.Windows.Forms.Label versionLabel;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox hintInput;
     }
 }

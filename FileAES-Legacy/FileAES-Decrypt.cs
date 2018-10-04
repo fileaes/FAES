@@ -31,6 +31,7 @@ namespace FileAES
         private void FileAES_Decrypt_Load(object sender, EventArgs e)
         {
             update.checkForUpdate();
+            hintTextbox.Text = FileAES_Utilities.GetPasswordHint(_fileToDecrypt);
 
             if (_autoPassword != null && _autoPassword.Length > 3)
             {

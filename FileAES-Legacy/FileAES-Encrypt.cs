@@ -72,7 +72,7 @@ namespace FileAES
 
                 while (!backgroundEncrypt.CancellationPending)
                 {
-                    fileAES = new FAES_File(_fileToEncrypt, passwordInput.Text, ref _encryptSuccessful);
+                    fileAES = new FAES_File(_fileToEncrypt, passwordInput.Text, ref _encryptSuccessful, hintInput.Text);
                     backgroundEncrypt.CancelAsync();
                 }
             }
