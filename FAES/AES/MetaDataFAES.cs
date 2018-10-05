@@ -1,56 +1,84 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace FAES.AES
 {
     internal class MetaDataFAES
     {
         protected byte[] _passwordHint;
+        protected byte[] _encryptionTimestamp;
 
+        /// <summary>
+        /// Converts various pieces of MetaData into easy-to-manage method calls
+        /// </summary>
+        /// <param name="passwordHint">Password Hint</param>
         public MetaDataFAES(string passwordHint)
         {
             _passwordHint = ConvertStringToBytes(passwordHint);
+            _encryptionTimestamp = BitConverter.GetBytes((int)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds);
         }
 
+        /// <summary>
+        /// Converts FAESv2 MetaData into easy-to-manage method calls
+        /// </summary>
+        /// <param name="metaData">Raw FAESv2 MetaData</param>
         public MetaDataFAES(byte[] metaData)
         {
             _passwordHint = metaData.Take(64).ToArray();
+            _encryptionTimestamp = metaData.Skip(64).Take(4).ToArray();
         }
 
-        private byte[] ConvertStringToBytes(string value)
-        {
-            if (value.Length > 64)
-                return Encoding.UTF8.GetBytes(value.Substring(0, 64));
-            else
-                return Encoding.UTF8.GetBytes(value.PadRight(64, '¬'));
-        }
-
+        /// <summary>
+        /// Gets the Password Hint
+        /// </summary>
+        /// <returns>Password Hint stored in MetaData</returns>
         public string getPasswordHint()
         {
-            return Encoding.UTF8.GetString(_passwordHint).Replace("¬", "");
+            if (_passwordHint != null)
+                return Encoding.UTF8.GetString(_passwordHint).Replace("¬", "");
+            else
+                return null;
         }
 
-        private byte[] Combine(params byte[][] arrays)
+        /// <summary>
+        /// Gets the UNIX timestamp of when the file was encrypted (UTC time)
+        /// </summary>
+        /// <returns>UNIX timestamp (UTC)</returns>
+        public int getEncryptionTimestamp()
         {
-            byte[] ret = new byte[arrays.Sum(x => x.Length)];
-            int offset = 0;
-            foreach (byte[] data in arrays)
-            {
-                Buffer.BlockCopy(data, 0, ret, offset, data.Length);
-                offset += data.Length;
-            }
-            return ret;
+            if (_encryptionTimestamp != null)
+                return BitConverter.ToInt32(_encryptionTimestamp, 0);
+            else
+                return -1;
         }
 
+        /// <summary>
+        /// Gets raw metadata
+        /// </summary>
+        /// <returns>MetaData byte array (256 bytes)</returns>
         public byte[] getMetaData()
         {
             byte[] formedMetaData = new byte[256];
             Buffer.BlockCopy(_passwordHint, 0, formedMetaData, 0, _passwordHint.Length);
+            Buffer.BlockCopy(_encryptionTimestamp, 0, formedMetaData, 64, _encryptionTimestamp.Length);
 
             return formedMetaData;
+        }
+
+        /// <summary>
+        /// Converts a string into a padded/truncated byte array
+        /// </summary>
+        /// <param name="value">String to convert</param>
+        /// <param name="maxLength">Max length of the string</param>
+        /// <param name="paddingChar">Character used to pad the string if required</param>
+        /// <returns></returns>
+        private byte[] ConvertStringToBytes(string value, int maxLength = 64, char paddingChar = '¬')
+        {
+            if (value.Length > maxLength)
+                return Encoding.UTF8.GetBytes(value.Substring(0, maxLength));
+            else
+                return Encoding.UTF8.GetBytes(value.PadRight(maxLength, paddingChar));
         }
     }
 }

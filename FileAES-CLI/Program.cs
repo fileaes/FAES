@@ -14,6 +14,8 @@ namespace FileAES_CLI
         private static bool _verbose = false;
         private static bool _purgeTemp = false;
         private static bool _help = false;
+        private static bool _getHint = false;
+        private static bool _getEncryptTimestamp = false;
         private static string _directory = null;
         private static string _passwordHint = null;
         private static string _password;
@@ -23,22 +25,22 @@ namespace FileAES_CLI
         {
             for (int i = 0; i < args.Length; i++)
             {
-                args[i].ToLower();
-
-                string strippedArg = args[i];
+                string strippedArg = args[i].ToLower();
 
                 if (Directory.Exists(args[i])) _directory = args[i];
                 else if (File.Exists(args[i])) _directory = args[i];
 
-                if (args[i][0] == '-') strippedArg = args[i].Replace("-", string.Empty);
-                else if (args[i][0] == '/') strippedArg = args[i].Replace("/", string.Empty);
-                else if (args[i][0] == '\\') strippedArg = args[i].Replace("\\", string.Empty);
+                if (strippedArg[0] == '-') strippedArg = strippedArg.Replace("-", string.Empty);
+                else if (strippedArg[0] == '/') strippedArg = strippedArg.Replace("/", string.Empty);
+                else if (strippedArg[0] == '\\') strippedArg = strippedArg.Replace("\\", string.Empty);
 
                 if (strippedArg == "verbose" || strippedArg == "v") _verbose = true;
-                else if (strippedArg == "password" || strippedArg == "p" && !string.IsNullOrEmpty(args[i + 1])) _password = args[i + 1];
+                else if (String.IsNullOrEmpty(_password) && (strippedArg == "password" || strippedArg == "p") && !string.IsNullOrEmpty(args[i + 1])) _password = args[i + 1];
                 else if (strippedArg == "purgetemp" || strippedArg == "deletetemp") _purgeTemp = true;
                 else if (strippedArg == "help") _help = true;
-                else if (strippedArg == "hint" || strippedArg == "passwordhint" || strippedArg == "h" && !string.IsNullOrEmpty(args[i + 1])) _passwordHint = args[i + 1];
+                else if (String.IsNullOrEmpty(_passwordHint) && (strippedArg == "hint" || strippedArg == "passwordhint" || strippedArg == "h") && !string.IsNullOrEmpty(args[i + 1])) _passwordHint = args[i + 1];
+                else if (strippedArg == "gethint" || strippedArg == "getpasswordhint") _getHint = true;
+                else if (strippedArg == "gettimestamp" || strippedArg == "timestamp" || strippedArg == "encryptiondate") _getEncryptTimestamp = true;
 
                 _strippedArgs.Add(strippedArg);
             }
@@ -46,16 +48,61 @@ namespace FileAES_CLI
             if (_help)
             {
                 Console.WriteLine("A FAES-based tool for encrypting and decrypting files using the command-line.\n\nPossible Launch Parameters:\n'--verbose' or '-v': Show more debugging information in the console (WIP)." +
-                    "\n'--purgeTemp' or '-p': Purge the FileAES Temp folder to resolve possible errors.\n'--password <password>' or '-p <password>': Set the password that will be used to encrypt/decrypt the file/folder.\n\n" +
+                    "\n'--purgeTemp' or '-p': Purge the FileAES Temp folder to resolve possible errors.\n'--password <password>' or '-p <password>': Set the password that will be used to encrypt/decrypt the file/folder." +
+                    "\n'--hint <Password Hint>' or '-h <Password Hint>': Sets a password hint.\n'--getHint': Gets the password hint for the encrypted file.\n'--getTimestamp': Gets the encryption timestamp of the encrypted file.\n\n" +
                     "File/Folder names can be entered as a launch parameter to select what to encrypt/decrypt (also allows for dragging/dropping a file/folder on the .exe).\n\n" +
                     "Example: 'FileAES-CLI.exe File.txt -p password123'");
-
                 return;
             }
 
             if (_purgeTemp)
             {
                 FileAES_Utilities.PurgeTempFolder();
+            }
+
+            if (_getHint)
+            {
+                if (File.Exists(_directory) && FileAES_Utilities.isFileDecryptable(_directory))
+                {
+                    string passHint = FileAES_Utilities.GetPasswordHint(_directory);
+
+                    if (passHint != "No Password Hint Set")
+                        Console.WriteLine("The hint for '{0}' is: {1}", Path.GetFileName(_directory), passHint);
+                    else
+                        Console.WriteLine("'{0}' does not contain a password hint!", Path.GetFileName(_directory));
+
+                    if (String.IsNullOrEmpty(_password) && !_getEncryptTimestamp) return;
+                }
+                else
+                {
+                    Console.WriteLine("You have not specified a valid encrypted file!");
+                    return;
+                }
+            }
+
+            if(_getEncryptTimestamp)
+            {
+                if (File.Exists(_directory) && FileAES_Utilities.isFileDecryptable(_directory))
+                {
+                    int timestamp = FileAES_Utilities.GetEncrpytionTimeStamp(_directory);
+
+                    if (timestamp >= 0)
+                    {
+                        DateTime dateTime = FileAES_Utilities.UnixTimeStampToDateTime((double)timestamp);
+                        Console.WriteLine("'{0}' was encrypted on {1} at {2}.", Path.GetFileName(_directory), dateTime.ToString("dd/MM/yyyy"), dateTime.ToString("HH:mm:ss tt"));
+                    }
+                    else
+                    {
+                        Console.WriteLine("This file does not contain a encryption date. This is likely due to this file being encrypted using an older FAES version.");
+                    }
+
+                    if (String.IsNullOrEmpty(_password)) return;
+                }
+                else
+                {
+                    Console.WriteLine("You have not specified a valid encrypted file!");
+                    return;
+                }
             }
 
             if (String.IsNullOrEmpty(_directory))

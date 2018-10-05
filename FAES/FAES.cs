@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using CoreChecksums;
 using FAES.AES;
 
@@ -9,6 +8,9 @@ namespace FAES
 {
     public class FAES_File
     {
+        /// <summary>
+        /// The appropriate Operation/Action for the FAES File
+        /// </summary>
         protected enum Operation
         {
             NULL,
@@ -16,6 +18,9 @@ namespace FAES
             DECRYPT
         };
 
+        /// <summary>
+        /// The Type of the FAES File
+        /// </summary>
         protected enum FAES_Type
         {
             NULL,
@@ -28,6 +33,10 @@ namespace FAES
         protected FAES_Type _type = FAES_Type.NULL;
         protected string _sha1Hash;
 
+        /// <summary>
+        /// Creates a FAES File using a file path
+        /// </summary>
+        /// <param name="filePath">Path to a file</param>
         public FAES_File(string filePath)
         {
             if (File.Exists(filePath) || Directory.Exists(filePath))
@@ -38,6 +47,13 @@ namespace FAES
             else throw new FileNotFoundException();
         }
 
+        /// <summary>
+        /// Creates a FAES File using a file path and automatically executes the appropriate action (Encrypt/Decrypt)
+        /// </summary>
+        /// <param name="filePath">Path to a file</param>
+        /// <param name="password">Password to encrypt/decrypt the file</param>
+        /// <param name="success">Output of if the action was successful</param>
+        /// <param name="passwordHint">Hint for the password (only used for encryption)</param>
         public FAES_File(string filePath, string password, ref bool success, string passwordHint = null)
         {
             if (File.Exists(filePath) || Directory.Exists(filePath))
@@ -54,6 +70,9 @@ namespace FAES
             Run(ref success);
         }
 
+        /// <summary>
+        /// Initialises/Caches the various methods
+        /// </summary>
         private void Initialise()
         {
             isFolder();
@@ -63,6 +82,10 @@ namespace FAES
             getPath();
         }
 
+        /// <summary>
+        /// Runs the appropriate action (Encrypt/Decrypt)
+        /// </summary>
+        /// <param name="success">Output of if the action was successful</param>
         public void Run(ref bool success)
         {
             if (!String.IsNullOrEmpty(_password))
@@ -87,11 +110,19 @@ namespace FAES
             else throw new Exception("A password has not been set!");
         }
 
+        /// <summary>
+        /// Sets the Password used to encrypt/decrypt the current FAES File
+        /// </summary>
+        /// <param name="password">Chosen Password</param>
         public void setPassword(string password)
         {
             _password = password;
         }
 
+        /// <summary>
+        /// Gets if the chosen FAES File is encryptable
+        /// </summary>
+        /// <returns>If the current FAES File is encryptable</returns>
         public bool isFileEncryptable()
         {
             if (_op == Operation.NULL) isFileDecryptable();
@@ -99,11 +130,15 @@ namespace FAES
             return (_op == Operation.ENCRYPT);
         }
 
+        /// <summary>
+        /// Gets if the chosen FAES File is decryptable
+        /// </summary>
+        /// <returns>If the current FAES File is decryptable</returns>
         public bool isFileDecryptable()
         {
             if (_op == Operation.NULL)
             {
-                if (Path.GetExtension(getPath()) == ".faes" || Path.GetExtension(getPath()) == ".mcrypt")
+                if (FileAES_Utilities.isFileDecryptable(getPath()))
                     _op = Operation.DECRYPT;
                 else
                     _op = Operation.ENCRYPT;
@@ -112,24 +147,34 @@ namespace FAES
             return (_op == Operation.DECRYPT);
         }
 
+        /// <summary>
+        /// Gets the SHA1 hash of the selected FAES File
+        /// </summary>
+        /// <returns>SHA1 Hash of FAES File</returns>
         public string getSHA1()
         {
             if (isFile())
             {
                 if (_sha1Hash == null) _sha1Hash = Checksums.convertHashToString(Checksums.getSHA1(getPath()));
-
                 return _sha1Hash;
             }
             else return null;
         }
 
+        /// <summary>
+        /// Gets the filename of the selected FAES File
+        /// </summary>
+        /// <returns>Filename of FAES File</returns>
         public string getFileName()
         {
             if (_fileName == null) _fileName = Path.GetFileName(getPath());
-
             return _fileName;
         }
 
+        /// <summary>
+        /// Gets if the current FAES File is a folder
+        /// </summary>
+        /// <returns>If the FAES File is a folder</returns>
         public bool isFolder()
         {
             if (_type == FAES_Type.NULL)
@@ -141,40 +186,61 @@ namespace FAES
                 else
                     _type = FAES_Type.FILE;
             }
-
             return (_type == FAES_Type.FOLDER);
-            
         }
 
+        /// <summary>
+        /// Gets if the current FAES File is a file
+        /// </summary>
+        /// <returns>Gets if the current FAES File is a file</returns>
         public bool isFile()
         {
             return !isFolder();
         }
 
+        /// <summary>
+        /// Gets the path of the selected FAES File
+        /// </summary>
+        /// <returns>Path of FAES File</returns>
         public string getPath()
         {
             if (_fullPath == null) _fullPath = Path.GetFullPath(_filePath);
-
             return _fullPath;
         }
 
+        /// <summary>
+        /// Gets the path of the selected FAES File
+        /// </summary>
+        /// <returns>Path of FAES File</returns>
         public override string ToString()
         {
             return getPath();
         }
 
+        /// <summary>
+        /// Gets the FAES Type of the FAES File
+        /// </summary>
+        /// <returns>FAES Type of FAES File</returns>
         public string getFaesType()
         {
             if (_type == FAES_Type.FILE) return "File";
             else return "Folder";
         }
 
+        /// <summary>
+        /// Gets the appropriate Operation/Action for the FAES File
+        /// </summary>
+        /// <returns>Appropriate Operation/Action for the FAES File</returns>
         public string getOperation()
         {
             if (_op == Operation.ENCRYPT) return "Encrypt";
             else return "Decrypt";
         }
 
+        /// <summary>
+        /// Gets the Password Hint for the current file
+        /// </summary>
+        /// <returns>Current files Password Hint</returns>
         public string getPasswordHint()
         {
             return _passwordHint;
@@ -183,11 +249,17 @@ namespace FAES
 
     public class FileAES_Encrypt
     {
-        protected string tempPath = FileAES_Utilities.getDynamicTempFolder("Encrypt");
+        protected string tempPath = FileAES_IntUtilities.getDynamicTempFolder("Encrypt");
         protected FAES_File _file;
         protected string _password, _passwordHint;
         protected Crypt crypt = new Crypt();
 
+        /// <summary>
+        /// Encrypts a selected FAES File using a password
+        /// </summary>
+        /// <param name="file">Encryptable FAES File</param>
+        /// <param name="password">Password to encrypt file</param>
+        /// <param name="passwordHint">Hint for the password</param>
         public FileAES_Encrypt(FAES_File file, string password, string passwordHint = null)
         {
             if (file.isFileEncryptable())
@@ -199,6 +271,10 @@ namespace FAES
             else throw new Exception("This filetype cannot be encrypted!");
         }
 
+        /// <summary>
+        /// Encrypts current file
+        /// </summary>
+        /// <returns>If the encryption was successful</returns>
         public bool encryptFile()
         {
             string fileToDelete = Path.Combine(tempPath, _file.getFileName() + ".faeszip");
@@ -220,9 +296,9 @@ namespace FAES
                     }
                     else
                     {
-                        tempFolderName = FileAES_Utilities.genRandomTempFolder(_file.getFileName().Substring(0, _file.getFileName().Length - Path.GetExtension(_file.getFileName()).Length));
+                        tempFolderName = FileAES_IntUtilities.genRandomTempFolder(_file.getFileName().Substring(0, _file.getFileName().Length - Path.GetExtension(_file.getFileName()).Length));
                         if (Directory.Exists(Path.Combine(tempPath, tempFolderName))) Directory.Delete(Path.Combine(tempPath, tempFolderName), true);
-                        FileAES_Utilities.DirectoryCopy(_file.getPath(), Path.Combine(tempPath, tempFolderName, _file.getFileName()), true);
+                        FileAES_IntUtilities.DirectoryCopy(_file.getPath(), Path.Combine(tempPath, tempFolderName, _file.getFileName()), true);
                         ZipFile.CreateFromDirectory(Path.Combine(tempPath, tempFolderName), Path.Combine(tempPath, _file.getFileName()) + ".faeszip");
                     }
                 }
@@ -279,11 +355,16 @@ namespace FAES
 
     public class FileAES_Decrypt
     {
-        protected string tempPath = FileAES_Utilities.getDynamicTempFolder("Decrypt");
+        protected string tempPath = FileAES_IntUtilities.getDynamicTempFolder("Decrypt");
         protected FAES_File _file;
         protected string _password;
         protected Crypt crypt = new Crypt();
 
+        /// <summary>
+        /// Decrypts a selected FAES File using a password
+        /// </summary>
+        /// <param name="file">Decryptable FAES File</param>
+        /// <param name="password">Password to decrypt file</param>
         public FileAES_Decrypt(FAES_File file, string password)
         {
             if (file.isFileDecryptable())
@@ -294,6 +375,10 @@ namespace FAES
             else throw new Exception("This filetype cannot be decrypted!");
         }
 
+        /// <summary>
+        /// Decrypts current file
+        /// </summary>
+        /// <returns>If the decryption was successful</returns>
         public bool decryptFile()
         {
             bool success = false;
@@ -332,6 +417,10 @@ namespace FAES
             return success;
         }
 
+        /// <summary>
+        /// Gets the Password Hint for the current file
+        /// </summary>
+        /// <returns>Current files Password Hint</returns>
         public string getPasswordHint()
         {
             string passwordHint = "";
@@ -343,22 +432,133 @@ namespace FAES
 
     public class FileAES_Utilities
     {
+        /// <summary>
+        /// Gets if the chosen file is encryptable
+        /// </summary>
+        /// <param name="filePath">Chosen File</param>
+        /// <returns>If the file is encryptable</returns>
+        public static bool isFileEncryptable(string filePath)
+        {
+            return !isFileDecryptable(filePath);
+        }
+        /// <summary>
+        /// Gets if the chosen file is decryptable
+        /// </summary>
+        /// <param name="filePath">Chosen File</param>
+        /// <returns>If the file is decryptable</returns>
+        public static bool isFileDecryptable(string filePath)
+        {
+            if (Path.GetExtension(filePath) == ".faes" || Path.GetExtension(filePath) == ".mcrypt")
+                return true;
+            else
+                return false;
+        }
+
+        /// <summary>
+        /// Recursively Deleted the FileAES Temp folder to fix any potential issues related to lingering files
+        /// </summary>
+        public static void PurgeTempFolder()
+        {
+            if (Directory.Exists(Path.Combine(Path.GetTempPath(), "FileAES"))) Directory.Delete(Path.Combine(Path.GetTempPath(), "FileAES"), true);
+        }
+
+        /// <summary>
+        /// Gets the Password Hint of a chosen encrypted file
+        /// </summary>
+        /// <param name="filePath">Encrypted File</param>
+        /// <returns>Password Hint</returns>
+        public static string GetPasswordHint(string filePath)
+        {
+            string passwordHint = "";
+
+            Crypt crypt = new Crypt();
+            crypt.GetPasswordHint(filePath, ref passwordHint);
+
+            return passwordHint;
+        }
+
+        /// <summary>
+        /// Gets the Encryption Timestamp (UNIX UTC) of when the chosen file was encrypted
+        /// </summary>
+        /// <param name="filePath">Encrypted File</param>
+        /// <returns>Encryption Timestamp (UNIX UTC)</returns>
+        public static int GetEncrpytionTimeStamp(string filePath)
+        {
+            int encryptTimestamp = -1;
+
+            Crypt crypt = new Crypt();
+            crypt.GetEncryptionTimestamp(filePath, ref encryptTimestamp);
+
+            return encryptTimestamp;
+        }
+
+        /// <summary>
+        /// Converts UNIX Timestamp to DateTime
+        /// </summary>
+        /// <param name="unixTimeStamp">UNIX Timestamp</param>
+        /// <returns>Localised DateTime</returns>
+        public static DateTime UnixTimeStampToDateTime(double unixTimeStamp)
+        {
+            System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+            dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToLocalTime();
+            return dtDateTime;
+        }
+
+        /// <summary>
+        /// Attempts to convert an Exception Thrown by FAES into a human-readable error
+        /// </summary>
+        /// <param name="exception">Exception</param>
+        /// <returns>Human-Readable Error</returns>
+        public static string FAES_ExceptionHandling(Exception exception)
+        {
+            if (exception.ToString().Contains("Error occured in creating the FAESZIP file."))
+                return "ERROR: The chosen file(s) could not be compressed as a compressed version already exists in the Temp files! Consider using '--purgeTemp' if you are not using another instance of FileAES and this error persists.";
+            else if (exception.ToString().Contains("Error occured in encrypting the FAESZIP file."))
+                return "ERROR: The compressed file could not be encrypted. Please close any other instances of FileAES and try again. Consider using '--purgeTemp' if you are not using another instance of FileAES and this error persists.";
+            else if (exception.ToString().Contains("Error occured in deleting the FAESZIP file."))
+                return "ERROR: The compressed file could not be deleted. Please close any other instances of FileAES and try again. Consider using '--purgeTemp' if you are not using another instance of FileAES and this error persists.";
+            else if (exception.ToString().Contains("Error occured in moving the FAES file after encryption."))
+                return "ERROR: The encrypted file could not be moved to the original destination! Please ensure that a file with the same name does not already exist.";
+            else if (exception.ToString().Contains("Error occured in decrypting the FAES file."))
+                return "ERROR: The encrypted file could not be decrypted. Please try again.";
+            else if (exception.ToString().Contains("Error occured in extracting the FAESZIP file."))
+                return "ERROR: The compressed file could not be extracted! Consider using '--purgeTemp' if you are not using another instance of FileAES and this error persists.";
+            else if (exception.ToString().Contains("Password hint contains invalid characters."))
+                return "ERROR: Password Hint contains invalid characters. Please choose another password hint.";
+            else
+                return exception.ToString();
+        }
+    }
+
+    internal class FileAES_IntUtilities
+    {
+        /// <summary>
+        /// The current Dynamic Temp folder for the current instance of FAES
+        /// </summary>
+        /// <param name="label">Required Subfolder</param>
+        /// <returns>Path to the current Dynamic Temp Folder</returns>
         public static string getDynamicTempFolder(string label)
         {
             return Path.Combine(Path.GetTempPath(), "FileAES", genRandomTempFolder(label));
         }
 
+        /// <summary>
+        /// Generates the name for a pseudo-random temp folder to allow multiple instances of FAES to run without having conflicting temp files
+        /// </summary>
+        /// <param name="sourceFolder">Source Folder of Pseudo-Random Subdirectory</param>
+        /// <returns>Path of pseudo-random temp folder</returns>
         public static string genRandomTempFolder(string sourceFolder)
         {
             DateTime now = DateTime.Now;
             return sourceFolder + "_" + (now.Day).ToString("00") + (now.Month).ToString("00") + (now.Year % 100).ToString() + (now.Hour).ToString("00") + (now.Minute).ToString("00") + (now.Second).ToString("00");
         }
 
-        public static bool IsDirectoryEmpty(string path)
-        {
-            return !Directory.EnumerateFiles(path).Any();
-        }
-
+        /// <summary>
+        /// Copies a directory to another location
+        /// </summary>
+        /// <param name="sourceDirName">Source directory to copy</param>
+        /// <param name="destDirName">Destination directory</param>
+        /// <param name="copySubDirs">Recursively copy sub-directories</param>
         public static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
         {
             DirectoryInfo dir = new DirectoryInfo(sourceDirName);
@@ -373,39 +573,6 @@ namespace FAES
 
             foreach (FileInfo file in files) file.CopyTo(Path.Combine(destDirName, file.Name), false);
             if (copySubDirs) foreach (DirectoryInfo subdir in dirs) DirectoryCopy(subdir.FullName, Path.Combine(destDirName, subdir.Name), copySubDirs);
-        }
-
-        public static void PurgeTempFolder()
-        {
-            if (Directory.Exists(Path.Combine(Path.GetTempPath(), "FileAES"))) Directory.Delete(Path.Combine(Path.GetTempPath(), "FileAES"), true);
-        }
-
-        public static string GetPasswordHint(string filePath)
-        {
-            string passwordHint = "";
-
-            Crypt crypt = new Crypt();
-            crypt.GetPasswordHint(filePath, ref passwordHint);
-
-            return passwordHint;
-        }
-
-        public static string FAES_ExceptionHandling(Exception e)
-        {
-            if (e.ToString().Contains("Error occured in creating the FAESZIP file."))
-                return "ERROR: The chosen file(s) could not be compressed as a compressed version already exists in the Temp files! Consider using '--purgeTemp' if you are not using another instance of FileAES and this error persists.";
-            else if (e.ToString().Contains("Error occured in encrypting the FAESZIP file."))
-                return "ERROR: The compressed file could not be encrypted. Please close any other instances of FileAES and try again. Consider using '--purgeTemp' if you are not using another instance of FileAES and this error persists.";
-            else if (e.ToString().Contains("Error occured in deleting the FAESZIP file."))
-                return "ERROR: The compressed file could not be deleted. Please close any other instances of FileAES and try again. Consider using '--purgeTemp' if you are not using another instance of FileAES and this error persists.";
-            else if (e.ToString().Contains("Error occured in moving the FAES file after encryption."))
-                return  "ERROR: The encrypted file could not be moved to the original destination! Please ensure that a file with the same name does not already exist.";
-            else if (e.ToString().Contains("Error occured in decrypting the FAES file."))
-                return  "ERROR: The encrypted file could not be decrypted. Please try again.";
-            else if (e.ToString().Contains("Error occured in extracting the FAESZIP file."))
-                return "ERROR: The compressed file could not be extracted! Consider using '--purgeTemp' if you are not using another instance of FileAES and this error persists.";
-            else
-                return e.ToString();
         }
     }
 }
