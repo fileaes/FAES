@@ -1,0 +1,24 @@
+|---| 1.0.0 |---|
+
+- Initial 'public' release
+
+~ FAES Encryption Mode: FAESv1-CBC
+~ Supported FAES Encryption Modes: Legacy and FAESv1-CBC
+
+|---| 1.1.0 |---|
+
+- Added support for MetaData to be added to files when encrypting (MetaData is not encrypted)
+- Added support for reading MetaData without decrypting the entire file
+- Added Password Hint to MetaData
+- Restructured and renamed SecureAES to Crypt
+
+~ FAES Encryption Mode: FAESv2-CBC
+~ Supported FAES Encryption Modes: Legacy, FAESv1-CBC and FAESv2-CBC
+
+|---| 1.1.1 |---|
+
+- Added exception if the Password Hint is over 64 characters
+- Added encryption timestamp to the encrypted file
+
+~ FAES Encryption Mode: FAESv2-CBC
+~ Supported FAES Encryption Modes: Legacy, FAESv1-CBC and FAESv2-CBC
