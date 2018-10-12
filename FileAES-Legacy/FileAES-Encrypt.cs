@@ -153,6 +153,11 @@ namespace FileAES
             update.Show();
         }
 
+        private void hintInput_TextChanged(object sender, EventArgs e)
+        {
+            hintInput.Text = hintInput.Text.Replace(Environment.NewLine, "");
+        }
+
         protected override bool ProcessDialogKey(Keys keyData)
         {
             if (Form.ModifierKeys == Keys.None && keyData == Keys.Escape)

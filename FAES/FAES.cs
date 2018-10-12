@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
+using System.Reflection;
 using CoreChecksums;
 using FAES.AES;
 
@@ -460,6 +462,16 @@ namespace FAES
         public static void PurgeTempFolder()
         {
             if (Directory.Exists(Path.Combine(Path.GetTempPath(), "FileAES"))) Directory.Delete(Path.Combine(Path.GetTempPath(), "FileAES"), true);
+        }
+
+        /// <summary>
+        /// Gets the FAES Version
+        /// </summary>
+        /// <returns>FAES Version</returns>
+        public static string GetVersion()
+        {
+            string[] ver = (typeof(FAES_File).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version).Split('.');
+            return "v" + ver[0] + "." + ver[1] + "." + ver[2];
         }
 
         /// <summary>

@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FileAES_Encrypt));
             this.pathLabel = new System.Windows.Forms.Label();
             this.passwordLabel = new System.Windows.Forms.Label();
@@ -36,7 +35,7 @@
             this.passwordInput = new System.Windows.Forms.TextBox();
             this.passwordInputConf = new System.Windows.Forms.TextBox();
             this.encryptButton = new System.Windows.Forms.Button();
-            this.runtime = new System.Windows.Forms.Timer(this.components);
+            this.runtime = new System.Windows.Forms.Timer();
             this.backgroundEncrypt = new System.ComponentModel.BackgroundWorker();
             this.noteLabel = new System.Windows.Forms.Label();
             this.fileName = new System.Windows.Forms.Label();
@@ -173,6 +172,7 @@
             this.hintInput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.hintInput.Size = new System.Drawing.Size(167, 26);
             this.hintInput.TabIndex = 6;
+            this.hintInput.TextChanged += new System.EventHandler(this.hintInput_TextChanged);
             // 
             // FileAES_Encrypt
             // 

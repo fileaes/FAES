@@ -36,6 +36,7 @@
             this.neverRemindButton = new System.Windows.Forms.Button();
             this.copyrightLabel = new System.Windows.Forms.Label();
             this.checkForUpdateButton = new System.Windows.Forms.Button();
+            this.FaesVersion = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // descLabel
@@ -50,7 +51,7 @@
             // 
             // currentVerLabel
             // 
-            this.currentVerLabel.Location = new System.Drawing.Point(13, 63);
+            this.currentVerLabel.Location = new System.Drawing.Point(13, 46);
             this.currentVerLabel.Name = "currentVerLabel";
             this.currentVerLabel.Size = new System.Drawing.Size(246, 15);
             this.currentVerLabel.TabIndex = 1;
@@ -58,7 +59,7 @@
             // 
             // latestVerLabel
             // 
-            this.latestVerLabel.Location = new System.Drawing.Point(18, 83);
+            this.latestVerLabel.Location = new System.Drawing.Point(18, 66);
             this.latestVerLabel.Name = "latestVerLabel";
             this.latestVerLabel.Size = new System.Drawing.Size(240, 13);
             this.latestVerLabel.TabIndex = 2;
@@ -118,6 +119,14 @@
             this.checkForUpdateButton.UseVisualStyleBackColor = false;
             this.checkForUpdateButton.Click += new System.EventHandler(this.checkForUpdateButton_Click);
             // 
+            // FaesVersion
+            // 
+            this.FaesVersion.Location = new System.Drawing.Point(20, 86);
+            this.FaesVersion.Name = "FaesVersion";
+            this.FaesVersion.Size = new System.Drawing.Size(238, 13);
+            this.FaesVersion.TabIndex = 22;
+            this.FaesVersion.Text = "FAES Version: v0.0.0.0";
+            // 
             // FileAES_Update
             // 
             this.AcceptButton = this.updateButton;
@@ -125,6 +134,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.neverRemindButton;
             this.ClientSize = new System.Drawing.Size(271, 210);
+            this.Controls.Add(this.FaesVersion);
             this.Controls.Add(this.checkForUpdateButton);
             this.Controls.Add(this.copyrightLabel);
             this.Controls.Add(this.neverRemindButton);
@@ -153,5 +163,6 @@
         private System.Windows.Forms.Button neverRemindButton;
         private System.Windows.Forms.Label copyrightLabel;
         private System.Windows.Forms.Button checkForUpdateButton;
+        private System.Windows.Forms.Label FaesVersion;
     }
 }

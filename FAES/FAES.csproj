@@ -2,11 +2,9 @@
 
   <PropertyGroup>
     <TargetFrameworks>net45;netcoreapp2.0</TargetFrameworks>
-    <Version>1.1.1</Version>
-    <AssemblyVersion>1.1.1.0</AssemblyVersion>
-    <PackageReleaseNotes>- Added exception if the Password Hint is over 64 characters
-- Added encryption timestamp to the encrypted file
-- Added comments</PackageReleaseNotes>
+    <Version>1.1.2</Version>
+    <AssemblyVersion>1.1.2.0</AssemblyVersion>
+    <PackageReleaseNotes>- Added GetVersion() method</PackageReleaseNotes>
     <Authors>mullak99</Authors>
     <Description>C# Library to encrypt/decrypt files using AES. With extra features.</Description>
   </PropertyGroup>

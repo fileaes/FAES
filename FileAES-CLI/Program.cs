@@ -16,6 +16,7 @@ namespace FileAES_CLI
         private static bool _help = false;
         private static bool _getHint = false;
         private static bool _getEncryptTimestamp = false;
+        private static bool _getFaesVersion = false;
         private static string _directory = null;
         private static string _passwordHint = null;
         private static string _password;
@@ -41,6 +42,7 @@ namespace FileAES_CLI
                 else if (String.IsNullOrEmpty(_passwordHint) && (strippedArg == "hint" || strippedArg == "passwordhint" || strippedArg == "h") && !string.IsNullOrEmpty(args[i + 1])) _passwordHint = args[i + 1];
                 else if (strippedArg == "gethint" || strippedArg == "getpasswordhint") _getHint = true;
                 else if (strippedArg == "gettimestamp" || strippedArg == "timestamp" || strippedArg == "encryptiondate") _getEncryptTimestamp = true;
+                else if (strippedArg == "faesversion" || strippedArg == "faes" || strippedArg == "faesver") _getFaesVersion = true;
 
                 _strippedArgs.Add(strippedArg);
             }
@@ -58,6 +60,12 @@ namespace FileAES_CLI
             if (_purgeTemp)
             {
                 FileAES_Utilities.PurgeTempFolder();
+            }
+
+            if (_getFaesVersion)
+            {
+                Console.WriteLine("Current FAES Version: {0}", FileAES_Utilities.GetVersion());
+                return;
             }
 
             if (_getHint)

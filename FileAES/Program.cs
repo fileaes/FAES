@@ -74,10 +74,10 @@ namespace FAES_GUI
                 {
                     fileAES = new FAES_File(_directory);
 
-                    if (fileAES.getOperation() == "Encrypt")
-                        Application.Run(new EncryptForm());
-                    else
-                        Application.Run(new DecryptForm());
+                    if (fileAES.isFileEncryptable())
+                        Application.Run(new EncryptForm(fileAES));
+                    else if(fileAES.isFileDecryptable())
+                        Application.Run(new DecryptForm(fileAES));
                 }
                 else  
                     Application.Run(new MainForm());
@@ -102,6 +102,14 @@ namespace FAES_GUI
         public static string getPassword()
         {
             return _password;
+        }
+
+        public static string getVersion()
+        {
+            string[] appVerSplit = (Application.ProductVersion).Split('.');
+            string appVer = appVerSplit[0] + "." + appVerSplit[1] + "." + appVerSplit[2];
+
+            return appVer;
         }
     }
 }

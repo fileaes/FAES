@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FAES;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -12,13 +13,27 @@ namespace FAES_GUI
 {
     public partial class MainForm : Form
     {
-        public MainForm()
+        private bool _closeAfterOperation = false;
+
+        public MainForm(FAES_File faesFile = null)
         {
             InitializeComponent();
+            autoDetect.BringToFront();
+
             autoSelectMenuButton.registerDetoggles(new CustomControls.SubMenuButton[3] { encryptMenuButton, decryptMenuButton, settingsMenuButton });
             encryptMenuButton.registerDetoggles(new CustomControls.SubMenuButton[3] { autoSelectMenuButton, decryptMenuButton, settingsMenuButton });
             decryptMenuButton.registerDetoggles(new CustomControls.SubMenuButton[3] { autoSelectMenuButton, encryptMenuButton, settingsMenuButton });
             settingsMenuButton.registerDetoggles(new CustomControls.SubMenuButton[3] { autoSelectMenuButton, encryptMenuButton, decryptMenuButton });
+
+            if (faesFile != null)
+            {
+                _closeAfterOperation = true;
+
+                encryptPanel.setCloseAfterOperationSuccessful(_closeAfterOperation);
+                decryptPanel.setCloseAfterOperationSuccessful(_closeAfterOperation);
+
+                FAESMenuHandler(faesFile);
+            }
         }
 
         private void titleBar_MouseDown(object sender, MouseEventArgs e)
@@ -73,6 +88,70 @@ namespace FAES_GUI
         private void quitButton_MouseHover(object sender, EventArgs e)
         {
             slowToolTip.SetToolTip(quitButton, "Close");
+        }
+
+        private void autoDetect_Click(object sender, EventArgs e)
+        {
+            if (openFileDialogAutoSelect.ShowDialog() == DialogResult.OK)
+            {
+                FAESMenuHandler(new FAES_File(openFileDialogAutoSelect.FileName));
+            }
+        }
+
+        private void autoDetect_DragDrop(object sender, DragEventArgs e)
+        {
+            string[] FileList = (string[])e.Data.GetData(DataFormats.FileDrop, false);
+
+            FAESMenuHandler(new FAES_File(FileList[0]));
+        }
+
+        private void autoDetect_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                e.Effect = DragDropEffects.All;
+            else
+            {
+                String[] strGetFormats = e.Data.GetFormats();
+                e.Effect = DragDropEffects.None;
+            }
+        }
+
+        private void FAESMenuHandler(FAES_File faesFile)
+        {
+            if (faesFile.isFileEncryptable())
+            {
+                encryptMenuButton_Click(null, null);
+                encryptMenuButton.Selected = true;
+                autoSelectMenuButton.Selected = false;
+                encryptPanel.setFileToEncrypt(faesFile);
+            }
+            else if (faesFile.isFileDecryptable())
+            {
+                decryptMenuButton_Click(null, null);
+                decryptMenuButton.Selected = true;
+                autoSelectMenuButton.Selected = false;
+                decryptPanel.setFileToDecrypt(faesFile);
+            }
+        }
+
+        private void autoSelectMenuButton_Click(object sender, EventArgs e)
+        {
+            autoDetect.BringToFront();
+        }
+
+        private void encryptMenuButton_Click(object sender, EventArgs e)
+        {
+            encryptPanel.BringToFront();
+        }
+
+        private void decryptMenuButton_Click(object sender, EventArgs e)
+        {
+            decryptPanel.BringToFront();
+        }
+
+        private void settingsMenuButton_Click(object sender, EventArgs e)
+        {
+            autoSelectMenuButton_Click(sender, e);
         }
     }
 }

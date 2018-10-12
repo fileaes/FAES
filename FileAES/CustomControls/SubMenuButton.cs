@@ -81,6 +81,8 @@ namespace FAES_GUI.CustomControls
 
             foreach (SubMenuButton button in _buttons)
                 button.Selected = false;
+
+            this.InvokeOnClick(this, EventArgs.Empty);
         }
 
         [Description("If the button is selected"), Category("Data")]

@@ -24,6 +24,7 @@ namespace FileAES
         {
             InitializeComponent();
             checkForUpdate();
+            FaesVersion.Text = "FAES Version: " + FAES.FileAES_Utilities.GetVersion();
         }
 
         private void updateCurrentVersion()
@@ -43,7 +44,7 @@ namespace FileAES
                 else
                     return utf.GetString(html);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return "0.0.0.0";
             }
