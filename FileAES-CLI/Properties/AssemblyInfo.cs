@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("FileAES-CLI")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("A tool used to encrypt and decrypt files or folders using FAES.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("mullak99")]
 [assembly: AssemblyProduct("FileAES-CLI")]
-[assembly: AssemblyCopyright("Copyright ©  2018")]
+[assembly: AssemblyCopyright("Copyright © 2018 | mullak99")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

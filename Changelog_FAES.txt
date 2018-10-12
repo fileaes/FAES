@@ -22,3 +22,10 @@
 
 ~ FAES Encryption Mode: FAESv2-CBC
 ~ Supported FAES Encryption Modes: Legacy, FAESv1-CBC and FAESv2-CBC
+
+|---| 1.1.1 |---|
+
+- Added GetVersion() method
+
+~ FAES Encryption Mode: FAESv2-CBC
+~ Supported FAES Encryption Modes: Legacy, FAESv1-CBC and FAESv2-CBC
