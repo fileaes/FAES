@@ -44,10 +44,18 @@ namespace FileAES
 
         private void setNoteLabel(string note, int severity)
         {
-            if (severity == 1) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Warning: " + note; }));
-            else if (severity == 2) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Important: " + note; }));
-            else if (severity == 3) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Error: " + note; }));
-            else noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Note: " + note; }));
+            if (note.Contains("ERROR:"))
+            {
+                note = note.Replace("ERROR:", "Error:");
+                noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = note; }));
+            }
+            else
+            {
+                if (severity == 1) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Warning: " + note; }));
+                else if (severity == 2) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Important: " + note; }));
+                else if (severity == 3) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Error: " + note; }));
+                else noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Note: " + note; }));
+            }
         }
 
         private void encryptButton_Click(object sender, EventArgs e)
@@ -58,6 +66,8 @@ namespace FileAES
                 else if (passwordInputConf.Text != passwordInput.Text) setNoteLabel("Passwords do not match!", 2);
                 else if (_inProgress) setNoteLabel("Encryption already in progress.", 1);
                 else setNoteLabel("Encryption Failed. Try again later.", 1);
+
+                runtime_Tick(sender, e);
             }
         }
 
@@ -100,8 +110,28 @@ namespace FileAES
 
         private void runtime_Tick(object sender, EventArgs e)
         {
-            if (Core.isEncryptFileValid(_fileToEncrypt) && passwordInput.Text.Length > 3 && passwordInputConf.Text.Length > 3 && !_inProgress) encryptButton.Enabled = true;
-            else encryptButton.Enabled = false;
+            if (_inProgress)
+            {
+                encryptButton.Enabled = false;
+                passwordInput.Enabled = false;
+                passwordInputConf.Enabled = false;
+                hintInput.Enabled = false;
+            }
+            else if (Core.isEncryptFileValid(_fileToEncrypt) && passwordInput.Text.Length > 3 && passwordInputConf.Text.Length > 3 && !_inProgress)
+            {
+                encryptButton.Enabled = true;
+                passwordInput.Enabled = true;
+                passwordInputConf.Enabled = true;
+                hintInput.Enabled = true;
+
+            }
+            else
+            {
+                encryptButton.Enabled = false;
+                passwordInput.Enabled = true;
+                passwordInputConf.Enabled = true;
+                hintInput.Enabled = true;
+            }
         }
 
         private void passwordBox_Focus(object sender, EventArgs e)
@@ -134,6 +164,8 @@ namespace FileAES
                             if (File.Exists(Path.Combine(Directory.GetParent(_fileToEncrypt).FullName, fileName.Text) + ".faeszip")) File.Delete(Path.Combine(Directory.GetParent(_fileToEncrypt).FullName, fileName.Text) + ".faeszip");
                             if (!core.IsDirectoryEmpty(Path.Combine(Program.tempPathInstance))) Directory.Delete(Path.Combine(Program.tempPathInstance), true);
                         }
+
+                        FileAES_Utilities.PurgeInstancedTempFolders();
                     }
                     catch (Exception)
                     {
@@ -156,6 +188,11 @@ namespace FileAES
         private void hintInput_TextChanged(object sender, EventArgs e)
         {
             hintInput.Text = hintInput.Text.Replace(Environment.NewLine, "");
+        }
+
+        private void noteLabel_MouseHover(object sender, EventArgs e)
+        {
+            slowToolTip.SetToolTip(noteLabel, noteLabel.Text);
         }
 
         protected override bool ProcessDialogKey(Keys keyData)
