@@ -72,10 +72,11 @@ namespace FAES.AES
             if (_compression != null)
             {
                 string converted = ConvertBytesToString(_compression);
-                return converted;
+
+                if (!String.IsNullOrEmpty(converted))
+                    return converted;
             }
-            else
-                return null;
+            return "LEGACYZIP";
         }
 
         /// <summary>
@@ -115,7 +116,8 @@ namespace FAES.AES
         /// <returns>String</returns>
         private string ConvertBytesToString(byte[] value)
         {
-            return Encoding.UTF8.GetString(value).TrimEnd('\0');
+            string conv = Encoding.UTF8.GetString(value).TrimEnd('\0');
+            return conv.Replace("¬", "");
         }
     }
 }

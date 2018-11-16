@@ -80,7 +80,10 @@ namespace FileAES
 
                 while (!backgroundDecrypt.CancellationPending)
                 {
-                    fileAES = new FAES_File(_fileToDecrypt, passwordInput.Text, ref _decryptSuccessful);
+                    FAES.FileAES_Decrypt encrypt = new FAES.FileAES_Decrypt(new FAES_File(_fileToDecrypt), passwordInput.Text);
+
+                    _decryptSuccessful = encrypt.decryptFile();
+
                     backgroundDecrypt.CancelAsync();
                 }
             }
@@ -141,11 +144,9 @@ namespace FileAES
                     backgroundDecrypt.CancelAsync();
                     try
                     {
-                        if (File.Exists(Path.Combine(Directory.GetParent(_fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".faeszip")))
-                            File.Delete(Path.Combine(Directory.GetParent(_fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".faeszip"));
+                        if (File.Exists(Path.Combine(Directory.GetParent(_fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + FileAES_Utilities.ExtentionUFAES)))
+                            File.Delete(Path.Combine(Directory.GetParent(_fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + FileAES_Utilities.ExtentionUFAES));
 
-                        if (File.Exists(Path.Combine(Directory.GetParent(_fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".ufaes")))
-                            File.Delete(Path.Combine(Directory.GetParent(_fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".ufaes"));
 
                         FileAES_Utilities.PurgeInstancedTempFolders();
                     }

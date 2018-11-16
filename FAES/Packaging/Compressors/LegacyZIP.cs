@@ -1,20 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FAES.Packaging
 {
-    internal class ZIP : ICompressedFAES
+    internal class LegacyZIP : ICompressedFAES
     {
-        private CompressionLevel _compressionLevel;
+        private SharpCompress.Compressors.Deflate.CompressionLevel _compressLevel;
 
-        public ZIP(CompressionLevel compressionLevel)
+        public LegacyZIP()
         {
-            _compressionLevel = compressionLevel;
+
         }
 
         public void CompressFAESFile(FAES_File file, string tempPath, string outputPath)
@@ -25,7 +20,7 @@ namespace FAES.Packaging
 
                 using (ZipArchive zip = ZipFile.Open(outputPath, ZipArchiveMode.Create))
                 {
-                    zip.CreateEntryFromFile(file.getPath(), file.getFileName(), _compressionLevel);
+                    zip.CreateEntryFromFile(file.getPath(), file.getFileName());
                     zip.Dispose();
                 }
             }
@@ -35,13 +30,16 @@ namespace FAES.Packaging
                 FileAES_Utilities._instancedTempFolders.Add(tempFolderName);
                 if (Directory.Exists(Path.Combine(tempPath, tempFolderName))) Directory.Delete(Path.Combine(tempPath, tempFolderName), true);
                 FileAES_IntUtilities.DirectoryCopy(file.getPath(), Path.Combine(tempPath, tempFolderName, file.getFileName()), true);
-                ZipFile.CreateFromDirectory(Path.Combine(tempPath, tempFolderName), outputPath, _compressionLevel, false);
+
+                if (Directory.Exists(Path.Combine(tempPath, tempFolderName))) Directory.Delete(Path.Combine(tempPath, tempFolderName), true);
+                FileAES_IntUtilities.DirectoryCopy(file.getPath(), Path.Combine(tempPath, tempFolderName, file.getFileName()), true);
+                ZipFile.CreateFromDirectory(Path.Combine(tempPath, tempFolderName), outputPath);
             }
         }
 
         public void UncompressFAESFile(FAES_File file)
         {
-            ZipFile.ExtractToDirectory(Path.Combine(Directory.GetParent(file.getPath()).FullName, file.getFileName().Substring(0, file.getFileName().Length - Path.GetExtension(file.getFileName()).Length) + FileAES_IntUtilities.CompressedPreEncFiletype), Directory.GetParent(file.getPath()).FullName);
+            ZipFile.ExtractToDirectory(Path.Combine(Directory.GetParent(file.getPath()).FullName, file.getFileName().Substring(0, file.getFileName().Length - Path.GetExtension(file.getFileName()).Length) + FileAES_Utilities.ExtentionUFAES), Directory.GetParent(file.getPath()).FullName);
         }
     }
 }

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
-using System.Linq;
 using System.Reflection;
 using CoreChecksums;
 using FAES.AES;
@@ -58,6 +56,7 @@ namespace FAES
         /// <param name="password">Password to encrypt/decrypt the file</param>
         /// <param name="success">Output of if the action was successful</param>
         /// <param name="passwordHint">Hint for the password (only used for encryption)</param>
+        [Obsolete("This method of creating a FAES_File is deprecated. Please use the alternative method and specify FAES_Encrypt/FAES_Decrypt")]
         public FAES_File(string filePath, string password, ref bool success, string passwordHint = null)
         {
             if (File.Exists(filePath) || Directory.Exists(filePath))
@@ -90,6 +89,7 @@ namespace FAES
         /// Runs the appropriate action (Encrypt/Decrypt)
         /// </summary>
         /// <param name="success">Output of if the action was successful</param>
+        [Obsolete("This method of automatically encrypting/decrypting a FAES_File is deprecated. Please use FAES_Encrypt/FAES_Decrypt.")]
         public void Run(ref bool success)
         {
             if (!String.IsNullOrEmpty(_password))
@@ -257,7 +257,7 @@ namespace FAES
         protected FAES_File _file;
         protected string _password, _passwordHint;
         protected Crypt crypt = new Crypt();
-        protected Compress compress = new Compress(Compress.Optimise.PreferBalanced);
+        protected Compress compress;
 
         /// <summary>
         /// Encrypts a selected FAES File using a password
@@ -265,7 +265,7 @@ namespace FAES
         /// <param name="file">Encryptable FAES File</param>
         /// <param name="password">Password to encrypt file</param>
         /// <param name="passwordHint">Hint for the password</param>
-        public FileAES_Encrypt(FAES_File file, string password, string passwordHint = null)
+        public FileAES_Encrypt(FAES_File file, string password, string passwordHint = null, Optimise compression = Optimise.Balanced)
         {
             if (file.isFileEncryptable())
             {
@@ -273,9 +273,28 @@ namespace FAES
                 _password = password;
                 _passwordHint = passwordHint;
 
-                
+                compress = new Compress(compression);
             }
             else throw new Exception("This filetype cannot be encrypted!");
+        }
+
+        /// <summary>
+        /// Set the compression method used for creating the .UFAES file
+        /// </summary>
+        /// <param name="optimisedCompression">How to optimise the compression</param>
+        public void SetCompressionMode(Optimise optimisedCompression)
+        {
+            compress = new Compress(optimisedCompression);
+        }
+
+        /// <summary>
+        /// Set the compression method used for creating the .UFAES file
+        /// </summary>
+        /// <param name="compressionMode">Compression Mode to use</param>
+        /// <param name="compressionLevel">Compression Level to use</param>
+        public void SetCompressionMode(FAES.Packaging.CompressionMode compressionMode, FAES.Packaging.CompressionLevel compressionLevel)
+        {
+            compress = new Compress(compressionMode, compressionLevel);
         }
 
         /// <summary>
@@ -284,14 +303,14 @@ namespace FAES
         /// <returns>If the encryption was successful</returns>
         public bool encryptFile()
         {
-            string fileToDelete = Path.Combine(tempPath, _file.getFileName() + FileAES_IntUtilities.CompressedPreEncFiletype);
+            string fileToDelete = Path.Combine(tempPath, _file.getFileName() + FileAES_Utilities.ExtentionUFAES);
             string tempFolderName = "";
             bool success;
             try
             {
                 try
                 {
-                    compress.CompressFAESFile(_file, tempPath, Path.Combine(tempPath, _file.getFileName()) + FileAES_IntUtilities.CompressedPreEncFiletype);
+                    compress.CompressFAESFile(_file, tempPath, Path.Combine(tempPath, _file.getFileName()) + FileAES_Utilities.ExtentionUFAES);
                 }
                 catch
                 {
@@ -300,7 +319,7 @@ namespace FAES
 
                 try
                 {
-                    success = crypt.Encrypt(Path.Combine(tempPath, _file.getFileName()) + FileAES_IntUtilities.CompressedPreEncFiletype, _password, compress.GetCompressionModeAsString(), _passwordHint);
+                    success = crypt.Encrypt(Path.Combine(tempPath, _file.getFileName()) + FileAES_Utilities.ExtentionUFAES, _password, compress.GetCompressionModeAsString(), _passwordHint);
                 }
                 catch
                 {
@@ -350,7 +369,7 @@ namespace FAES
         protected FAES_File _file;
         protected string _password;
         protected Crypt crypt = new Crypt();
-        protected Compress compress = new Compress(Compress.Optimise.PreferBalanced);
+        protected Compress compress = new Compress(Optimise.Balanced);
 
         /// <summary>
         /// Decrypts a selected FAES File using a password
@@ -379,7 +398,7 @@ namespace FAES
 
             success = crypt.Decrypt(_file.getPath(), _password);
 
-            File.SetAttributes(Path.Combine(Directory.GetParent(_file.getPath()).FullName, _file.getFileName().Substring(0, _file.getFileName().Length - Path.GetExtension(_file.getFileName()).Length) + FileAES_IntUtilities.CompressedPreEncFiletype), FileAttributes.Hidden);
+            File.SetAttributes(Path.Combine(Directory.GetParent(_file.getPath()).FullName, _file.getFileName().Substring(0, _file.getFileName().Length - Path.GetExtension(_file.getFileName()).Length) + FileAES_Utilities.ExtentionUFAES), FileAttributes.Hidden);
 
             if (success)
             {
@@ -395,7 +414,7 @@ namespace FAES
                 try
                 {
                     File.SetAttributes(Directory.GetParent(_file.getPath()).FullName, FileAttributes.Hidden);
-                    File.Delete(Path.Combine(Directory.GetParent(_file.getPath()).FullName, _file.getFileName().Substring(0, _file.getFileName().Length - Path.GetExtension(_file.getFileName()).Length) + FileAES_IntUtilities.CompressedPreEncFiletype));
+                    File.Delete(Path.Combine(Directory.GetParent(_file.getPath()).FullName, _file.getFileName().Substring(0, _file.getFileName().Length - Path.GetExtension(_file.getFileName()).Length) + FileAES_Utilities.ExtentionUFAES));
                     File.Delete(_file.getPath());
                     File.SetAttributes(Directory.GetParent(_file.getPath()).FullName, FileAttributes.Normal);
                 }
@@ -406,7 +425,7 @@ namespace FAES
             }
 
             FileAES_IntUtilities.DeleteTempPath(_file);
-            if (File.Exists(Path.ChangeExtension(_file.getPath(), FileAES_IntUtilities.CompressedPreEncFiletype.Replace(".", "")))) File.Delete(Path.ChangeExtension(_file.getPath(), FileAES_IntUtilities.CompressedPreEncFiletype.Replace(".", "")));
+            if (File.Exists(Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES.Replace(".", "")))) File.Delete(Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES.Replace(".", "")));
 
             return success;
         }
@@ -426,6 +445,7 @@ namespace FAES
 
     public class FileAES_Utilities
     {
+        public const string ExtentionUFAES = ".ufaes";
         internal static List<string> _instancedTempFolders = new List<string>();
 
         /// <summary>
@@ -555,6 +575,8 @@ namespace FAES
                 return "ERROR: The compressed file could not be extracted! Consider using '--purgeTemp' if you are not using another instance of FileAES and this error persists.";
             else if (exception.ToString().Contains("Password hint contains invalid characters."))
                 return "ERROR: Password Hint contains invalid characters. Please choose another password hint.";
+            else if (exception.ToString().Contains("FAES File was compressed using an unsupported file format."))
+                return "ERROR: The encrypted file was compressed using an unsupported file format. You are likely using an outdated version of FAES!";
             else
                 return exception.ToString();
         }
@@ -562,8 +584,6 @@ namespace FAES
 
     internal class FileAES_IntUtilities
     {
-
-        public const string CompressedPreEncFiletype = ".ufaes";
 
         /// <summary>
         /// The current Dynamic Temp folder for the current instance of FAES

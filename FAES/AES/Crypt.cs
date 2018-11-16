@@ -38,7 +38,7 @@ namespace FAES.AES
             byte[] salt = GenerateRandomSalt();
             byte[] metaData = fMD.getMetaData();
 
-            if (inputFile.Contains(FileAES_IntUtilities.CompressedPreEncFiletype)) outputName = inputFile.Replace(FileAES_IntUtilities.CompressedPreEncFiletype, "");
+            if (inputFile.Contains(FileAES_Utilities.ExtentionUFAES)) outputName = inputFile.Replace(FileAES_Utilities.ExtentionUFAES, "");
             else outputName = inputFile;
 
             outputName = Path.ChangeExtension(outputName, "faes");
@@ -120,9 +120,9 @@ namespace FAES.AES
                     CryptoStream cs = new CryptoStream(fsCrypt, AES.CreateDecryptor(), CryptoStreamMode.Read);
 
                     if (Path.GetExtension(inputFile) == ".faes")
-                        outputName = inputFile.Replace(".faes", FileAES_IntUtilities.CompressedPreEncFiletype);
+                        outputName = inputFile.Replace(".faes", FileAES_Utilities.ExtentionUFAES);
                     else
-                        outputName = inputFile.Replace(".mcrypt", FileAES_IntUtilities.CompressedPreEncFiletype);
+                        outputName = inputFile.Replace(".mcrypt", FileAES_Utilities.ExtentionUFAES);
 
                     try
                     {
