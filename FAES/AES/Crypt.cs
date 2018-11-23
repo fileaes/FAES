@@ -324,7 +324,7 @@ namespace FAES.AES
                     MetaDataFAES fMD = new MetaDataFAES(faesMetaData);
                     CompressionMode = fMD.getCompressionMode();
                 }
-                else CompressionMode = "ZIP";
+                else CompressionMode = "LEGACYZIP";
 
                 return true;
             }
