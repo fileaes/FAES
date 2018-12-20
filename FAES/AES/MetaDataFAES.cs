@@ -76,7 +76,7 @@ namespace FAES.AES
                 if (!String.IsNullOrEmpty(converted))
                     return converted;
             }
-            return "LEGACYZIP";
+            return "LGYZIP";
         }
 
         /// <summary>

@@ -10,7 +10,6 @@ namespace FileAES
     public partial class FileAES_Encrypt : Form
     {
         Core core = new Core();
-        FAES_File fileAES;
         FileAES_Update update = new FileAES_Update();
 
         private bool _inProgress = false;

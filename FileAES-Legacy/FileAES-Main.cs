@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FAES;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -120,6 +121,12 @@ namespace FileAES
                     }
                 }
             }
+        }
+
+        private void clearTempToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("Are you sure you want to clear the FileAES Temp Folder?\n\nDoing this while encrypting or decrypting another file can result in data loss!", "Clear FileAES Temp", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                FileAES_Utilities.PurgeTempFolder();
         }
 
         private void versionLabel_Click(object sender, EventArgs e)

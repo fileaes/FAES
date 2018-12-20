@@ -18,14 +18,19 @@ namespace FAES.Packaging
         {
             if (file.isFile())
             {
-                FileAES_IntUtilities.CreateTempPath(file);
+                string tempFolderName = FileAES_IntUtilities.genRandomTempFolder(file.getFileName().Substring(0, file.getFileName().Length - Path.GetExtension(file.getFileName()).Length));
+                FileAES_Utilities._instancedTempFolders.Add(tempFolderName);
+                if (Directory.Exists(Path.Combine(tempPath, tempFolderName))) Directory.Delete(Path.Combine(tempPath, tempFolderName), true);
+
+                Directory.CreateDirectory(Path.Combine(tempPath, tempFolderName));
+                File.Copy(file.getPath(), Path.Combine(tempPath, tempFolderName, file.getFileName()));
 
                 TarWriterOptions wo = new TarWriterOptions(CompressionType.BZip2, true);
 
                 using (Stream stream = File.OpenWrite(outputPath))
                 using (var writer = new TarWriter(stream, wo))
                 {
-                    writer.Write(file.getPath(), new FileInfo(file.getPath()));
+                    writer.WriteAll(Path.Combine(tempPath, tempFolderName), "*", SearchOption.AllDirectories);
                 }
             }
             else
@@ -45,18 +50,14 @@ namespace FAES.Packaging
             }
         }
 
-        public void UncompressFAESFile(FAES_File file)
+        public void UncompressFAESFile(FAES_File file, string unencryptedFile)
         {
-            using (Stream stream = File.OpenRead(Path.Combine(Directory.GetParent(file.getPath()).FullName, file.getFileName().Substring(0, file.getFileName().Length - Path.GetExtension(file.getFileName()).Length) + FileAES_Utilities.ExtentionUFAES)))
+            using (Stream stream = File.OpenRead(Path.Combine(Directory.GetParent(unencryptedFile).FullName, Path.GetFileName(unencryptedFile).Substring(0, Path.GetFileName(unencryptedFile).Length - Path.GetExtension(Path.GetFileName(unencryptedFile)).Length) + FileAES_Utilities.ExtentionUFAES)))
             {
                 var reader = ReaderFactory.Open(stream);
                 while (reader.MoveToNextEntry())
                 {
-                    if (!reader.Entry.IsDirectory)
-                    {
-                        Console.WriteLine(reader.Entry.Key);
-                        reader.WriteEntryToDirectory(Path.GetFullPath(Directory.GetParent(file.getPath()).FullName), new ExtractionOptions() { ExtractFullPath = false, Overwrite = true });
-                    }
+                    reader.WriteEntryToDirectory(Path.GetFullPath(Directory.GetParent(unencryptedFile).FullName), new ExtractionOptions() { ExtractFullPath = true, Overwrite = true });
                 }
             }
         }

@@ -37,7 +37,7 @@ namespace FAES.Packaging
             }
         }
 
-        public void UncompressFAESFile(FAES_File file)
+        public void UncompressFAESFile(FAES_File file, string unencryptedFile)
         {
             ZipFile.ExtractToDirectory(Path.Combine(Directory.GetParent(file.getPath()).FullName, file.getFileName().Substring(0, file.getFileName().Length - Path.GetExtension(file.getFileName()).Length) + FileAES_Utilities.ExtentionUFAES), Directory.GetParent(file.getPath()).FullName);
         }

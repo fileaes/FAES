@@ -6,6 +6,7 @@ namespace FAES.Packaging
     {
         private CompressionMode _compressionMode;
         private CompressionLevel _compressionLevel;
+        private int _compressionLevelRaw = -1;
 
         /// <summary>
         /// Allows for the compression/decompression of FAES Files using a prefered Compression Mode
@@ -16,6 +17,17 @@ namespace FAES.Packaging
         {
             _compressionMode = compressionMode;
             _compressionLevel = compressionLevel;
+        }
+
+        /// <summary>
+        /// Allows for the compression/decompression of FAES Files using a prefered Compression Mode
+        /// </summary>
+        /// <param name="compressionMode">Compression Mode to use during Compression</param>
+        /// <param name="compressionLevel">Compression Level to use during Compression</param>
+        public Compress(CompressionMode compressionMode, int compressionLevel)
+        {
+            _compressionMode = compressionMode;
+            _compressionLevelRaw = compressionLevel;
         }
 
         /// <summary>
@@ -64,8 +76,19 @@ namespace FAES.Packaging
                     tar.CompressFAESFile(file, tempPath, outputPath);
                     break;
                 case CompressionMode.ZIP:
-                    ZIP zip = new ZIP(_compressionLevel);
-                    zip.CompressFAESFile(file, tempPath, outputPath);
+                    {
+                        ZIP zip;
+                        if (_compressionLevelRaw < 0)
+                            zip = new ZIP(_compressionLevel);
+                        else
+                            zip = new ZIP(_compressionLevelRaw);
+
+                        zip.CompressFAESFile(file, tempPath, outputPath);
+                        break;
+                    }
+                case CompressionMode.LGYZIP:
+                    LegacyZIP legacyZIP = new LegacyZIP();
+                    legacyZIP.CompressFAESFile(file, tempPath, outputPath);
                     break;
             }
         }
@@ -74,27 +97,27 @@ namespace FAES.Packaging
         /// Uncompresses a FAES File
         /// </summary>
         /// <param name="file">FAES File to uncompress</param>
-        public void UncompressFAESFile(FAES_File file)
+        public void UncompressFAESFile(FAES_File encryptedFile, string uFaesFile)
         {
-            string fileCompressionMode = FileAES_Utilities.GetCompressionMode(file.getPath());
+            string fileCompressionMode = FileAES_Utilities.GetCompressionMode(encryptedFile.getPath());
 
             switch (fileCompressionMode)
             {
                 case "LZMA":
                     LZMA lzma = new LZMA();
-                    lzma.UncompressFAESFile(file);
+                    lzma.UncompressFAESFile(encryptedFile, uFaesFile);
                     break;
                 case "TAR":
                     TAR tar = new TAR();
-                    tar.UncompressFAESFile(file);
+                    tar.UncompressFAESFile(encryptedFile, uFaesFile);
                     break;
                 case "ZIP":
                     ZIP zip = new ZIP(_compressionLevel);
-                    zip.UncompressFAESFile(file);
+                    zip.UncompressFAESFile(encryptedFile, uFaesFile);
                     break;
-                case "LEGACYZIP":
+                case "LGYZIP":
                     LegacyZIP legacyZip = new LegacyZIP();
-                    legacyZip.UncompressFAESFile(file);
+                    legacyZip.UncompressFAESFile(encryptedFile, uFaesFile);
                     break;
                 default:
                     throw new NotSupportedException("FAES File was compressed using an unsupported file format.");

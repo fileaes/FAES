@@ -13,7 +13,8 @@ namespace FAES.Packaging
     {
         ZIP,
         TAR,
-        LZMA
+        LZMA,
+        LGYZIP
     };
 
     /// <summary>
@@ -24,7 +25,7 @@ namespace FAES.Packaging
         None,
         Fastest,
         Optimal,
-        Slowest
+        Slowest,
     }
 
     /// <summary>

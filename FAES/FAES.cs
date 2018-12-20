@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -298,6 +299,16 @@ namespace FAES
         }
 
         /// <summary>
+        /// Set the compression method used for creating the .UFAES file
+        /// </summary>
+        /// <param name="compressionMode">Compression Mode to use</param>
+        /// <param name="compressionLevel">Raw Compression Level to use</param>
+        public void SetCompressionMode(FAES.Packaging.CompressionMode compressionMode, int compressionLevel)
+        {
+            compress = new Compress(compressionMode, compressionLevel);
+        }
+
+        /// <summary>
         /// Encrypts current file
         /// </summary>
         /// <returns>If the encryption was successful</returns>
@@ -328,8 +339,7 @@ namespace FAES
                 
                 try
                 {
-                    if (File.Exists(fileToDelete))
-                        File.Delete(fileToDelete);
+                    FileAES_IntUtilities.SafeDeleteFile(fileToDelete);
                 }
                 catch
                 {
@@ -339,11 +349,15 @@ namespace FAES
                 try
                 {
                     if (_file.isFile()) File.Move(Path.Combine(tempPath, _file.getFileName().Substring(0, _file.getFileName().Length - Path.GetExtension(_file.getFileName()).Length) + ".faes"), Path.Combine(Directory.GetParent(_file.getPath()).FullName, _file.getFileName().Substring(0, _file.getFileName().Length - Path.GetExtension(_file.getFileName()).Length) + ".faes"));
-                    if (Directory.Exists(Path.Combine(tempPath, tempFolderName))) Directory.Delete(Path.Combine(tempPath, tempFolderName), true);
-                    if (_file.isFolder() && Directory.Exists(Path.Combine(tempPath, tempFolderName))) Directory.Delete(Path.Combine(tempPath, tempFolderName), true);
-                    if (_file.isFile()) File.Delete(_file.getPath());
-                    else Directory.Delete(_file.getPath(), true);
-                    if (_file.isFolder()) File.Move(Path.Combine(tempPath, _file.getFileName().Substring(0, _file.getFileName().Length - Path.GetExtension(_file.getFileName()).Length) + ".faes"), Path.Combine(Directory.GetParent(_file.getPath()).FullName, _file.getFileName().Substring(0, _file.getFileName().Length - Path.GetExtension(_file.getFileName()).Length) + ".faes"));
+                    else File.Move(Path.Combine(tempPath, _file.getFileName() + FileAES_Utilities.ExtentionFAES), Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionFAES));
+
+                    if (Directory.Exists(Path.Combine(tempPath, tempFolderName))) FileAES_IntUtilities.SafeDeleteFolder(Path.Combine(tempPath, tempFolderName), true);
+
+                    if (_file.isFolder() && Directory.Exists(Path.Combine(tempPath, tempFolderName))) FileAES_IntUtilities.SafeDeleteFolder(Path.Combine(tempPath, tempFolderName), true);
+
+                    if (_file.isFile()) FileAES_IntUtilities.SafeDeleteFile(_file.getPath());
+                    else FileAES_IntUtilities.SafeDeleteFolder(_file.getPath(), true);
+
                     File.SetAttributes(_file.getFileName().Substring(0, _file.getFileName().Length - Path.GetExtension(_file.getFileName()).Length) + ".faes", FileAttributes.Encrypted);
                 }
                 catch
@@ -354,8 +368,7 @@ namespace FAES
             }
             finally
             {
-                if (File.Exists(fileToDelete))
-                    File.Delete(fileToDelete);
+                FileAES_IntUtilities.SafeDeleteFile(fileToDelete);
 
                 FileAES_IntUtilities.DeleteTempPath(_file);
             }
@@ -394,17 +407,17 @@ namespace FAES
         /// <returns>If the decryption was successful</returns>
         public bool decryptFile()
         {
-            bool success = false;
+            bool success;
 
             success = crypt.Decrypt(_file.getPath(), _password);
 
-            File.SetAttributes(Path.Combine(Directory.GetParent(_file.getPath()).FullName, _file.getFileName().Substring(0, _file.getFileName().Length - Path.GetExtension(_file.getFileName()).Length) + FileAES_Utilities.ExtentionUFAES), FileAttributes.Hidden);
+            File.SetAttributes(Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES), FileAttributes.Hidden);
 
             if (success)
             {
                 try
                 {
-                    compress.UncompressFAESFile(_file);
+                    compress.UncompressFAESFile(_file, Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES));
                 }
                 catch
                 {
@@ -414,8 +427,8 @@ namespace FAES
                 try
                 {
                     File.SetAttributes(Directory.GetParent(_file.getPath()).FullName, FileAttributes.Hidden);
-                    File.Delete(Path.Combine(Directory.GetParent(_file.getPath()).FullName, _file.getFileName().Substring(0, _file.getFileName().Length - Path.GetExtension(_file.getFileName()).Length) + FileAES_Utilities.ExtentionUFAES));
-                    File.Delete(_file.getPath());
+                    FileAES_IntUtilities.SafeDeleteFile(Path.Combine(Directory.GetParent(_file.getPath()).FullName, _file.getFileName().Substring(0, _file.getFileName().Length - Path.GetExtension(_file.getFileName()).Length) + FileAES_Utilities.ExtentionUFAES));
+                    FileAES_IntUtilities.SafeDeleteFile(_file.getPath());
                     File.SetAttributes(Directory.GetParent(_file.getPath()).FullName, FileAttributes.Normal);
                 }
                 catch
@@ -425,7 +438,7 @@ namespace FAES
             }
 
             FileAES_IntUtilities.DeleteTempPath(_file);
-            if (File.Exists(Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES.Replace(".", "")))) File.Delete(Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES.Replace(".", "")));
+            FileAES_IntUtilities.SafeDeleteFile(Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES.Replace(".", "")));
 
             return success;
         }
@@ -445,7 +458,10 @@ namespace FAES
 
     public class FileAES_Utilities
     {
+        public const string ExtentionFAES = ".faes";
         public const string ExtentionUFAES = ".ufaes";
+        private static string[] _supportedEncExtentions = new string[3] { ExtentionFAES, ".faes", ".mcrypt" };
+
         internal static List<string> _instancedTempFolders = new List<string>();
 
         /// <summary>
@@ -464,7 +480,7 @@ namespace FAES
         /// <returns>If the file is decryptable</returns>
         public static bool isFileDecryptable(string filePath)
         {
-            if (Path.GetExtension(filePath) == ".faes" || Path.GetExtension(filePath) == ".mcrypt")
+            if (_supportedEncExtentions.Any(Path.GetExtension(filePath).Contains))
                 return true;
             else
                 return false;
@@ -517,7 +533,7 @@ namespace FAES
         /// </summary>
         /// <param name="filePath">Encrypted File</param>
         /// <returns>Encryption Timestamp (UNIX UTC)</returns>
-        public static int GetEncrpytionTimeStamp(string filePath)
+        public static int GetEncryptionTimeStamp(string filePath)
         {
             int encryptTimestamp = -1;
 
@@ -607,6 +623,36 @@ namespace FAES
         }
 
         /// <summary>
+        /// Safely deletes a file by ensure it exists before deletion
+        /// </summary>
+        /// <param name="path">Path to file</param>
+        /// <returns>If the file is deleted</returns>
+        public static bool SafeDeleteFile(string path)
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Safely deletes a folder by ensure it exists before deletion
+        /// </summary>
+        /// <param name="path">Path to folder</param>
+        /// <returns>If the folder is deleted</returns>
+        public static bool SafeDeleteFolder(string path, bool recursive = true)
+        {
+            if (Directory.Exists(path))
+            {
+                Directory.Delete(path, recursive);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Copies a directory to another location
         /// </summary>
         /// <param name="sourceDirName">Source directory to copy</param>
@@ -659,11 +705,8 @@ namespace FAES
             else
                 tempPath = FileAES_IntUtilities.getDynamicTempFolder("Decrypt");
 
-            if (Directory.Exists(tempPath))
-            {
-                Directory.Delete(tempPath, true);
+            if (SafeDeleteFolder(tempPath, true))
                 FileAES_Utilities._instancedTempFolders.Remove(tempPath);
-            }
         }
     }
 }

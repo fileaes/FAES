@@ -149,10 +149,11 @@ namespace FAES.AES
 
                         if (Checksums.convertHashToString(hash) != Checksums.convertHashToString(Checksums.getSHA1(outputName)))
                         {
-                            File.Delete(outputName);
+                            FileAES_IntUtilities.SafeDeleteFile(outputName);
                             return false;
                         }
-                        else return true;
+
+                        return true;
                     }
                     catch
                     {
@@ -165,6 +166,7 @@ namespace FAES.AES
                     fsCrypt.Close();
                 }
             }
+
             return false;
         }
 
@@ -324,7 +326,7 @@ namespace FAES.AES
                     MetaDataFAES fMD = new MetaDataFAES(faesMetaData);
                     CompressionMode = fMD.getCompressionMode();
                 }
-                else CompressionMode = "LEGACYZIP";
+                else CompressionMode = "LGYZIP";
 
                 return true;
             }
