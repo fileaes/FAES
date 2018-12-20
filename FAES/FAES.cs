@@ -119,6 +119,7 @@ namespace FAES
         /// Sets the Password used to encrypt/decrypt the current FAES File
         /// </summary>
         /// <param name="password">Chosen Password</param>
+        [Obsolete("This method of automatically encrypting/decrypting a FAES_File is deprecated. Please use FAES_Encrypt/FAES_Decrypt.")]
         public void setPassword(string password)
         {
             _password = password;
@@ -449,10 +450,13 @@ namespace FAES
         /// <returns>Current files Password Hint</returns>
         public string getPasswordHint()
         {
+            /*
             string passwordHint = "";
             crypt.GetPasswordHint(_file.getPath(), ref passwordHint);
 
-            return passwordHint;
+            return passwordHint;*/
+
+            return crypt.GetPasswordHint(_file);
         }
     }
 
@@ -520,12 +524,7 @@ namespace FAES
         /// <returns>Password Hint</returns>
         public static string GetPasswordHint(string filePath)
         {
-            string passwordHint = "";
-
-            Crypt crypt = new Crypt();
-            crypt.GetPasswordHint(filePath, ref passwordHint);
-
-            return passwordHint;
+            return new Crypt().GetPasswordHint(new FAES_File(filePath));
         }
 
         /// <summary>
@@ -535,12 +534,7 @@ namespace FAES
         /// <returns>Encryption Timestamp (UNIX UTC)</returns>
         public static int GetEncryptionTimeStamp(string filePath)
         {
-            int encryptTimestamp = -1;
-
-            Crypt crypt = new Crypt();
-            crypt.GetEncryptionTimestamp(filePath, ref encryptTimestamp);
-
-            return encryptTimestamp;
+            return new Crypt().GetEncryptionTimestamp(new FAES_File(filePath));
         }
 
         /// <summary>
@@ -562,12 +556,7 @@ namespace FAES
         /// <returns>Compression Mode Type</returns>
         public static string GetCompressionMode(string filePath)
         {
-            string compressionMode = "";
-
-            Crypt crypt = new Crypt();
-            crypt.GetCompressionMode(filePath, ref compressionMode);
-
-            return compressionMode;
+            return new Crypt().GetCompressionMode(new FAES_File(filePath));
         }
 
         /// <summary>
@@ -593,6 +582,8 @@ namespace FAES
                 return "ERROR: Password Hint contains invalid characters. Please choose another password hint.";
             else if (exception.ToString().Contains("FAES File was compressed using an unsupported file format."))
                 return "ERROR: The encrypted file was compressed using an unsupported file format. You are likely using an outdated version of FAES!";
+            else if (exception.ToString().Contains("This method only supports encrypted FAES Files!"))
+                return "ERROR: The chosen file does not contain any MetaData since it is not an encrypted FAES File!";
             else
                 return exception.ToString();
         }

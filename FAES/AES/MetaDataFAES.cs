@@ -48,7 +48,7 @@ namespace FAES.AES
                 return converted;
             }
             else
-                return null;
+                return "No Password Hint Set";
         }
 
         /// <summary>

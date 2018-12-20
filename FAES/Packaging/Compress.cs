@@ -54,6 +54,10 @@ namespace FAES.Packaging
                     _compressionMode = CompressionMode.ZIP;
                     _compressionLevel = CompressionLevel.None;
                     break;
+                case Optimise.Legacy:
+                    _compressionMode = CompressionMode.LGYZIP;
+                    _compressionLevel = CompressionLevel.None;
+                    break;
             }
         }
 
@@ -115,6 +119,8 @@ namespace FAES.Packaging
                     ZIP zip = new ZIP(_compressionLevel);
                     zip.UncompressFAESFile(encryptedFile, uFaesFile);
                     break;
+                case "LEGACY":
+                case "LEGACYZIP":
                 case "LGYZIP":
                     LegacyZIP legacyZip = new LegacyZIP();
                     legacyZip.UncompressFAESFile(encryptedFile, uFaesFile);

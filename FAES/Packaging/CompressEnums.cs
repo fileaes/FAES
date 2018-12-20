@@ -36,7 +36,8 @@ namespace FAES.Packaging
         Balanced,
         Faster_Compression,
         Lower_Filesize,
-        Store
+        Store,
+        Legacy
     };
 
     public class CompressionUtils

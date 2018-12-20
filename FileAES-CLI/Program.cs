@@ -269,7 +269,7 @@ namespace FileAES_CLI
 
                             if (encrypt.encryptFile())
                             {
-                                Console.WriteLine("Encryption on {0} succeded!", faesFile.getFaesType().ToLower());
+                                Console.WriteLine("Encryption on {0} succeeded!", faesFile.getFaesType().ToLower());
                             }
                             else
                             {
@@ -282,7 +282,7 @@ namespace FileAES_CLI
 
                             if (decrypt.decryptFile())
                             {
-                                Console.WriteLine("Decryption on {0} succeded!", faesFile.getFaesType().ToLower());
+                                Console.WriteLine("Decryption on {0} succeeded!", faesFile.getFaesType().ToLower());
                             }
                             else
                             {
