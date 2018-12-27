@@ -1,23 +1,27 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>net45;netcoreapp2.1</TargetFrameworks>
     <Version>1.2.0</Version>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <PackageReleaseNotes>- Added FAES version to encrypted file metadata
 - Added method to manually delete instanced temp paths
 - Added better compression handling (easier to add new compression algorithms)
+- Added new compression methods (ZIP/Deflate, LZMA, TAR/BZip2)
 - Changed password hint padding character
 - Changed Compressed, Unencrypted file extention from '.faeszip' to '.ufaes'
-- Fully fixed invalid character showing up in password hints</PackageReleaseNotes>
+- Fully fixed invalid character showing up in password hints
+- Changed .NET Core 2.0 to .NET Core 2.1</PackageReleaseNotes>
     <Authors>mullak99</Authors>
     <Description>C# Library to encrypt/decrypt files using AES. With extra features.</Description>
     <FileVersion>1.2.0.0</FileVersion>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <RepositoryUrl>https://github.com/mullak99/FileAES</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Costura.Fody" Version="3.1.6" />
-    <PackageReference Include="Fody" Version="3.2.17">
+    <PackageReference Include="Costura.Fody" Version="3.2.1" />
+    <PackageReference Include="Fody" Version="3.3.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>

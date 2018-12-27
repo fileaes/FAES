@@ -5,8 +5,6 @@ namespace FAES.Packaging
 {
     internal class LegacyZIP : ICompressedFAES
     {
-        private SharpCompress.Compressors.Deflate.CompressionLevel _compressLevel;
-
         public LegacyZIP()
         {
 

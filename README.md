@@ -1,6 +1,6 @@
 # FileAES Project
 
-FAES: .NET4.5/.NETCore2.0 Library used to encrypt and decrypt files.
+FAES: .NET4.5/.NETCore2.1 Library used to encrypt and decrypt files.
 
 FileAES: New W.I.P GUI application for encrypting and decrypting files. Replacing old GUI.
 
