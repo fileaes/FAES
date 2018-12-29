@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FileAES_Encrypt));
             this.pathLabel = new System.Windows.Forms.Label();
             this.passwordLabel = new System.Windows.Forms.Label();
@@ -35,7 +36,7 @@
             this.passwordInput = new System.Windows.Forms.TextBox();
             this.passwordInputConf = new System.Windows.Forms.TextBox();
             this.encryptButton = new System.Windows.Forms.Button();
-            this.runtime = new System.Windows.Forms.Timer();
+            this.runtime = new System.Windows.Forms.Timer(this.components);
             this.backgroundEncrypt = new System.ComponentModel.BackgroundWorker();
             this.noteLabel = new System.Windows.Forms.Label();
             this.fileName = new System.Windows.Forms.Label();
@@ -43,6 +44,7 @@
             this.versionLabel = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.hintInput = new System.Windows.Forms.TextBox();
+            this.slowToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.SuspendLayout();
             // 
             // pathLabel
@@ -115,14 +117,16 @@
             // 
             // noteLabel
             // 
-            this.noteLabel.AutoSize = true;
+            this.noteLabel.AutoEllipsis = true;
             this.noteLabel.BackColor = System.Drawing.SystemColors.Control;
             this.noteLabel.ForeColor = System.Drawing.Color.Black;
-            this.noteLabel.Location = new System.Drawing.Point(9, 149);
+            this.noteLabel.Location = new System.Drawing.Point(9, 137);
             this.noteLabel.Name = "noteLabel";
-            this.noteLabel.Size = new System.Drawing.Size(235, 13);
+            this.noteLabel.Size = new System.Drawing.Size(235, 30);
             this.noteLabel.TabIndex = 7;
             this.noteLabel.Text = "Note: Press \'Encrypt\' to encrypt your chosen file.";
+            this.noteLabel.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
+            this.noteLabel.MouseHover += new System.EventHandler(this.noteLabel_MouseHover);
             // 
             // fileName
             // 
@@ -174,6 +178,12 @@
             this.hintInput.TabIndex = 6;
             this.hintInput.TextChanged += new System.EventHandler(this.hintInput_TextChanged);
             // 
+            // slowToolTip
+            // 
+            this.slowToolTip.AutoPopDelay = 5000;
+            this.slowToolTip.InitialDelay = 1000;
+            this.slowToolTip.ReshowDelay = 100;
+            // 
             // FileAES_Encrypt
             // 
             this.AcceptButton = this.encryptButton;
@@ -221,5 +231,6 @@
         private System.Windows.Forms.Label versionLabel;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox hintInput;
+        private System.Windows.Forms.ToolTip slowToolTip;
     }
 }

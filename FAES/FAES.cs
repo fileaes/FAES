@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -56,6 +57,7 @@ namespace FAES
         /// <param name="password">Password to encrypt/decrypt the file</param>
         /// <param name="success">Output of if the action was successful</param>
         /// <param name="passwordHint">Hint for the password (only used for encryption)</param>
+        [Obsolete("This method of creating a FAES_File is deprecated. Please use the alternative method and specify FAES_Encrypt/FAES_Decrypt")]
         public FAES_File(string filePath, string password, ref bool success, string passwordHint = null)
         {
             if (File.Exists(filePath) || Directory.Exists(filePath))
@@ -88,6 +90,7 @@ namespace FAES
         /// Runs the appropriate action (Encrypt/Decrypt)
         /// </summary>
         /// <param name="success">Output of if the action was successful</param>
+        [Obsolete("This method of automatically encrypting/decrypting a FAES_File is deprecated. Please use FAES_Encrypt/FAES_Decrypt.")]
         public void Run(ref bool success)
         {
             if (!String.IsNullOrEmpty(_password))
@@ -116,6 +119,7 @@ namespace FAES
         /// Sets the Password used to encrypt/decrypt the current FAES File
         /// </summary>
         /// <param name="password">Chosen Password</param>
+        [Obsolete("This method of automatically encrypting/decrypting a FAES_File is deprecated. Please use FAES_Encrypt/FAES_Decrypt.")]
         public void setPassword(string password)
         {
             _password = password;
@@ -269,8 +273,31 @@ namespace FAES
                 _file = file;
                 _password = password;
                 _passwordHint = passwordHint;
+
+                
             }
             else throw new Exception("This filetype cannot be encrypted!");
+        }
+
+        /// <summary>
+        /// Creates a new temp path and adds it to the instancedTempFolders list
+        /// </summary>
+        private void CreateTempPath()
+        {
+            Directory.CreateDirectory(Path.Combine(tempPath));
+            FileAES_Utilities._instancedTempFolders.Add(tempPath);
+        }
+
+        /// <summary>
+        /// Deletes the temp path after use and removes it from the instancedTempFolders list
+        /// </summary>
+        private void DeleteTempPath()
+        {
+            if (Directory.Exists(tempPath))
+            {
+                Directory.Delete(tempPath, true);
+                FileAES_Utilities._instancedTempFolders.Remove(tempPath);
+            }
         }
 
         /// <summary>
@@ -288,7 +315,7 @@ namespace FAES
                 {
                     if (_file.isFile())
                     {
-                        if (!Directory.Exists(Path.Combine(tempPath))) Directory.CreateDirectory(Path.Combine(tempPath));
+                        if (!Directory.Exists(Path.Combine(tempPath))) CreateTempPath();
 
                         using (ZipArchive zip = ZipFile.Open(Path.Combine(tempPath, _file.getFileName()) + ".faeszip", ZipArchiveMode.Create))
                         {
@@ -299,6 +326,7 @@ namespace FAES
                     else
                     {
                         tempFolderName = FileAES_IntUtilities.genRandomTempFolder(_file.getFileName().Substring(0, _file.getFileName().Length - Path.GetExtension(_file.getFileName()).Length));
+                        FileAES_Utilities._instancedTempFolders.Add(tempFolderName);
                         if (Directory.Exists(Path.Combine(tempPath, tempFolderName))) Directory.Delete(Path.Combine(tempPath, tempFolderName), true);
                         FileAES_IntUtilities.DirectoryCopy(_file.getPath(), Path.Combine(tempPath, tempFolderName, _file.getFileName()), true);
                         ZipFile.CreateFromDirectory(Path.Combine(tempPath, tempFolderName), Path.Combine(tempPath, _file.getFileName()) + ".faeszip");
@@ -349,7 +377,7 @@ namespace FAES
                 if (File.Exists(fileToDelete))
                     File.Delete(fileToDelete);
 
-                if (Directory.Exists(tempPath)) Directory.Delete(tempPath, true);
+                DeleteTempPath();
             }
             return success;
         }
@@ -373,8 +401,22 @@ namespace FAES
             {
                 _file = file;
                 _password = password;
+
+                FileAES_Utilities._instancedTempFolders.Add(tempPath);
             }
             else throw new Exception("This filetype cannot be decrypted!");
+        }
+
+        /// <summary>
+        /// Deletes the temp path after use and removes it from the instancedTempFolders list
+        /// </summary>
+        private void DeleteTempPath()
+        {
+            if (Directory.Exists(tempPath))
+            {
+                Directory.Delete(tempPath, true);
+                FileAES_Utilities._instancedTempFolders.Remove(tempPath);
+            }
         }
 
         /// <summary>
@@ -413,7 +455,7 @@ namespace FAES
                 }
             }
 
-            if (Directory.Exists(tempPath)) Directory.Delete(tempPath, true);
+            DeleteTempPath();
             if (File.Exists(Path.ChangeExtension(_file.getPath(), "faeszip"))) File.Delete(Path.ChangeExtension(_file.getPath(), "faeszip"));
 
             return success;
@@ -434,6 +476,8 @@ namespace FAES
 
     public class FileAES_Utilities
     {
+        internal static List<string> _instancedTempFolders = new List<string>();
+
         /// <summary>
         /// Gets if the chosen file is encryptable
         /// </summary>
@@ -462,6 +506,15 @@ namespace FAES
         public static void PurgeTempFolder()
         {
             if (Directory.Exists(Path.Combine(Path.GetTempPath(), "FileAES"))) Directory.Delete(Path.Combine(Path.GetTempPath(), "FileAES"), true);
+        }
+
+        public static void PurgeInstancedTempFolders()
+        {
+            foreach (string iTempFolder in _instancedTempFolders)
+            {
+                if (Directory.Exists(iTempFolder)) Directory.Delete(iTempFolder, true);
+            }
+            _instancedTempFolders.Clear();
         }
 
         /// <summary>
@@ -494,7 +547,18 @@ namespace FAES
         /// </summary>
         /// <param name="filePath">Encrypted File</param>
         /// <returns>Encryption Timestamp (UNIX UTC)</returns>
+        [Obsolete("This method includes a typo, please switch to 'GetEncryptionTimeStamp' before updating to FAES 1.2.0.")]
         public static int GetEncrpytionTimeStamp(string filePath)
+        {
+            return GetEncryptionTimeStamp(filePath);
+        }
+
+        /// <summary>
+        /// Gets the Encryption Timestamp (UNIX UTC) of when the chosen file was encrypted
+        /// </summary>
+        /// <param name="filePath">Encrypted File</param>
+        /// <returns>Encryption Timestamp (UNIX UTC)</returns>
+        public static int GetEncryptionTimeStamp(string filePath)
         {
             int encryptTimestamp = -1;
 

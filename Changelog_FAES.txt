@@ -23,9 +23,20 @@
 ~ FAES Encryption Mode: FAESv2-CBC
 ~ Supported FAES Encryption Modes: Legacy, FAESv1-CBC and FAESv2-CBC
 
-|---| 1.1.1 |---|
+|---| 1.1.2 |---|
 
 - Added GetVersion() method
+
+~ FAES Encryption Mode: FAESv2-CBC
+~ Supported FAES Encryption Modes: Legacy, FAESv1-CBC and FAESv2-CBC
+~ Supported FAES Compression Modes: LegacyZIP
+
+|---| 1.1.3 |---|
+
+- Added FAES version to encrypted file metadata
+- Added method to manually delete instanced temp paths
+- Changed password hint padding character
+- Fully fixed invalid character showing up in password hints
 
 ~ FAES Encryption Mode: FAESv2-CBC
 ~ Supported FAES Encryption Modes: Legacy, FAESv1-CBC and FAESv2-CBC
