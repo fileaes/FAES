@@ -3,7 +3,7 @@
   <Costura>
       <IncludeAssemblies>
           FAES
-          XmlSettings
+          SSM
       </IncludeAssemblies>
   </Costura>
 </Weavers>

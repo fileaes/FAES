@@ -12,6 +12,7 @@ namespace FAES_GUI
 {
     static class Program
     {
+        private const string betaAppendTag = "Beta 2";
 
         private static bool _verbose = false;
         private static bool _debugMenu = false;
@@ -216,7 +217,10 @@ namespace FAES_GUI
         public static string GetVersion()
         {
             string[] ver = (typeof(FAES_GUI.Program).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version).Split('.');
-            return "v" + ver[0] + "." + ver[1] + "." + ver[2];
+            if (String.IsNullOrEmpty(betaAppendTag))
+                return "v" + ver[0] + "." + ver[1] + "." + ver[2];
+            else
+                return "v" + ver[0] + "." + ver[1] + "." + ver[2] + " (" + betaAppendTag + ")";
         }
 
         public static bool GetDebugMode()

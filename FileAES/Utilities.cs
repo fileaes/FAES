@@ -4,17 +4,18 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SimpleSettingsManager;
 
 namespace FAES_GUI
 {
     public class SettingsManager
     {
 
-        protected XmlSettings xmlSettings;
+        protected SSM ssm;
 
         public SettingsManager()
         {
-            //xmlSettings = new XmlSettings()
+            //ssm = new SSM()
         }
     }
 

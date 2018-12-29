@@ -64,6 +64,18 @@ namespace FAES.AES
         }
 
         /// <summary>
+        /// Gets the Version of FAES used to encrypt the file
+        /// </summary>
+        /// <returns>FAES Version</returns>
+        public string getEncryptionVersion()
+        {
+            if (_encryptionVersion != null)
+                return ConvertBytesToString(_encryptionVersion);
+            else
+                return "v1.1.0 — v1.1.2";
+        }
+
+        /// <summary>
         /// Gets the Compression Method used to compress the encrypted file
         /// </summary>
         /// <returns>Compression Mode Type</returns>

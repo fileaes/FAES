@@ -42,6 +42,7 @@ namespace FAES_GUI.MenuPanels
             InitializeComponent();
 
             ResetFile();
+            populateCompressionModes();
             statusInformation.Text = "";
 
             this.Focus();
@@ -90,6 +91,21 @@ namespace FAES_GUI.MenuPanels
             passConfTextbox.Enabled = !lockChanges;
             passHintTextbox.Enabled = !lockChanges;
             encryptButton.Enabled = !lockChanges;
+            compressMode.Enabled = !lockChanges;
+        }
+
+        private void populateCompressionModes()
+        {
+            List<string> optimiseModes = FAES.Packaging.CompressionUtils.GetAllOptimiseModesAsStrings();
+
+            compressMode.Items.Clear();
+
+            foreach (string mode in optimiseModes)
+            {
+                compressMode.Items.Add(mode.Replace("_", " "));
+            }
+
+            compressMode.SelectedIndex = 0;
         }
 
         private void doEncrypt()
@@ -104,6 +120,8 @@ namespace FAES_GUI.MenuPanels
                 while (!backgroundEncrypt.CancellationPending)
                 {
                     FileAES_Encrypt encrypt = new FileAES_Encrypt(_fileToEncrypt, passTextbox.Text, passHintTextbox.Text);
+                    encrypt.SetCompressionMode(FAES.Packaging.CompressionUtils.GetAllOptimiseModes()[compressMode.SelectedIndex]);
+
                     _encryptSuccessful = encrypt.encryptFile();
 
                     backgroundEncrypt.CancelAsync();
@@ -179,7 +197,11 @@ namespace FAES_GUI.MenuPanels
 
         private void selectEncryptButton_Click(object sender, EventArgs e)
         {
-            if (openFileToEncrypt.ShowDialog() == DialogResult.OK)
+            if (Control.ModifierKeys == Keys.Shift)
+            {
+                ResetFile();
+            }
+            else if (openFileToEncrypt.ShowDialog() == DialogResult.OK)
             {
                 FAES_File tFaesFile = new FAES_File(openFileToEncrypt.FileName);
                 setFileToEncrypt(tFaesFile);

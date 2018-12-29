@@ -10,6 +10,9 @@ namespace FAES_GUI
         public DecryptForm(FAES_File faesFile)
         {
             InitializeComponent();
+
+            titleLabel.Text += Program.GetVersion();
+
             decryptPanel.LockFileSelect(true);
             decryptPanel.setCloseAfterOperationSuccessful(true);
             decryptPanel.setFileToDecrypt(faesFile);

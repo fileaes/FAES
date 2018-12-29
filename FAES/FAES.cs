@@ -550,6 +550,16 @@ namespace FAES
         }
 
         /// <summary>
+        /// Gets the FAES Version used to encrypt the chosen file
+        /// </summary>
+        /// <param name="filePath">Encrypted File</param>
+        /// <returns>FAES Version</returns>
+        public static string GetEncryptionVersion(string filePath)
+        {
+            return new Crypt().GetEncryptionVersion(new FAES_File(filePath));
+        }
+
+        /// <summary>
         /// Gets the Compression Mode of a chosen encrypted file
         /// </summary>
         /// <param name="filePath">Encrypted File</param>

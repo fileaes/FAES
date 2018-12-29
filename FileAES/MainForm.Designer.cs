@@ -84,7 +84,7 @@
             this.titleLabel.Name = "titleLabel";
             this.titleLabel.Size = new System.Drawing.Size(216, 25);
             this.titleLabel.TabIndex = 1;
-            this.titleLabel.Text = "FileAES 2.0.0 (Beta 1)";
+            this.titleLabel.Text = "FileAES ";
             this.titleLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.titleLabel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.titleBar_MouseDown);
             // 
