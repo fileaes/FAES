@@ -79,7 +79,7 @@ namespace FAES_GUI.MenuPanels
 
         private void setMetaData()
         {
-            int timestamp = FileAES_Utilities.GetEncrpytionTimeStamp(_fileToDecrypt.getPath());
+            int timestamp = FileAES_Utilities.GetEncryptionTimeStamp(_fileToDecrypt.getPath());
 
             if (timestamp >= 0)
             {
