@@ -48,15 +48,25 @@ namespace FileAES
                 if (Core.isDecryptFileValid(_fileToDecrypt) && !_inProgress) backgroundDecrypt.RunWorkerAsync();
                 else if (_inProgress) setNoteLabel("Decryption already in progress.", 1);
                 else setNoteLabel("Decryption Failed. Try again later.", 1);
+
+                runtime_Tick(sender, e);
             }
         }
 
         private void setNoteLabel(string note, int severity)
         {
-            if (severity == 1) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Warning: " + note; }));
-            else if (severity == 2) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Important: " + note; }));
-            else if (severity == 3) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Error: " + note; }));
-            else noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Note: " + note; }));
+            if (note.Contains("ERROR:"))
+            {
+                note = note.Replace("ERROR:", "Error:");
+                noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = note; }));
+            }
+            else
+            {
+                if (severity == 1) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Warning: " + note; }));
+                else if (severity == 2) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Important: " + note; }));
+                else if (severity == 3) noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Error: " + note; }));
+                else noteLabel.Invoke(new MethodInvoker(delegate { this.noteLabel.Text = "Note: " + note; }));
+            }
         }
 
         private void doDecrypt()
@@ -94,8 +104,22 @@ namespace FileAES
 
         private void runtime_Tick(object sender, EventArgs e)
         {
-            if (Core.isDecryptFileValid(_fileToDecrypt) && passwordInput.Text.Length > 3 && !_inProgress) decryptButton.Enabled = true;
-            else decryptButton.Enabled = false;
+            if (_inProgress)
+            {
+                decryptButton.Enabled = false;
+                passwordInput.Enabled = false;
+            }
+            else if (Core.isDecryptFileValid(_fileToDecrypt) && passwordInput.Text.Length > 3 && !_inProgress)
+            {
+                decryptButton.Enabled = true;
+                passwordInput.Enabled = true;
+
+            }
+            else
+            {
+                decryptButton.Enabled = false;
+                passwordInput.Enabled = true;
+            }
         }
 
         private void passwordBox_Focus(object sender, EventArgs e)
@@ -119,6 +143,8 @@ namespace FileAES
                     {
                         if (File.Exists(Path.Combine(Directory.GetParent(_fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".faeszip")))
                             File.Delete(Path.Combine(Directory.GetParent(_fileToDecrypt).FullName, fileName.Text.Substring(0, fileName.Text.Length - Path.GetExtension(fileName.Text).Length) + ".faeszip"));
+
+                        FileAES_Utilities.PurgeInstancedTempFolders();
                     }
                     catch (Exception)
                     {
@@ -134,6 +160,11 @@ namespace FileAES
         private void versionLabel_Click(object sender, EventArgs e)
         {
             update.Show();
+        }
+
+        private void noteLabel_MouseHover(object sender, EventArgs e)
+        {
+            slowToolTip.SetToolTip(noteLabel, noteLabel.Text);
         }
 
         protected override bool ProcessDialogKey(Keys keyData)

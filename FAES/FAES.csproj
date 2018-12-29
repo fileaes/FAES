@@ -2,11 +2,15 @@
 
   <PropertyGroup>
     <TargetFrameworks>net45;netcoreapp2.0</TargetFrameworks>
-    <Version>1.1.2</Version>
-    <AssemblyVersion>1.1.2.0</AssemblyVersion>
-    <PackageReleaseNotes>- Added GetVersion() method</PackageReleaseNotes>
+    <Version>1.1.3</Version>
+    <AssemblyVersion>1.1.3.0</AssemblyVersion>
+    <PackageReleaseNotes>- Added FAES version to encrypted file metadata
+- Added method to manually delete instanced temp paths
+- Changed password hint padding character
+- Fully fixed invalid character showing up in password hints</PackageReleaseNotes>
     <Authors>mullak99</Authors>
     <Description>C# Library to encrypt/decrypt files using AES. With extra features.</Description>
+    <FileVersion>1.1.3.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

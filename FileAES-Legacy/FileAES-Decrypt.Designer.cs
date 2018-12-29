@@ -42,6 +42,7 @@
             this.versionLabel = new System.Windows.Forms.Label();
             this.hintLabel = new System.Windows.Forms.Label();
             this.hintTextbox = new System.Windows.Forms.TextBox();
+            this.slowToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.SuspendLayout();
             // 
             // fileName
@@ -109,14 +110,16 @@
             // 
             // noteLabel
             // 
-            this.noteLabel.AutoSize = true;
+            this.noteLabel.AutoEllipsis = true;
             this.noteLabel.BackColor = System.Drawing.SystemColors.Control;
             this.noteLabel.ForeColor = System.Drawing.Color.Black;
-            this.noteLabel.Location = new System.Drawing.Point(8, 110);
+            this.noteLabel.Location = new System.Drawing.Point(8, 100);
             this.noteLabel.Name = "noteLabel";
-            this.noteLabel.Size = new System.Drawing.Size(236, 13);
+            this.noteLabel.Size = new System.Drawing.Size(236, 23);
             this.noteLabel.TabIndex = 15;
             this.noteLabel.Text = "Note: Press \'Decrypt\' to decrypt your chosen file.";
+            this.noteLabel.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
+            this.noteLabel.MouseHover += new System.EventHandler(this.noteLabel_MouseHover);
             // 
             // copyrightLabel
             // 
@@ -155,6 +158,12 @@
             this.hintTextbox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.hintTextbox.Size = new System.Drawing.Size(167, 26);
             this.hintTextbox.TabIndex = 22;
+            // 
+            // slowToolTip
+            // 
+            this.slowToolTip.AutoPopDelay = 5000;
+            this.slowToolTip.InitialDelay = 1000;
+            this.slowToolTip.ReshowDelay = 100;
             // 
             // FileAES_Decrypt
             // 
@@ -198,5 +207,6 @@
         private System.Windows.Forms.Label versionLabel;
         private System.Windows.Forms.Label hintLabel;
         private System.Windows.Forms.TextBox hintTextbox;
+        private System.Windows.Forms.ToolTip slowToolTip;
     }
 }

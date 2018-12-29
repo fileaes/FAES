@@ -8,6 +8,7 @@ namespace FAES.AES
     {
         protected byte[] _passwordHint;
         protected byte[] _encryptionTimestamp;
+        protected byte[] _encryptionVersion;
 
         /// <summary>
         /// Converts various pieces of MetaData into easy-to-manage method calls
@@ -17,6 +18,7 @@ namespace FAES.AES
         {
             _passwordHint = ConvertStringToBytes(passwordHint);
             _encryptionTimestamp = BitConverter.GetBytes((int)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds);
+            _encryptionVersion = ConvertStringToBytes(FileAES_Utilities.GetVersion(), 16);
         }
 
         /// <summary>
@@ -27,6 +29,7 @@ namespace FAES.AES
         {
             _passwordHint = metaData.Take(64).ToArray();
             _encryptionTimestamp = metaData.Skip(64).Take(4).ToArray();
+            _encryptionVersion = metaData.Skip(68).Take(16).ToArray();
         }
 
         /// <summary>
@@ -36,7 +39,11 @@ namespace FAES.AES
         public string getPasswordHint()
         {
             if (_passwordHint != null)
-                return Encoding.UTF8.GetString(_passwordHint).Replace("¬", "");
+            {
+                string converted = Encoding.UTF8.GetString(_passwordHint).Replace("¬", "");
+                if (converted.Contains("�")) converted = converted.Replace("�", "");
+                return converted;
+            }
             else
                 return null;
         }
@@ -62,6 +69,7 @@ namespace FAES.AES
             byte[] formedMetaData = new byte[256];
             Buffer.BlockCopy(_passwordHint, 0, formedMetaData, 0, _passwordHint.Length);
             Buffer.BlockCopy(_encryptionTimestamp, 0, formedMetaData, 64, _encryptionTimestamp.Length);
+            Buffer.BlockCopy(_encryptionVersion, 0, formedMetaData, 68, _encryptionVersion.Length);
 
             return formedMetaData;
         }
@@ -73,12 +81,12 @@ namespace FAES.AES
         /// <param name="maxLength">Max length of the string</param>
         /// <param name="paddingChar">Character used to pad the string if required</param>
         /// <returns></returns>
-        private byte[] ConvertStringToBytes(string value, int maxLength = 64, char paddingChar = '¬')
+        private byte[] ConvertStringToBytes(string value, int maxLength = 64)
         {
             if (value.Length > maxLength)
                 return Encoding.UTF8.GetBytes(value.Substring(0, maxLength));
             else
-                return Encoding.UTF8.GetBytes(value.PadRight(maxLength, paddingChar));
+                return Encoding.UTF8.GetBytes(value.PadRight(maxLength, '\0'));
         }
     }
 }
