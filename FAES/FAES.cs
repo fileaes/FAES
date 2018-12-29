@@ -57,6 +57,7 @@ namespace FAES
         /// <param name="password">Password to encrypt/decrypt the file</param>
         /// <param name="success">Output of if the action was successful</param>
         /// <param name="passwordHint">Hint for the password (only used for encryption)</param>
+        [Obsolete("This method of creating a FAES_File is deprecated. Please use the alternative method and specify FAES_Encrypt/FAES_Decrypt")]
         public FAES_File(string filePath, string password, ref bool success, string passwordHint = null)
         {
             if (File.Exists(filePath) || Directory.Exists(filePath))
@@ -89,6 +90,7 @@ namespace FAES
         /// Runs the appropriate action (Encrypt/Decrypt)
         /// </summary>
         /// <param name="success">Output of if the action was successful</param>
+        [Obsolete("This method of automatically encrypting/decrypting a FAES_File is deprecated. Please use FAES_Encrypt/FAES_Decrypt.")]
         public void Run(ref bool success)
         {
             if (!String.IsNullOrEmpty(_password))
@@ -117,6 +119,7 @@ namespace FAES
         /// Sets the Password used to encrypt/decrypt the current FAES File
         /// </summary>
         /// <param name="password">Chosen Password</param>
+        [Obsolete("This method of automatically encrypting/decrypting a FAES_File is deprecated. Please use FAES_Encrypt/FAES_Decrypt.")]
         public void setPassword(string password)
         {
             _password = password;
@@ -544,7 +547,18 @@ namespace FAES
         /// </summary>
         /// <param name="filePath">Encrypted File</param>
         /// <returns>Encryption Timestamp (UNIX UTC)</returns>
+        [Obsolete("This method includes a typo, please switch to 'GetEncryptionTimeStamp' before updating to FAES 1.2.0.")]
         public static int GetEncrpytionTimeStamp(string filePath)
+        {
+            return GetEncryptionTimeStamp(filePath);
+        }
+
+        /// <summary>
+        /// Gets the Encryption Timestamp (UNIX UTC) of when the chosen file was encrypted
+        /// </summary>
+        /// <param name="filePath">Encrypted File</param>
+        /// <returns>Encryption Timestamp (UNIX UTC)</returns>
+        public static int GetEncryptionTimeStamp(string filePath)
         {
             int encryptTimestamp = -1;
 
