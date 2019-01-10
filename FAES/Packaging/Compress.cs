@@ -2,7 +2,7 @@
 
 namespace FAES.Packaging
 {
-    public class Compress : ICompressedFAES
+    internal class Compress : ICompressedFAES
     {
         private CompressionMode _compressionMode;
         private CompressionLevel _compressionLevel;

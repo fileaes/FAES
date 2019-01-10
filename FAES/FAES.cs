@@ -258,8 +258,8 @@ namespace FAES
         protected string tempPath = FileAES_IntUtilities.getDynamicTempFolder("Encrypt");
         protected FAES_File _file;
         protected string _password, _passwordHint;
-        protected Crypt crypt = new Crypt();
-        protected Compress compress;
+        internal Crypt crypt = new Crypt();
+        internal Compress compress;
 
         /// <summary>
         /// Encrypts a selected FAES File using a password
@@ -267,17 +267,52 @@ namespace FAES
         /// <param name="file">Encryptable FAES File</param>
         /// <param name="password">Password to encrypt file</param>
         /// <param name="passwordHint">Hint for the password</param>
-        public FileAES_Encrypt(FAES_File file, string password, string passwordHint = null, Optimise compression = Optimise.Balanced)
+        public FileAES_Encrypt(FAES_File file, string password, string passwordHint = null, Optimise compression = Optimise.Balanced, byte[] UserSpecifiedSalt = null)
         {
             if (file.isFileEncryptable())
             {
                 _file = file;
                 _password = password;
                 _passwordHint = passwordHint;
-
                 compress = new Compress(compression);
+                if (UserSpecifiedSalt != null) crypt.SetUserSalt(UserSpecifiedSalt);
             }
             else throw new Exception("This filetype cannot be encrypted!");
+        }
+
+        /// <summary>
+        /// Sets the user specified salt.
+        /// </summary>
+        /// <param name="salt">User-specified salt</param>
+        public void SetUserSalt(byte[] salt)
+        {
+            crypt.SetUserSalt(salt);
+        }
+
+        /// <summary>
+        /// Gets the user specified salt.
+        /// </summary>
+        /// <returns>User-specified salt</returns>
+        public byte[] GetUserSalt()
+        {
+            return crypt.GetUserSalt();
+        }
+
+        /// <summary>
+        /// Removes the user specified salt and returns to using a randomly generated one each encryption.
+        /// </summary>
+        public void RemoveUserSalt()
+        {
+            crypt.RemoveUserSalt();
+        }
+
+        /// <summary>
+        /// Gets if the user specified salt is active.
+        /// </summary>
+        /// <returns>If the user-specified salt is active</returns>
+        public bool IsUserSaltActive()
+        {
+            return crypt.IsUserSaltActive();
         }
 
         /// <summary>
@@ -382,8 +417,8 @@ namespace FAES
         protected string tempPath = FileAES_IntUtilities.getDynamicTempFolder("Decrypt");
         protected FAES_File _file;
         protected string _password;
-        protected Crypt crypt = new Crypt();
-        protected Compress compress = new Compress(Optimise.Balanced);
+        internal Crypt crypt = new Crypt();
+        internal Compress compress = new Compress(Optimise.Balanced);
 
         /// <summary>
         /// Decrypts a selected FAES File using a password
@@ -450,12 +485,6 @@ namespace FAES
         /// <returns>Current files Password Hint</returns>
         public string getPasswordHint()
         {
-            /*
-            string passwordHint = "";
-            crypt.GetPasswordHint(_file.getPath(), ref passwordHint);
-
-            return passwordHint;*/
-
             return crypt.GetPasswordHint(_file);
         }
     }
@@ -601,13 +630,12 @@ namespace FAES
 
     internal class FileAES_IntUtilities
     {
-
         /// <summary>
         /// The current Dynamic Temp folder for the current instance of FAES
         /// </summary>
         /// <param name="label">Required Subfolder</param>
         /// <returns>Path to the current Dynamic Temp Folder</returns>
-        public static string getDynamicTempFolder(string label)
+        internal static string getDynamicTempFolder(string label)
         {
             return Path.Combine(Path.GetTempPath(), "FileAES", genRandomTempFolder(label));
         }
@@ -617,7 +645,7 @@ namespace FAES
         /// </summary>
         /// <param name="sourceFolder">Source Folder of Pseudo-Random Subdirectory</param>
         /// <returns>Path of pseudo-random temp folder</returns>
-        public static string genRandomTempFolder(string sourceFolder)
+        internal static string genRandomTempFolder(string sourceFolder)
         {
             DateTime now = DateTime.Now;
             return sourceFolder + "_" + (now.Day).ToString("00") + (now.Month).ToString("00") + (now.Year % 100).ToString() + (now.Hour).ToString("00") + (now.Minute).ToString("00") + (now.Second).ToString("00");
@@ -628,7 +656,7 @@ namespace FAES
         /// </summary>
         /// <param name="path">Path to file</param>
         /// <returns>If the file is deleted</returns>
-        public static bool SafeDeleteFile(string path)
+        internal static bool SafeDeleteFile(string path)
         {
             if (File.Exists(path))
             {
@@ -643,7 +671,7 @@ namespace FAES
         /// </summary>
         /// <param name="path">Path to folder</param>
         /// <returns>If the folder is deleted</returns>
-        public static bool SafeDeleteFolder(string path, bool recursive = true)
+        internal static bool SafeDeleteFolder(string path, bool recursive = true)
         {
             if (Directory.Exists(path))
             {
@@ -659,7 +687,7 @@ namespace FAES
         /// <param name="sourceDirName">Source directory to copy</param>
         /// <param name="destDirName">Destination directory</param>
         /// <param name="copySubDirs">Recursively copy sub-directories</param>
-        public static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
+        internal static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
         {
             DirectoryInfo dir = new DirectoryInfo(sourceDirName);
 
@@ -678,7 +706,7 @@ namespace FAES
         /// <summary>
         /// Creates a new temp path and adds it to the instancedTempFolders list
         /// </summary>
-        public static void CreateTempPath(FAES_File file)
+        internal static void CreateTempPath(FAES_File file)
         {
             string tempPath;
 
@@ -697,7 +725,7 @@ namespace FAES
         /// <summary>
         /// Deletes the temp path after use and removes it from the instancedTempFolders list
         /// </summary>
-        public static void DeleteTempPath(FAES_File file)
+        internal static void DeleteTempPath(FAES_File file)
         {
             string tempPath;
 

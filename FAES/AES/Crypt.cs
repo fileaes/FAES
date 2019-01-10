@@ -6,19 +6,61 @@ using CoreChecksums;
 
 namespace FAES.AES
 {
-    public class Crypt
+    internal class Crypt
     {
-        protected byte[] _specifiedSalt;
+        protected byte[] _specifiedSalt = null;
 
         private const string _faesCBCModeIdentifier = "FAESv2-CBC"; //Current FAES Encryption Mode
 
         /// <summary>
-        /// FAES Encrypt/Decrypt Handler
+        /// FAES Encrypt/Decrypt Handler. Using a randomly generated salt.
         /// </summary>
-        /// <param name="salt">Custom Salt</param>
-        public Crypt(byte[] salt = null)
+        public Crypt()
+        { }
+
+        /// <summary>
+        /// FAES Encrypt/Decrypt Handler. Using a user-specified salt.
+        /// </summary>
+        /// <param name="salt">User-specified Salt</param>
+        public Crypt(byte[] salt)
         {
-            if (salt != null) _specifiedSalt = salt;
+            _specifiedSalt = salt;
+        }
+
+        /// <summary>
+        /// Sets the user specified salt.
+        /// </summary>
+        /// <param name="salt">User-specified salt</param>
+        internal void SetUserSalt(byte[] salt)
+        {
+            _specifiedSalt = salt;
+        }
+
+        /// <summary>
+        /// Gets the user specified salt.
+        /// </summary>
+        /// <returns>User-specified salt</returns>
+        internal byte[] GetUserSalt()
+        {
+            return _specifiedSalt;
+        }
+
+        /// <summary>
+        /// Removes the user specified salt and returns to using a randomly generated one each encryption.
+        /// </summary>
+        internal void RemoveUserSalt()
+        {
+            _specifiedSalt = null;
+        }
+
+        /// <summary>
+        /// Gets if the user specified salt is active.
+        /// </summary>
+        /// <returns>If the user-specified salt is active</returns>
+        internal bool IsUserSaltActive()
+        {
+            if (_specifiedSalt != null) return true;
+            return false;
         }
 
         /// <summary>
@@ -28,7 +70,7 @@ namespace FAES.AES
         /// <param name="password">Password to encrypt the file</param>
         /// <param name="passwordHint">Hint for the password used on the file</param>
         /// <returns></returns>
-        public bool Encrypt(string inputFile, string password, string compressionMode, string passwordHint = null)
+        internal bool Encrypt(string inputFile, string password, string compressionMode, string passwordHint = null)
         {
             if (String.IsNullOrEmpty(passwordHint)) passwordHint = "No Password Hint Set";
             else if (passwordHint.Contains("¬")) throw new Exception("Password hint contains invalid characters.");
@@ -92,7 +134,7 @@ namespace FAES.AES
         /// <param name="inputFile">Encrypted File</param>
         /// <param name="password">Password to decrypt the file</param>
         /// <returns>If the decryption was successful</returns>
-        public bool Decrypt(string inputFile, string password)
+        internal bool Decrypt(string inputFile, string password)
         {
             if (FileAES_Utilities.isFileDecryptable(inputFile))
             {
@@ -241,7 +283,7 @@ namespace FAES.AES
         /// </summary>
         /// <param name="faesFile">Encrypted File</param>
         /// <returns>The password hint</returns>
-        public string GetPasswordHint(FAES_File faesFile)
+        internal string GetPasswordHint(FAES_File faesFile)
         {
             if (faesFile.isFileDecryptable())
             {
@@ -270,7 +312,7 @@ namespace FAES.AES
         /// </summary>
         /// <param name="faesFile">Encrypted File</param>
         /// <returns>Timestamp of when the file was encrypted</returns>
-        public int GetEncryptionTimestamp(FAES_File faesFile)
+        internal int GetEncryptionTimestamp(FAES_File faesFile)
         {
             if (faesFile.isFileDecryptable())
             {
@@ -299,7 +341,7 @@ namespace FAES.AES
         /// </summary>
         /// <param name="faesFile">Encrypted File</param>
         /// <returns>FAES Version used to encrypt file</returns>
-        public string GetEncryptionVersion(FAES_File faesFile)
+        internal string GetEncryptionVersion(FAES_File faesFile)
         {
             if (faesFile.isFileDecryptable())
             {
@@ -331,7 +373,7 @@ namespace FAES.AES
         /// </summary>
         /// <param name="faesFile">Encrypted File</param>
         /// <returns>Output Password Hint</returns>
-        public string GetCompressionMode(FAES_File faesFile)
+        internal string GetCompressionMode(FAES_File faesFile)
         {
             if (faesFile.isFileDecryptable())
             {

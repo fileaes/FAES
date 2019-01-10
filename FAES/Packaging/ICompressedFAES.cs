@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FAES.Packaging
 {
-    interface ICompressedFAES
+    internal interface ICompressedFAES
     {
         void CompressFAESFile(FAES_File file, string tempPath, string outputPath);
 
