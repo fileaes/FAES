@@ -49,8 +49,6 @@
 
 - Added better compression handling (easier to add new compression algorithms)
 - Added new compression methods (ZIP/Deflate, LZMA, TAR/BZip2)
-- Added GetEncryptionVersion()
-- Added support for setting custom salts
 - Changed Compressed, Unencrypted file extention from '.faeszip' to '.ufaes'
 - Changed .NET Core 2.0 to .NET Core 2.1
 
