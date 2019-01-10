@@ -493,6 +493,10 @@ namespace FAES
     {
         public const string ExtentionFAES = ".faes";
         public const string ExtentionUFAES = ".ufaes";
+
+        private const bool IsPreReleaseBuild = true;
+        private const string PreReleaseTag = "BETA_1";
+
         private static string[] _supportedEncExtentions = new string[3] { ExtentionFAES, ".faes", ".mcrypt" };
 
         internal static List<string> _instancedTempFolders = new List<string>();
@@ -543,7 +547,19 @@ namespace FAES
         public static string GetVersion()
         {
             string[] ver = (typeof(FAES_File).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version).Split('.');
-            return "v" + ver[0] + "." + ver[1] + "." + ver[2];
+            if (!IsPreReleaseBuild)
+                return "v" + ver[0] + "." + ver[1] + "." + ver[2];
+            else
+                return "v" + ver[0] + "." + ver[1] + "." + ver[2] + "-" + PreReleaseTag;
+        }
+
+        /// <summary>
+        /// Gets if the current version of FAES is a Pre-Release version
+        /// </summary>
+        /// <returns>If the current FAES version is a Pre-Release build</returns>
+        public static bool IsPreReleaseVersion()
+        {
+            return IsPreReleaseBuild;
         }
 
         /// <summary>
