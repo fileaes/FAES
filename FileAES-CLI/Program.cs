@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FAES;
+using FAES.Packaging;
 
 namespace FileAES_CLI
 {
@@ -16,10 +18,14 @@ namespace FileAES_CLI
         private static bool _help = false;
         private static bool _getHint = false;
         private static bool _getEncryptTimestamp = false;
+        private static bool _getEncryptCompression = false;
         private static bool _getFaesVersion = false;
+        private static bool _getVersion = false;
         private static string _directory = null;
         private static string _passwordHint = null;
         private static string _password;
+        private static string _compressionMethod = null;
+        private static int _compressionLevel = 7;
         private static List<string> _strippedArgs = new List<string>();
 
         static void Main(string[] args)
@@ -42,7 +48,24 @@ namespace FileAES_CLI
                 else if (String.IsNullOrEmpty(_passwordHint) && (strippedArg == "hint" || strippedArg == "passwordhint" || strippedArg == "h") && !string.IsNullOrEmpty(args[i + 1])) _passwordHint = args[i + 1];
                 else if (strippedArg == "gethint" || strippedArg == "getpasswordhint") _getHint = true;
                 else if (strippedArg == "gettimestamp" || strippedArg == "timestamp" || strippedArg == "encryptiondate") _getEncryptTimestamp = true;
+                else if (strippedArg == "getcompression" || strippedArg == "getcompressionmethod") _getEncryptCompression = true;
                 else if (strippedArg == "faesversion" || strippedArg == "faes" || strippedArg == "faesver") _getFaesVersion = true;
+                else if (strippedArg == "faescliversion" || strippedArg == "faescliver" || strippedArg == "faescli" || strippedArg == "cliver" || strippedArg == "ver")
+                {
+                    _getVersion = true;
+                    _getFaesVersion = true;
+                }
+
+                else if (String.IsNullOrEmpty(_compressionMethod) && (strippedArg == "compression" || strippedArg == "compressionmethod" || strippedArg == "c") && !string.IsNullOrEmpty(args[i + 1])) _compressionMethod = args[i + 1].ToUpper();
+                else if ((strippedArg == "level" || strippedArg == "compressionlevel" || strippedArg == "l") && !string.IsNullOrEmpty(args[i + 1]))
+                {
+                    try
+                    {
+                        _compressionLevel = Convert.ToInt32(args[i + 1]);
+                    }
+                    catch
+                    { }
+                }
 
                 _strippedArgs.Add(strippedArg);
             }
@@ -50,8 +73,12 @@ namespace FileAES_CLI
             if (_help)
             {
                 Console.WriteLine("A FAES-based tool for encrypting and decrypting files using the command-line.\n\nPossible Launch Parameters:\n'--verbose' or '-v': Show more debugging information in the console (WIP)." +
-                    "\n'--purgeTemp' or '-p': Purge the FileAES Temp folder to resolve possible errors.\n'--password <password>' or '-p <password>': Set the password that will be used to encrypt/decrypt the file/folder." +
-                    "\n'--hint <Password Hint>' or '-h <Password Hint>': Sets a password hint.\n'--getHint': Gets the password hint for the encrypted file.\n'--getTimestamp': Gets the encryption timestamp of the encrypted file.\n\n" +
+                    "\n'--purgeTemp' or '-p': Purge the FileAES Temp folder to resolve possible errors.\n'--password <password>' or '-p <password>': Sets the password that will be used to encrypt/decrypt the file/folder." +
+                    "\n'--hint <Password Hint>' or '-h <Password Hint>': Sets a password hint.\n'--compression <ZIP/TAR/LZMA/LEGACYZIP>' or '-c <ZIP/TAR/LZMA/LEGACYZIP>': Sets the compression method that will be used to encrypt the file/folder." +
+                    "\n'--level <0-9>' or '-l <0-9>': Sets the compression level that will be used to encrypt the file/folder. (Only works for with the ZIP compression method)" +
+                    ".\n'--getHint': Gets the password hint for the encrypted file.\n'--getTimestamp': Gets the encryption timestamp of the encrypted file." +
+                    "\n'--getCompression': Gets the compression method of the encrypted file.\n'--ver': Gets the current version of FileAES-CLI and FAES being used." +
+                    "\n'--FAES': Gets the current version of FAES being used.\n\n" +
                     "File/Folder names can be entered as a launch parameter to select what to encrypt/decrypt (also allows for dragging/dropping a file/folder on the .exe).\n\n" +
                     "Example: 'FileAES-CLI.exe File.txt -p password123'");
                 return;
@@ -60,6 +87,12 @@ namespace FileAES_CLI
             if (_purgeTemp)
             {
                 FileAES_Utilities.PurgeTempFolder();
+            }
+
+            if (_getVersion)
+            {
+                Console.WriteLine("Current FileAES-CLI Version: {0}", GetVersion());
+                if (!_getFaesVersion) return;
             }
 
             if (_getFaesVersion)
@@ -79,7 +112,7 @@ namespace FileAES_CLI
                     else
                         Console.WriteLine("'{0}' does not contain a password hint!", Path.GetFileName(_directory));
 
-                    if (String.IsNullOrEmpty(_password) && !_getEncryptTimestamp) return;
+                    if (String.IsNullOrEmpty(_password) && (!_getEncryptTimestamp || !_getEncryptCompression)) return;
                 }
                 else
                 {
@@ -92,7 +125,7 @@ namespace FileAES_CLI
             {
                 if (File.Exists(_directory) && FileAES_Utilities.isFileDecryptable(_directory))
                 {
-                    int timestamp = FileAES_Utilities.GetEncrpytionTimeStamp(_directory);
+                    int timestamp = FileAES_Utilities.GetEncryptionTimeStamp(_directory);
 
                     if (timestamp >= 0)
                     {
@@ -103,6 +136,26 @@ namespace FileAES_CLI
                     {
                         Console.WriteLine("This file does not contain a encryption date. This is likely due to this file being encrypted using an older FAES version.");
                     }
+
+                    if (String.IsNullOrEmpty(_password) && !_getEncryptCompression) return;
+                }
+                else
+                {
+                    Console.WriteLine("You have not specified a valid encrypted file!");
+                    return;
+                }
+            }
+
+            if (_getEncryptCompression)
+            {
+                if (File.Exists(_directory) && FileAES_Utilities.isFileDecryptable(_directory))
+                {
+                    string compressionMode = FileAES_Utilities.GetCompressionMode(_directory);
+
+                    if (compressionMode != "LGYZIP")
+                        Console.WriteLine("The Compression Mode used for '{0}' is: {1}", Path.GetFileName(_directory), compressionMode);
+                    else
+                        Console.WriteLine("The Compression Mode used for '{0}' is: LGYZIP (LEGACYZIP)", Path.GetFileName(_directory));
 
                     if (String.IsNullOrEmpty(_password)) return;
                 }
@@ -167,22 +220,78 @@ namespace FileAES_CLI
             }
             else
             {
-                bool successful = false;
-                FAES_File fileAES;
+                FAES_File faesFile = new FAES_File(_directory);
 
                 try
                 {
-                    fileAES = new FAES_File(_directory, _password, ref successful, _passwordHint);
-
-                    if (successful) Console.WriteLine("{0}ion on {1} succeded!", fileAES.getOperation(), fileAES.getFaesType().ToLower());
-                    else Console.WriteLine("{0}ion on {1} failed!", fileAES.getOperation(), fileAES.getFaesType().ToLower());
-
-                    if (!successful && fileAES.isFileDecryptable())
+                    if (_compressionLevel < 0 || _compressionLevel > 9)
                     {
-                        Console.WriteLine("Ensure that you entered the correct password!");
-                        Console.WriteLine("Password Hint: {0}", fileAES.getPasswordHint());
+                        Console.WriteLine("You have not specified a valid compression level! Please choose a value between 0 and 9.");
+                        return;
                     }
+                    else
+                    {
+                        if (faesFile.isFileEncryptable())
+                        {
+                            FileAES_Encrypt encrypt = new FileAES_Encrypt(faesFile, _password, _passwordHint);
 
+                            if (!String.IsNullOrEmpty(_compressionMethod))
+                            {
+                                switch (_compressionMethod)
+                                {
+                                    case "ZIP":
+                                        {
+                                            encrypt.SetCompressionMode(CompressionMode.ZIP, _compressionLevel);
+                                            break;
+                                        }
+                                    case "TAR":
+                                        {
+                                            encrypt.SetCompressionMode(CompressionMode.TAR, _compressionLevel);
+                                            break;
+                                        }
+                                    case "LZMA":
+                                        {
+                                            encrypt.SetCompressionMode(CompressionMode.LZMA, _compressionLevel);
+                                            break;
+                                        }
+                                    case "LGYZIP":
+                                    case "LEGACYZIP":
+                                    case "LEGACY":
+                                        {
+                                            encrypt.SetCompressionMode(CompressionMode.LGYZIP, _compressionLevel);
+                                            break;
+                                        }
+                                    default:
+                                        Console.WriteLine("Unknown Compression Method: {0}", _compressionMethod);
+                                        return;
+                                }
+                            }
+
+                            if (encrypt.encryptFile())
+                            {
+                                Console.WriteLine("Encryption on {0} succeeded!", faesFile.getFaesType().ToLower());
+                            }
+                            else
+                            {
+                                Console.WriteLine("Encryption on {0} failed!", faesFile.getFaesType().ToLower());
+                            }
+                        }
+                        else
+                        {
+                            FileAES_Decrypt decrypt = new FileAES_Decrypt(faesFile, _password);
+
+                            if (decrypt.decryptFile())
+                            {
+                                Console.WriteLine("Decryption on {0} succeeded!", faesFile.getFaesType().ToLower());
+                            }
+                            else
+                            {
+                                Console.WriteLine("Decryption on {0} failed!", faesFile.getFaesType().ToLower());
+                                Console.WriteLine("Ensure that you entered the correct password!");
+                                Console.WriteLine("Password Hint: {0}", faesFile.getPasswordHint());
+                            }
+                        }
+                    }
                 }
                 catch (Exception e)
                 {
@@ -210,6 +319,12 @@ namespace FileAES_CLI
             }
 
             return input.ToString();
+        }
+
+        public static string GetVersion()
+        {
+            string[] ver = (typeof(FileAES_CLI.Program).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version).Split('.');
+            return "v" + ver[0] + "." + ver[1] + "." + ver[2];
         }
     }
 }

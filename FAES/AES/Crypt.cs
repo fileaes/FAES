@@ -6,19 +6,61 @@ using CoreChecksums;
 
 namespace FAES.AES
 {
-    public class Crypt
+    internal class Crypt
     {
-        protected byte[] _specifiedSalt;
+        protected byte[] _specifiedSalt = null;
 
         private const string _faesCBCModeIdentifier = "FAESv2-CBC"; //Current FAES Encryption Mode
 
         /// <summary>
-        /// FAES Encrypt/Decrypt Handler
+        /// FAES Encrypt/Decrypt Handler. Using a randomly generated salt.
         /// </summary>
-        /// <param name="salt">Custom Salt</param>
-        public Crypt(byte[] salt = null)
+        public Crypt()
+        { }
+
+        /// <summary>
+        /// FAES Encrypt/Decrypt Handler. Using a user-specified salt.
+        /// </summary>
+        /// <param name="salt">User-specified Salt</param>
+        public Crypt(byte[] salt)
         {
-            if (salt != null) _specifiedSalt = salt;
+            _specifiedSalt = salt;
+        }
+
+        /// <summary>
+        /// Sets the user specified salt.
+        /// </summary>
+        /// <param name="salt">User-specified salt</param>
+        internal void SetUserSalt(byte[] salt)
+        {
+            _specifiedSalt = salt;
+        }
+
+        /// <summary>
+        /// Gets the user specified salt.
+        /// </summary>
+        /// <returns>User-specified salt</returns>
+        internal byte[] GetUserSalt()
+        {
+            return _specifiedSalt;
+        }
+
+        /// <summary>
+        /// Removes the user specified salt and returns to using a randomly generated one each encryption.
+        /// </summary>
+        internal void RemoveUserSalt()
+        {
+            _specifiedSalt = null;
+        }
+
+        /// <summary>
+        /// Gets if the user specified salt is active.
+        /// </summary>
+        /// <returns>If the user-specified salt is active</returns>
+        internal bool IsUserSaltActive()
+        {
+            if (_specifiedSalt != null) return true;
+            return false;
         }
 
         /// <summary>
@@ -28,21 +70,23 @@ namespace FAES.AES
         /// <param name="password">Password to encrypt the file</param>
         /// <param name="passwordHint">Hint for the password used on the file</param>
         /// <returns></returns>
-        public bool Encrypt(string inputFile, string password, string passwordHint = null)
+        internal bool Encrypt(string inputFile, string password, string compressionMode, string passwordHint = null)
         {
             if (String.IsNullOrEmpty(passwordHint)) passwordHint = "No Password Hint Set";
             else if (passwordHint.Contains("¬")) throw new Exception("Password hint contains invalid characters.");
-            MetaDataFAES fMD = new MetaDataFAES(passwordHint);
+            MetaDataFAES fMD = new MetaDataFAES(passwordHint, compressionMode);
             string outputName;
             byte[] hash = Checksums.getSHA1(inputFile);
-            byte[] salt = GenerateRandomSalt();
+            byte[] salt;
             byte[] metaData = fMD.getMetaData();
 
-            if (inputFile.Contains(".faeszip")) outputName = inputFile.Replace(".faeszip", "");
+            if (_specifiedSalt != null) salt = _specifiedSalt;
+            else salt = GenerateRandomSalt();
+
+            if (inputFile.Contains(FileAES_Utilities.ExtentionUFAES)) outputName = inputFile.Replace(FileAES_Utilities.ExtentionUFAES, "");
             else outputName = inputFile;
 
             outputName = Path.ChangeExtension(outputName, "faes");
-
 
             FileStream fsCrypt = new FileStream(outputName, FileMode.Create);
 
@@ -90,9 +134,9 @@ namespace FAES.AES
         /// <param name="inputFile">Encrypted File</param>
         /// <param name="password">Password to decrypt the file</param>
         /// <returns>If the decryption was successful</returns>
-        public bool Decrypt(string inputFile, string password)
+        internal bool Decrypt(string inputFile, string password)
         {
-            if (Path.GetExtension(inputFile) == ".faes" || Path.GetExtension(inputFile) == ".mcrypt")
+            if (FileAES_Utilities.isFileDecryptable(inputFile))
             {
                 string outputName;
                 CipherMode cipher = CipherMode.CBC;
@@ -119,10 +163,7 @@ namespace FAES.AES
                 {
                     CryptoStream cs = new CryptoStream(fsCrypt, AES.CreateDecryptor(), CryptoStreamMode.Read);
 
-                    if (Path.GetExtension(inputFile) == ".faes")
-                        outputName = inputFile.Replace(".faes", ".faeszip");
-                    else
-                        outputName = inputFile.Replace(".mcrypt", ".faeszip");
+                    outputName = Path.ChangeExtension(inputFile, FileAES_Utilities.ExtentionUFAES);
 
                     try
                     {
@@ -149,10 +190,11 @@ namespace FAES.AES
 
                         if (Checksums.convertHashToString(hash) != Checksums.convertHashToString(Checksums.getSHA1(outputName)))
                         {
-                            File.Delete(outputName);
+                            FileAES_IntUtilities.SafeDeleteFile(outputName);
                             return false;
                         }
-                        else return true;
+
+                        return true;
                     }
                     catch
                     {
@@ -165,6 +207,7 @@ namespace FAES.AES
                     fsCrypt.Close();
                 }
             }
+
             return false;
         }
 
@@ -210,7 +253,7 @@ namespace FAES.AES
                     break;
                 default:
                     cipherMode = CipherMode.CFB;
-                    if (!hideWriteLine) Console.WriteLine("Version Identifier not found! Decrypting using Legacy Mode.");
+                    if (!hideWriteLine) Console.WriteLine("Version Identifier not found! Decrypting using LegacyCFB Mode.");
                     fsCrypt.Position = hash.Length + salt.Length;
                     break;
             }
@@ -238,12 +281,11 @@ namespace FAES.AES
         /// <summary>
         /// Gets the Password Hint of the encrypted file
         /// </summary>
-        /// <param name="inputFile">Encrypted File</param>
-        /// <param name="PasswordHint">Output Password Hint</param>
-        /// <returns>If the inputFile was valid</returns>
-        public bool GetPasswordHint(string inputFile, ref string PasswordHint)
+        /// <param name="faesFile">Encrypted File</param>
+        /// <returns>The password hint</returns>
+        internal string GetPasswordHint(FAES_File faesFile)
         {
-            if (Path.GetExtension(inputFile) == ".faes" || Path.GetExtension(inputFile) == ".mcrypt")
+            if (faesFile.isFileDecryptable())
             {
                 CipherMode cipher = CipherMode.CBC;
                 byte[] hash = new byte[20];
@@ -251,31 +293,28 @@ namespace FAES.AES
                 byte[] faesCBCMode = new byte[10];
                 byte[] faesMetaData = new byte[256];
 
-                FileStream fsCrypt = new FileStream(inputFile, FileMode.Open);
+                FileStream fsCrypt = new FileStream(faesFile.getPath(), FileMode.Open);
                 fsCrypt = DecryptModeHandler(fsCrypt, ref hash, ref salt, ref faesCBCMode, ref faesMetaData, ref cipher, true);
                 fsCrypt.Close();
 
                 if (Encoding.UTF8.GetString(faesCBCMode) == "FAESv2-CBC")
                 {
                     MetaDataFAES fMD = new MetaDataFAES(faesMetaData);
-                    PasswordHint = fMD.getPasswordHint();
+                    return fMD.getPasswordHint();
                 }
-                else PasswordHint = "No Password Hint Set";
-
-                return true;
+                return "No Password Hint Set";
             }
-            return false;
+            else throw new FormatException("This method only supports encrypted FAES Files!");
         }
 
         /// <summary>
         /// Gets the UNIX Timestamp (UTC) of when the file was encrypted
         /// </summary>
-        /// <param name="inputFile">Encrypted File</param>
-        /// <param name="UNIXTimestampUTC">Output UNIX Timestamp</param>
-        /// <returns>If the inputFile was valid</returns>
-        public bool GetEncryptionTimestamp(string inputFile, ref int UNIXTimestamp)
+        /// <param name="faesFile">Encrypted File</param>
+        /// <returns>Timestamp of when the file was encrypted</returns>
+        internal int GetEncryptionTimestamp(FAES_File faesFile)
         {
-            if (Path.GetExtension(inputFile) == ".faes" || Path.GetExtension(inputFile) == ".mcrypt")
+            if (faesFile.isFileDecryptable())
             {
                 CipherMode cipher = CipherMode.CBC;
                 byte[] hash = new byte[20];
@@ -283,20 +322,79 @@ namespace FAES.AES
                 byte[] faesCBCMode = new byte[10];
                 byte[] faesMetaData = new byte[256];
 
-                FileStream fsCrypt = new FileStream(inputFile, FileMode.Open);
+                FileStream fsCrypt = new FileStream(faesFile.getPath(), FileMode.Open);
                 fsCrypt = DecryptModeHandler(fsCrypt, ref hash, ref salt, ref faesCBCMode, ref faesMetaData, ref cipher, true);
                 fsCrypt.Close();
 
                 if (Encoding.UTF8.GetString(faesCBCMode) == "FAESv2-CBC")
                 {
                     MetaDataFAES fMD = new MetaDataFAES(faesMetaData);
-                    UNIXTimestamp = fMD.getEncryptionTimestamp();
+                    return fMD.getEncryptionTimestamp();
                 }
-                else UNIXTimestamp = -1;
-
-                return true;
+                return -1;
             }
-            return false;
+            else throw new FormatException("This method only supports encrypted FAES Files!");
+        }
+
+        /// <summary>
+        /// Gets the FAES version used to encrypt the file
+        /// </summary>
+        /// <param name="faesFile">Encrypted File</param>
+        /// <returns>FAES Version used to encrypt file</returns>
+        internal string GetEncryptionVersion(FAES_File faesFile)
+        {
+            if (faesFile.isFileDecryptable())
+            {
+                CipherMode cipher = CipherMode.CBC;
+                byte[] hash = new byte[20];
+                byte[] salt = new byte[32];
+                byte[] faesCBCMode = new byte[10];
+                byte[] faesMetaData = new byte[256];
+
+                FileStream fsCrypt = new FileStream(faesFile.getPath(), FileMode.Open);
+                fsCrypt = DecryptModeHandler(fsCrypt, ref hash, ref salt, ref faesCBCMode, ref faesMetaData, ref cipher, true);
+                fsCrypt.Close();
+
+                if (Encoding.UTF8.GetString(faesCBCMode) == "FAESv2-CBC")
+                {
+                    MetaDataFAES fMD = new MetaDataFAES(faesMetaData);
+                    return fMD.getEncryptionVersion();
+                }
+                else if (Encoding.UTF8.GetString(faesCBCMode) == "FAESv1-CBC")
+                    return "v1.0.0";
+                else
+                    return "Pre-v1.0.0";
+            }
+            else throw new FormatException("This method only supports encrypted FAES Files!");
+        }
+
+        /// <summary>
+        /// Gets the Compression Mode of the encrypted file
+        /// </summary>
+        /// <param name="faesFile">Encrypted File</param>
+        /// <returns>Output Password Hint</returns>
+        internal string GetCompressionMode(FAES_File faesFile)
+        {
+            if (faesFile.isFileDecryptable())
+            {
+                CipherMode cipher = CipherMode.CBC;
+                byte[] hash = new byte[20];
+                byte[] salt = new byte[32];
+                byte[] faesCBCMode = new byte[10];
+                byte[] faesMetaData = new byte[256];
+
+                FileStream fsCrypt = new FileStream(faesFile.getPath(), FileMode.Open);
+                fsCrypt = DecryptModeHandler(fsCrypt, ref hash, ref salt, ref faesCBCMode, ref faesMetaData, ref cipher, true);
+                fsCrypt.Close();
+
+                if (Encoding.UTF8.GetString(faesCBCMode) == "FAESv2-CBC")
+                {
+                    MetaDataFAES fMD = new MetaDataFAES(faesMetaData);
+                    return fMD.getCompressionMode();
+                }
+                return "LGYZIP";
+            }
+            else throw new FormatException("This method only supports encrypted FAES Files!");
         }
     }
 }

@@ -42,9 +42,11 @@
             this.fileName = new System.Windows.Forms.Label();
             this.copyrightLabel = new System.Windows.Forms.Label();
             this.versionLabel = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
+            this.passwordHintLabel = new System.Windows.Forms.Label();
             this.hintInput = new System.Windows.Forms.TextBox();
             this.slowToolTip = new System.Windows.Forms.ToolTip(this.components);
+            this.compressModeLabel = new System.Windows.Forms.Label();
+            this.compressMode = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // pathLabel
@@ -95,10 +97,10 @@
             // encryptButton
             // 
             this.encryptButton.Enabled = false;
-            this.encryptButton.Location = new System.Drawing.Point(12, 170);
+            this.encryptButton.Location = new System.Drawing.Point(12, 212);
             this.encryptButton.Name = "encryptButton";
             this.encryptButton.Size = new System.Drawing.Size(228, 23);
-            this.encryptButton.TabIndex = 7;
+            this.encryptButton.TabIndex = 8;
             this.encryptButton.Text = "Encrypt";
             this.encryptButton.UseVisualStyleBackColor = true;
             this.encryptButton.Click += new System.EventHandler(this.encryptButton_Click);
@@ -120,7 +122,7 @@
             this.noteLabel.AutoEllipsis = true;
             this.noteLabel.BackColor = System.Drawing.SystemColors.Control;
             this.noteLabel.ForeColor = System.Drawing.Color.Black;
-            this.noteLabel.Location = new System.Drawing.Point(9, 137);
+            this.noteLabel.Location = new System.Drawing.Point(9, 179);
             this.noteLabel.Name = "noteLabel";
             this.noteLabel.Size = new System.Drawing.Size(235, 30);
             this.noteLabel.TabIndex = 7;
@@ -143,7 +145,7 @@
             // copyrightLabel
             // 
             this.copyrightLabel.AutoSize = true;
-            this.copyrightLabel.Location = new System.Drawing.Point(165, 196);
+            this.copyrightLabel.Location = new System.Drawing.Point(165, 238);
             this.copyrightLabel.Name = "copyrightLabel";
             this.copyrightLabel.Size = new System.Drawing.Size(88, 13);
             this.copyrightLabel.TabIndex = 18;
@@ -151,21 +153,21 @@
             // 
             // versionLabel
             // 
-            this.versionLabel.Location = new System.Drawing.Point(-1, 196);
+            this.versionLabel.Location = new System.Drawing.Point(-1, 238);
             this.versionLabel.Name = "versionLabel";
             this.versionLabel.Size = new System.Drawing.Size(160, 13);
             this.versionLabel.TabIndex = 19;
             this.versionLabel.Text = "v0.0.0.0";
             this.versionLabel.Click += new System.EventHandler(this.versionLabel_Click);
             // 
-            // label1
+            // passwordHintLabel
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 108);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(53, 26);
-            this.label1.TabIndex = 20;
-            this.label1.Text = "Password\r\nHint:";
+            this.passwordHintLabel.AutoSize = true;
+            this.passwordHintLabel.Location = new System.Drawing.Point(12, 108);
+            this.passwordHintLabel.Name = "passwordHintLabel";
+            this.passwordHintLabel.Size = new System.Drawing.Size(53, 26);
+            this.passwordHintLabel.TabIndex = 20;
+            this.passwordHintLabel.Text = "Password\r\nHint:";
             // 
             // hintInput
             // 
@@ -184,14 +186,34 @@
             this.slowToolTip.InitialDelay = 1000;
             this.slowToolTip.ReshowDelay = 100;
             // 
+            // compressModeLabel
+            // 
+            this.compressModeLabel.AutoSize = true;
+            this.compressModeLabel.Location = new System.Drawing.Point(12, 151);
+            this.compressModeLabel.Name = "compressModeLabel";
+            this.compressModeLabel.Size = new System.Drawing.Size(37, 13);
+            this.compressModeLabel.TabIndex = 21;
+            this.compressModeLabel.Text = "Mode:";
+            // 
+            // compressMode
+            // 
+            this.compressMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.compressMode.FormattingEnabled = true;
+            this.compressMode.Location = new System.Drawing.Point(74, 148);
+            this.compressMode.Name = "compressMode";
+            this.compressMode.Size = new System.Drawing.Size(167, 21);
+            this.compressMode.TabIndex = 7;
+            // 
             // FileAES_Encrypt
             // 
             this.AcceptButton = this.encryptButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(252, 211);
+            this.ClientSize = new System.Drawing.Size(252, 253);
+            this.Controls.Add(this.compressMode);
+            this.Controls.Add(this.compressModeLabel);
             this.Controls.Add(this.hintInput);
-            this.Controls.Add(this.label1);
+            this.Controls.Add(this.passwordHintLabel);
             this.Controls.Add(this.versionLabel);
             this.Controls.Add(this.copyrightLabel);
             this.Controls.Add(this.fileName);
@@ -229,8 +251,10 @@
         private System.Windows.Forms.Label fileName;
         private System.Windows.Forms.Label copyrightLabel;
         private System.Windows.Forms.Label versionLabel;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label passwordHintLabel;
         private System.Windows.Forms.TextBox hintInput;
         private System.Windows.Forms.ToolTip slowToolTip;
+        private System.Windows.Forms.Label compressModeLabel;
+        private System.Windows.Forms.ComboBox compressMode;
     }
 }

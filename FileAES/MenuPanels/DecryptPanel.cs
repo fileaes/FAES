@@ -79,17 +79,21 @@ namespace FAES_GUI.MenuPanels
 
         private void setMetaData()
         {
-            int timestamp = FileAES_Utilities.GetEncrpytionTimeStamp(_fileToDecrypt.getPath());
+            int timestamp = FileAES_Utilities.GetEncryptionTimeStamp(_fileToDecrypt.getPath());
+            string version = FileAES_Utilities.GetEncryptionVersion(_fileToDecrypt.getPath());
+            string compression = FileAES_Utilities.GetCompressionMode(_fileToDecrypt.getPath());
 
             if (timestamp >= 0)
-            {
-                DateTime dateTime = FileAES_Utilities.UnixTimeStampToDateTime((double)timestamp);
-                encryptedFileMetaData.Text = String.Format("Encrypted on {0} at {1}", dateTime.ToString("dd/MM/yyyy"), dateTime.ToString("HH:mm:ss tt"));
-            }
+                encryptedFileMetaData.Text += String.Format("Encrypted on {0} at {1}.", FileAES_Utilities.UnixTimeStampToDateTime((double)timestamp).ToString("dd/MM/yyyy"), FileAES_Utilities.UnixTimeStampToDateTime((double)timestamp).ToString("hh:mm:ss tt"));
             else
-            {
-                encryptedFileMetaData.Text = String.Format("This file does not contain a encryption date. This is likely due to this file being encrypted using an older FAES version.");
-            }
+                encryptedFileMetaData.Text += String.Format("This file does not contain a encryption date. This is likely due to this file being encrypted using an older FAES version.");
+
+            encryptedFileMetaData.Text += (Environment.NewLine + String.Format("FAES {0} was used.", version));
+
+            if (compression == "LGYZIP")
+                encryptedFileMetaData.Text += (Environment.NewLine + "Compressed with LEGACYZIP.");
+            else
+                encryptedFileMetaData.Text += (Environment.NewLine + String.Format("Compressed with {0}.", compression));
 
             passHintTextbox.Text = FileAES_Utilities.GetPasswordHint(_fileToDecrypt.getPath());
         }
@@ -187,7 +191,11 @@ namespace FAES_GUI.MenuPanels
 
         private void selectDecryptButton_Click(object sender, EventArgs e)
         {
-            if (openFileToDecrypt.ShowDialog() == DialogResult.OK)
+            if (Control.ModifierKeys == Keys.Shift)
+            {
+                ResetFile();
+            }
+            else if (openFileToDecrypt.ShowDialog() == DialogResult.OK)
             {
                 FAES_File tFaesFile = new FAES_File(openFileToDecrypt.FileName);
                 setFileToDecrypt(tFaesFile);
