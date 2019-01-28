@@ -3,8 +3,8 @@
 ## FAES
 _.NET Framework 4.5 or .NET Core 2.1 Library used to encrypt and decrypt files._
 
-**External Links:**  
-[FAES Development](https://trello.com/b/MzXitLMc/fileaes-faes "FAES Trello")
+**Links:**  
+[FAES Development](https://github.com/mullak99/FileAES/projects/1 "FAES Development")
 
 ## FileAES
 _New W.I.P GUI application for encrypting and decrypting files. Will phase out legacy GUI._
