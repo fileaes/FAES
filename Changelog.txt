@@ -4,6 +4,7 @@
 
 ~ FAES Encryption Mode: FAESv1-CBC
 ~ Supported FAES Encryption Modes: Legacy and FAESv1-CBC
+~ Supported FAES Compression Modes: LegacyZIP
 
 |---| 1.1.0 |---|
 
@@ -14,6 +15,7 @@
 
 ~ FAES Encryption Mode: FAESv2-CBC
 ~ Supported FAES Encryption Modes: Legacy, FAESv1-CBC and FAESv2-CBC
+~ Supported FAES Compression Modes: LegacyZIP
 
 |---| 1.1.1 |---|
 
@@ -22,6 +24,7 @@
 
 ~ FAES Encryption Mode: FAESv2-CBC
 ~ Supported FAES Encryption Modes: Legacy, FAESv1-CBC and FAESv2-CBC
+~ Supported FAES Compression Modes: LegacyZIP
 
 |---| 1.1.2 |---|
 
@@ -40,3 +43,4 @@
 
 ~ FAES Encryption Mode: FAESv2-CBC
 ~ Supported FAES Encryption Modes: Legacy, FAESv1-CBC and FAESv2-CBC
+~ Supported FAES Compression Modes: LegacyZIP
