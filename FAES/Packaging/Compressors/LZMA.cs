@@ -16,36 +16,34 @@ namespace FAES.Packaging
 
         public void CompressFAESFile(FAES_File file, string tempPath, string outputPath)
         {
+            string tempFolderName = FileAES_IntUtilities.CreateTempPath(file, tempPath);
+            if (Directory.Exists(tempFolderName)) Directory.Delete(tempFolderName, true);
+
+            if (!Directory.Exists(Path.GetDirectoryName(outputPath))) Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
+
             if (file.isFile())
             {
-                string tempFolderName = FileAES_IntUtilities.genRandomTempFolder(file.getFileName().Substring(0, file.getFileName().Length - Path.GetExtension(file.getFileName()).Length));
-                FileAES_Utilities._instancedTempFolders.Add(tempFolderName);
-                if (Directory.Exists(Path.Combine(tempPath, tempFolderName))) Directory.Delete(Path.Combine(tempPath, tempFolderName), true);
-
-                Directory.CreateDirectory(Path.Combine(tempPath, tempFolderName));
-                File.Copy(file.getPath(), Path.Combine(tempPath, tempFolderName, file.getFileName()));
+                Directory.CreateDirectory(tempFolderName);
+                File.Copy(file.getPath(), Path.Combine(tempFolderName, file.getFileName()));
 
                 WriterOptions wo = new WriterOptions(CompressionType.LZMA);
 
                 using (Stream stream = File.OpenWrite(outputPath))
                 using (var writer = WriterFactory.Open(stream, ArchiveType.Zip, wo))
                 {
-                    writer.WriteAll(Path.Combine(tempPath, tempFolderName), "*", SearchOption.AllDirectories);
+                    writer.WriteAll(tempFolderName, "*", SearchOption.AllDirectories);
                 }
             }
             else
             {
-                string tempFolderName = FileAES_IntUtilities.genRandomTempFolder(file.getFileName().Substring(0, file.getFileName().Length - Path.GetExtension(file.getFileName()).Length));
-                FileAES_Utilities._instancedTempFolders.Add(tempFolderName);
-                if (Directory.Exists(Path.Combine(tempPath, tempFolderName))) Directory.Delete(Path.Combine(tempPath, tempFolderName), true);
-                FileAES_IntUtilities.DirectoryCopy(file.getPath(), Path.Combine(tempPath, tempFolderName, file.getFileName()), true);
+                FileAES_IntUtilities.DirectoryCopy(file.getPath(), Path.Combine(tempFolderName, file.getFileName()), true);
 
                 WriterOptions wo = new WriterOptions(CompressionType.LZMA);
 
                 using (Stream stream = File.OpenWrite(outputPath))
                 using (var writer = WriterFactory.Open(stream, ArchiveType.Zip, wo))
                 {
-                    writer.WriteAll(Path.Combine(tempPath, tempFolderName), "*", SearchOption.AllDirectories);
+                    writer.WriteAll(tempFolderName, "*", SearchOption.AllDirectories);
                 }
             }
         }
