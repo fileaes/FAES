@@ -14,38 +14,29 @@ namespace FAES.Packaging
 
         }
 
-        public void CompressFAESFile(FAES_File file, string tempPath, string outputPath)
+        public string CompressFAESFile(FAES_File file)
         {
-            string tempFolderName = FileAES_IntUtilities.CreateTempPath(file, tempPath);
-            if (Directory.Exists(tempFolderName)) Directory.Delete(tempFolderName, true);
+            string tempPath = FileAES_IntUtilities.CreateTempPath(file, "LZMA_Compress-" + FileAES_IntUtilities.GetDateTimeString());
+            string tempRawPath = Path.Combine(tempPath, "contents");
+            string tempRawFile = Path.Combine(tempRawPath, file.getFileName());
+            string tempOutputPath = Path.Combine(Directory.GetParent(tempPath).FullName, Path.ChangeExtension(file.getFileName(), FileAES_Utilities.ExtentionUFAES));
 
-            if (!Directory.Exists(Path.GetDirectoryName(outputPath))) Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
+            if (!Directory.Exists(tempRawPath)) Directory.CreateDirectory(tempRawPath);
 
             if (file.isFile())
-            {
-                Directory.CreateDirectory(tempFolderName);
-                File.Copy(file.getPath(), Path.Combine(tempFolderName, file.getFileName()));
-
-                WriterOptions wo = new WriterOptions(CompressionType.LZMA);
-
-                using (Stream stream = File.OpenWrite(outputPath))
-                using (var writer = WriterFactory.Open(stream, ArchiveType.Zip, wo))
-                {
-                    writer.WriteAll(tempFolderName, "*", SearchOption.AllDirectories);
-                }
-            }
+                File.Copy(file.getPath(), tempRawFile);
             else
+                FileAES_IntUtilities.DirectoryCopy(file.getPath(), tempRawPath, true);
+
+            WriterOptions wo = new WriterOptions(CompressionType.LZMA);
+
+            using (Stream stream = File.OpenWrite(tempOutputPath))
+            using (var writer = WriterFactory.Open(stream, ArchiveType.Zip, wo))
             {
-                FileAES_IntUtilities.DirectoryCopy(file.getPath(), Path.Combine(tempFolderName, file.getFileName()), true);
-
-                WriterOptions wo = new WriterOptions(CompressionType.LZMA);
-
-                using (Stream stream = File.OpenWrite(outputPath))
-                using (var writer = WriterFactory.Open(stream, ArchiveType.Zip, wo))
-                {
-                    writer.WriteAll(tempFolderName, "*", SearchOption.AllDirectories);
-                }
+                writer.WriteAll(tempRawPath, "*", SearchOption.AllDirectories);
             }
+
+            return tempOutputPath;
         }
 
         public void UncompressFAESFile(FAES_File file, string unencryptedFile)

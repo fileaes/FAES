@@ -67,19 +67,21 @@ namespace FAES.Packaging
         /// <param name="file">FAES File to compress</param>
         /// <param name="tempPath">Temporary File Path</param>
         /// <param name="outputPath">Final Output Path</param>
-        public void CompressFAESFile(FAES_File file, string tempPath, string outputPath)
+        public string CompressFAESFile(FAES_File file)
         {
             switch (_compressionMode)
             {
                 case CompressionMode.LZMA:
                     LZMA lzma = new LZMA();
-                    lzma.CompressFAESFile(file, tempPath, outputPath);
-                    break;
+                    return lzma.CompressFAESFile(file);
                 case CompressionMode.TAR:
                     TAR tar = new TAR();
-                    tar.CompressFAESFile(file, tempPath, outputPath);
-                    break;
+                    return tar.CompressFAESFile(file);
+                case CompressionMode.LGYZIP:
+                    LegacyZIP legacyZIP = new LegacyZIP();
+                    return legacyZIP.CompressFAESFile(file);
                 case CompressionMode.ZIP:
+                default:
                     {
                         ZIP zip;
                         if (_compressionLevelRaw < 0)
@@ -87,13 +89,8 @@ namespace FAES.Packaging
                         else
                             zip = new ZIP(_compressionLevelRaw);
 
-                        zip.CompressFAESFile(file, tempPath, outputPath);
-                        break;
+                        return zip.CompressFAESFile(file);
                     }
-                case CompressionMode.LGYZIP:
-                    LegacyZIP legacyZIP = new LegacyZIP();
-                    legacyZIP.CompressFAESFile(file, tempPath, outputPath);
-                    break;
             }
         }
 

@@ -8,7 +8,7 @@ namespace FAES.Packaging
 {
     internal interface ICompressedFAES
     {
-        void CompressFAESFile(FAES_File file, string tempPath, string outputPath);
+        string CompressFAESFile(FAES_File file);
 
         void UncompressFAESFile(FAES_File encryptedFile, string unencryptedFile);
     }
