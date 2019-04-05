@@ -70,7 +70,14 @@ namespace FAES.AES
         public string getEncryptionVersion()
         {
             if (_encryptionVersion != null)
-                return ConvertBytesToString(_encryptionVersion);
+            {
+                string ver = ConvertBytesToString(_encryptionVersion);
+
+                if (ver.Contains("DEV"))
+                    return ver.Split('_')[0];
+                else
+                    return ver;
+            }
             else
                 return "v1.1.0 — v1.1.2";
         }

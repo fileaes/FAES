@@ -73,21 +73,32 @@ namespace FAES.Packaging
             {
                 case CompressionMode.LZMA:
                     LZMA lzma = new LZMA();
+                    Logging.Log(String.Format("Compression Mode: LZMA"), Severity.DEBUG);
                     return lzma.CompressFAESFile(file);
                 case CompressionMode.TAR:
                     TAR tar = new TAR();
+                    Logging.Log(String.Format("Compression Mode: LZMA"), Severity.DEBUG);
                     return tar.CompressFAESFile(file);
                 case CompressionMode.LGYZIP:
                     LegacyZIP legacyZIP = new LegacyZIP();
+                    Logging.Log(String.Format("Compression Mode: LEGACYZIP"), Severity.DEBUG);
                     return legacyZIP.CompressFAESFile(file);
                 case CompressionMode.ZIP:
                 default:
                     {
                         ZIP zip;
+                        Logging.Log(String.Format("Compression Mode: ZIP"), Severity.DEBUG);
                         if (_compressionLevelRaw < 0)
+                        {
+                            Logging.Log(String.Format("Compression Level: {0}", _compressionLevel), Severity.DEBUG);
                             zip = new ZIP(_compressionLevel);
+                        }
                         else
+                        {
+                            Logging.Log(String.Format("Compression Level: {0}", _compressionLevelRaw), Severity.DEBUG);
                             zip = new ZIP(_compressionLevelRaw);
+                        }
+
 
                         return zip.CompressFAESFile(file);
                     }
@@ -101,6 +112,8 @@ namespace FAES.Packaging
         public void UncompressFAESFile(FAES_File encryptedFile, string uFaesFile)
         {
             string fileCompressionMode = FileAES_Utilities.GetCompressionMode(encryptedFile.getPath());
+
+            Logging.Log(String.Format("Compression Mode: {0}", fileCompressionMode), Severity.DEBUG);
 
             switch (fileCompressionMode)
             {

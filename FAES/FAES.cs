@@ -97,13 +97,13 @@ namespace FAES
             {
                 if (isFileEncryptable())
                 {
-                    Console.WriteLine("Encrypting '{0}'...", _filePath);
+                    Logging.Log(String.Format("Encrypting '{0}'...", _filePath), Severity.INFO);
                     FileAES_Encrypt encrypt = new FileAES_Encrypt(new FAES_File(_filePath), _password, _passwordHint);
                     success = encrypt.encryptFile();
                 }
                 else if (isFileDecryptable())
                 {
-                    Console.WriteLine("Decrypting '{0}'...", _filePath);
+                    Logging.Log(String.Format("Decrypting '{0}'...", _filePath), Severity.INFO);
                     FileAES_Decrypt decrypt = new FileAES_Decrypt(new FAES_File(_filePath), _password);
                     success = decrypt.decryptFile();
                 }
@@ -398,7 +398,9 @@ namespace FAES
             {
                 try
                 {
+                    Logging.Log(String.Format("Starting Uncompression: {0}", _file.getPath()), Severity.DEBUG);
                     file = compress.CompressFAESFile(_file);
+                    Logging.Log(String.Format("Finished Uncompression: {0}", _file.getPath()), Severity.DEBUG);
                 }
                 catch
                 {
@@ -407,7 +409,9 @@ namespace FAES
 
                 try
                 {
+                    Logging.Log(String.Format("Starting Encryption: {0}", file), Severity.DEBUG);
                     success = crypt.Encrypt(file, _password, compress.GetCompressionModeAsString(), _passwordHint);
+                    Logging.Log(String.Format("Finished Encryption: {0}", file), Severity.DEBUG);
                 }
                 catch
                 {
@@ -536,7 +540,9 @@ namespace FAES
         public bool decryptFile()
         {
             bool success;
+            Logging.Log(String.Format("Starting Decryption: {0}", _file.getPath()), Severity.DEBUG);
             success = crypt.Decrypt(_file.getPath(), _password);
+            Logging.Log(String.Format("Finished Decryption: {0}", _file.getPath()), Severity.DEBUG);
 
             File.SetAttributes(Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES), FileAttributes.Hidden);
 
@@ -544,7 +550,9 @@ namespace FAES
             {
                 try
                 {
+                    Logging.Log(String.Format("Starting Uncompression: {0}", Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES)), Severity.DEBUG);
                     compress.UncompressFAESFile(_file, Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES));
+                    Logging.Log(String.Format("Finished Uncompression: {0}", Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES)), Severity.DEBUG);
                 }
                 catch
                 {
@@ -553,9 +561,7 @@ namespace FAES
 
                 try
                 {
-                    File.SetAttributes(Directory.GetParent(_file.getPath()).FullName, FileAttributes.Hidden);
                     File.SetAttributes(Directory.GetParent(_file.getPath()).FullName, FileAttributes.Normal);
-
                     FileAES_IntUtilities.SafeDeleteFile(Path.Combine(Directory.GetParent(_file.getPath()).FullName, _file.getFileName().Substring(0, _file.getFileName().Length - Path.GetExtension(_file.getFileName()).Length) + FileAES_Utilities.ExtentionUFAES));
                 }
                 catch
@@ -594,13 +600,13 @@ namespace FAES
         public const string ExtentionUFAES = ".ufaes";
 
         private const bool IsPreReleaseBuild = true;
-        private const string PreReleaseTag = "DEV_20190405-2";
+        private const string PreReleaseTag = "DEV_20190405-3";
 
         private static string[] _supportedEncExtentions = new string[3] { ExtentionFAES, ".faes", ".mcrypt" };
+        private static string _FileAES_TempRoot = Path.Combine(Path.GetTempPath(), "FileAES");
+        private static bool _verboseLogging = false;
 
         internal static List<TempPath> _instancedTempFolders = new List<TempPath>();
-
-        private static string _FileAES_TempRoot = Path.Combine(Path.GetTempPath(), "FileAES");
 
         /// <summary>
         /// Get FileAES temp folder path
@@ -609,6 +615,24 @@ namespace FAES
         public static string GetFaesTempFolder()
         {
             return _FileAES_TempRoot;
+        }
+
+        /// <summary>
+        /// Gets if FAES has debug logging enabled (Console.WriteLine)
+        /// </summary>
+        /// <returns>If verbose logging is enabled</returns>
+        public static bool GetVerboseLogging()
+        {
+            return _verboseLogging;
+        }
+
+        /// <summary>
+        /// Sets if FAES should log verbosely
+        /// </summary>
+        /// <param name="logging">If verbose logging should be enabled</param>
+        public static void SetVerboseLogging(bool logging)
+        {
+            _verboseLogging = logging;
         }
 
         /// <summary>
@@ -627,10 +651,7 @@ namespace FAES
         /// <returns>If the file is decryptable</returns>
         public static bool isFileDecryptable(string filePath)
         {
-            if (_supportedEncExtentions.Any(Path.GetExtension(filePath).Contains))
-                return true;
-            else
-                return false;
+            return _supportedEncExtentions.Any(Path.GetExtension(filePath).Contains);
         }
 
         /// <summary>
@@ -640,7 +661,11 @@ namespace FAES
         /// </summary>
         public static void PurgeTempFolder()
         {
-            if (Directory.Exists(GetFaesTempFolder())) Directory.Delete(GetFaesTempFolder(), true);
+            if (Directory.Exists(GetFaesTempFolder()))
+            {
+                Directory.Delete(GetFaesTempFolder(), true);
+                Logging.Log(String.Format("Purged FAES Temp Folder: {0}", GetFaesTempFolder()), Severity.DEBUG);
+            }
         }
 
         /// <summary>
@@ -652,12 +677,7 @@ namespace FAES
         {
             TempPath tmp = _instancedTempFolders.Where(tPath => tPath.GetTempPath() == tempPath).First();
 
-            if (tmp != null)
-            {
-                _instancedTempFolders.Remove(tmp);
-                return true;
-            }
-            return false;
+            return RemoveInstancedTempPath(tmp);
         }
 
         /// <summary>
@@ -669,9 +689,16 @@ namespace FAES
         {
             TempPath tmp = _instancedTempFolders.Where(tPath => tPath.GetFaesFile().getFileName() == faesFile.getFileName()).First();
 
+            return RemoveInstancedTempPath(tmp);
+        }
+
+        private static bool RemoveInstancedTempPath(TempPath tmp)
+        {
             if (tmp != null)
             {
                 _instancedTempFolders.Remove(tmp);
+                Logging.Log(String.Format("Deleted InstancedTempFolder: {0}", tmp.GetTempPath()), Severity.DEBUG);
+
                 return true;
             }
             return false;
@@ -688,10 +715,11 @@ namespace FAES
             int totalDeleted = 0;
             foreach (TempPath tempPath in _instancedTempFolders)
             {
-                if (Directory.Exists(tempPath.GetTempPath()))
+                string pTempPath = tempPath.GetTempPath();
+                if (Directory.Exists(pTempPath))
                 {
-                    Console.WriteLine("Deleted: {0}", tempPath.GetTempPath());
-                    Directory.Delete(tempPath.GetTempPath(), true);
+                    Logging.Log(String.Format("Deleted InstancedTempFolder[{0}]: {1}", totalDeleted, pTempPath), Severity.DEBUG);
+                    Directory.Delete(pTempPath, true);
                     totalDeleted++;
                 }
             }
@@ -750,7 +778,7 @@ namespace FAES
         /// <returns>Localised DateTime</returns>
         public static DateTime UnixTimeStampToDateTime(double unixTimeStamp)
         {
-            System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+            DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
             dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToLocalTime();
             return dtDateTime;
         }
@@ -836,6 +864,8 @@ namespace FAES
                 try
                 {
                     File.Delete(path);
+                    Logging.Log(String.Format("SafeDeleteFile: {0}", path), Severity.DEBUG);
+
                     return true;
                 }
                 catch
@@ -859,6 +889,8 @@ namespace FAES
                 try
                 {
                     Directory.Delete(path, recursive);
+                    Logging.Log(String.Format("SafeDeleteFolder: {0}", path), Severity.DEBUG);
+
                     return true;
                 }
                 catch
@@ -903,6 +935,8 @@ namespace FAES
             {
                 tempPath = Path.Combine(tempPath, dateTime);
                 FileAES_Utilities._instancedTempFolders.Add(new TempPath(file, Path.Combine(FileAES_Utilities.GetFaesTempFolder(), dateTime)));
+
+                Logging.Log(String.Format("Created TempPath: {0}", tempPath), Severity.DEBUG);
             }
             else
             {
@@ -910,6 +944,7 @@ namespace FAES
             }
 
             if (!Directory.Exists(tempPath)) Directory.CreateDirectory(tempPath);
+
             return tempPath;
         }
 

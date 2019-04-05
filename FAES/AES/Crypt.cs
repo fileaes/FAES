@@ -73,7 +73,7 @@ namespace FAES.AES
         internal bool Encrypt(string inputFile, string password, string compressionMode, string passwordHint = null)
         {
             if (String.IsNullOrEmpty(passwordHint)) passwordHint = "No Password Hint Set";
-            else if (passwordHint.Contains("¬")) throw new Exception("Password hint contains invalid characters.");
+            //else if (passwordHint.Contains("¬")) throw new Exception("Password hint contains invalid characters.");
             MetaDataFAES fMD = new MetaDataFAES(passwordHint, compressionMode);
             string outputName;
             byte[] hash = Checksums.getSHA1(inputFile);
@@ -116,10 +116,12 @@ namespace FAES.AES
             byte[] buffer = new byte[1048576];
             int read;
 
+            Logging.Log(String.Format("Beginning writing encrypted data..."), Severity.DEBUG);
             while ((read = fsIn.Read(buffer, 0, buffer.Length)) > 0)
             {
                 cs.Write(buffer, 0, read);
             }
+            Logging.Log(String.Format("Finished writing encrypted data."), Severity.DEBUG);
 
             fsIn.Close();
             cs.Close();
@@ -174,10 +176,12 @@ namespace FAES.AES
 
                         try
                         {
+                            Logging.Log(String.Format("Beginning writing decrypted data..."), Severity.DEBUG);
                             while ((read = cs.Read(buffer, 0, buffer.Length)) > 0)
                             {
                                 fsOut.Write(buffer, 0, read);
                             }
+                            Logging.Log(String.Format("Finished writing decrypted data."), Severity.DEBUG);
                         }
                         catch
                         {
@@ -190,10 +194,11 @@ namespace FAES.AES
 
                         if (Checksums.convertHashToString(hash) != Checksums.convertHashToString(Checksums.getSHA1(outputName)))
                         {
+                            Logging.Log(String.Format("Invalid Checksum detected! Assuming password is incorrect."), Severity.DEBUG);
                             FileAES_IntUtilities.SafeDeleteFile(outputName);
                             return false;
                         }
-
+                        Logging.Log(String.Format("Valid Checksum detected!"), Severity.DEBUG);
                         return true;
                     }
                     catch
@@ -222,7 +227,7 @@ namespace FAES.AES
         /// <param name="cipherMode">Output of the Cipher Mode used on the file</param>
         /// <param name="hideWriteLine">Disables pushing the FAES Encryption Mode to console</param>
         /// <returns></returns>
-        private FileStream DecryptModeHandler(FileStream fsCrypt, ref byte[] dHash, ref byte[] dSalt, ref byte[] dFaesMode, ref byte[] dMetaData, ref CipherMode cipherMode, bool hideWriteLine = false)
+        private FileStream DecryptModeHandler(FileStream fsCrypt, ref byte[] dHash, ref byte[] dSalt, ref byte[] dFaesMode, ref byte[] dMetaData, ref CipherMode cipherMode)
         {
             byte[] hash = new byte[20];
             byte[] salt = new byte[32];
@@ -243,17 +248,17 @@ namespace FAES.AES
             {
                 case "FAESv2-CBC":
                     cipherMode = CipherMode.CBC;
-                    if (!hideWriteLine) Console.WriteLine("FAESv2 Identifier Detected! Decrypting using FAESv2 Mode.");
+                    Logging.Log(String.Format("FAESv2 Identifier Detected! Decrypting using FAESv2 Mode."), Severity.DEBUG);
                     dMetaData = metaData;
                     break;
                 case "FAESv1-CBC":
                     cipherMode = CipherMode.CBC;
-                    if (!hideWriteLine) Console.WriteLine("FAESv1 Identifier Detected! Decrypting using FAESv1 Mode.");
+                    Logging.Log(String.Format("FAESv1 Identifier Detected! Decrypting using FAESv1 Mode."), Severity.DEBUG);
                     fsCrypt.Position = hash.Length + salt.Length + faesCBCMode.Length;
                     break;
                 default:
                     cipherMode = CipherMode.CFB;
-                    if (!hideWriteLine) Console.WriteLine("Version Identifier not found! Decrypting using LegacyCFB Mode.");
+                    Logging.Log(String.Format("Version Identifier not found! Decrypting using LegacyCFB Mode."), Severity.DEBUG);
                     fsCrypt.Position = hash.Length + salt.Length;
                     break;
             }
@@ -294,7 +299,7 @@ namespace FAES.AES
                 byte[] faesMetaData = new byte[256];
 
                 FileStream fsCrypt = new FileStream(faesFile.getPath(), FileMode.Open);
-                fsCrypt = DecryptModeHandler(fsCrypt, ref hash, ref salt, ref faesCBCMode, ref faesMetaData, ref cipher, true);
+                fsCrypt = DecryptModeHandler(fsCrypt, ref hash, ref salt, ref faesCBCMode, ref faesMetaData, ref cipher);
                 fsCrypt.Close();
 
                 if (Encoding.UTF8.GetString(faesCBCMode) == "FAESv2-CBC")
@@ -323,7 +328,7 @@ namespace FAES.AES
                 byte[] faesMetaData = new byte[256];
 
                 FileStream fsCrypt = new FileStream(faesFile.getPath(), FileMode.Open);
-                fsCrypt = DecryptModeHandler(fsCrypt, ref hash, ref salt, ref faesCBCMode, ref faesMetaData, ref cipher, true);
+                fsCrypt = DecryptModeHandler(fsCrypt, ref hash, ref salt, ref faesCBCMode, ref faesMetaData, ref cipher);
                 fsCrypt.Close();
 
                 if (Encoding.UTF8.GetString(faesCBCMode) == "FAESv2-CBC")
@@ -352,7 +357,7 @@ namespace FAES.AES
                 byte[] faesMetaData = new byte[256];
 
                 FileStream fsCrypt = new FileStream(faesFile.getPath(), FileMode.Open);
-                fsCrypt = DecryptModeHandler(fsCrypt, ref hash, ref salt, ref faesCBCMode, ref faesMetaData, ref cipher, true);
+                fsCrypt = DecryptModeHandler(fsCrypt, ref hash, ref salt, ref faesCBCMode, ref faesMetaData, ref cipher);
                 fsCrypt.Close();
 
                 if (Encoding.UTF8.GetString(faesCBCMode) == "FAESv2-CBC")
@@ -384,7 +389,7 @@ namespace FAES.AES
                 byte[] faesMetaData = new byte[256];
 
                 FileStream fsCrypt = new FileStream(faesFile.getPath(), FileMode.Open);
-                fsCrypt = DecryptModeHandler(fsCrypt, ref hash, ref salt, ref faesCBCMode, ref faesMetaData, ref cipher, true);
+                fsCrypt = DecryptModeHandler(fsCrypt, ref hash, ref salt, ref faesCBCMode, ref faesMetaData, ref cipher);
                 fsCrypt.Close();
 
                 if (Encoding.UTF8.GetString(faesCBCMode) == "FAESv2-CBC")
