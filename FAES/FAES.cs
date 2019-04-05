@@ -594,7 +594,7 @@ namespace FAES
         public const string ExtentionUFAES = ".ufaes";
 
         private const bool IsPreReleaseBuild = true;
-        private const string PreReleaseTag = "DEV_20190405-1";
+        private const string PreReleaseTag = "DEV_20190405-2";
 
         private static string[] _supportedEncExtentions = new string[3] { ExtentionFAES, ".faes", ".mcrypt" };
 
