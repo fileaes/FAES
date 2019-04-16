@@ -258,6 +258,8 @@ namespace FAES
         protected FAES_File _file;
         protected string _password, _passwordHint;
         protected bool _deletePost, _overwriteDuplicate;
+        protected decimal _percentEncComplete = 0;
+
         internal Crypt crypt = new Crypt();
         internal Compress compress;
 
@@ -273,6 +275,8 @@ namespace FAES
         /// <param name="overwriteDuplicate">Whether duplicate files should be forcibly overwritten</param>
         public FileAES_Encrypt(FAES_File file, string password, string passwordHint = null, Optimise compression = Optimise.Balanced, byte[] UserSpecifiedSalt = null, bool deleteAfterEncrypt = true, bool overwriteDuplicate = true)
         {
+            Logging.Log(String.Format("FAES {0} started!", FileAES_Utilities.GetVersion()), Severity.DEBUG);
+
             if (file.isFileEncryptable())
             {
                 _file = file;
@@ -387,6 +391,15 @@ namespace FAES
         }
 
         /// <summary>
+        /// Gets the percent completion of the encryption process
+        /// </summary>
+        /// <returns>Percent complete (0-100)</returns>
+        public decimal GetEncryptionPercentComplete()
+        {
+            return _percentEncComplete;
+        }
+
+        /// <summary>
         /// Encrypts current file
         /// </summary>
         /// <returns>If the encryption was successful</returns>
@@ -394,13 +407,15 @@ namespace FAES
         {
             string file;
             bool success = false;
+            _percentEncComplete = 0;
+
             try
             {
                 try
                 {
-                    Logging.Log(String.Format("Starting Uncompression: {0}", _file.getPath()), Severity.DEBUG);
+                    Logging.Log(String.Format("Starting Compression: {0}", _file.getPath()), Severity.DEBUG);
                     file = compress.CompressFAESFile(_file);
-                    Logging.Log(String.Format("Finished Uncompression: {0}", _file.getPath()), Severity.DEBUG);
+                    Logging.Log(String.Format("Finished Compression: {0}", _file.getPath()), Severity.DEBUG);
                 }
                 catch
                 {
@@ -410,7 +425,7 @@ namespace FAES
                 try
                 {
                     Logging.Log(String.Format("Starting Encryption: {0}", file), Severity.DEBUG);
-                    success = crypt.Encrypt(file, _password, compress.GetCompressionModeAsString(), _passwordHint);
+                    success = crypt.Encrypt(file, _password, compress.GetCompressionModeAsString(), ref _percentEncComplete, _passwordHint);
                     Logging.Log(String.Format("Finished Encryption: {0}", file), Severity.DEBUG);
                 }
                 catch
@@ -474,6 +489,7 @@ namespace FAES
         protected FAES_File _file;
         protected string _password;
         protected bool _deletePost, _overwriteDuplicate;
+        protected decimal _percentDecComplete = 0;
 
         internal Crypt crypt = new Crypt();
         internal Compress compress = new Compress(Optimise.Balanced);
@@ -487,6 +503,8 @@ namespace FAES
         /// <param name="overwriteDuplicate">Whether duplicate files should be forcibly overwritten</param>
         public FileAES_Decrypt(FAES_File file, string password, bool deleteAfterDecrypt = true, bool overwriteDuplicate = true)
         {
+            Logging.Log(String.Format("FAES {0} started!", FileAES_Utilities.GetVersion()), Severity.DEBUG);
+
             if (file.isFileDecryptable())
             {
                 _file = file;
@@ -534,15 +552,33 @@ namespace FAES
         }
 
         /// <summary>
+        /// Gets the percent completion of the decryption process
+        /// </summary>
+        /// <returns>Percent complete (0-100)</returns>
+        public decimal GetDecryptionPercentComplete()
+        {
+            return _percentDecComplete;
+        }
+
+        /// <summary>
         /// Decrypts current file
         /// </summary>
         /// <returns>If the decryption was successful</returns>
         public bool decryptFile()
         {
             bool success;
-            Logging.Log(String.Format("Starting Decryption: {0}", _file.getPath()), Severity.DEBUG);
-            success = crypt.Decrypt(_file.getPath(), _password);
-            Logging.Log(String.Format("Finished Decryption: {0}", _file.getPath()), Severity.DEBUG);
+            _percentDecComplete = 0;
+
+            try
+            {
+                Logging.Log(String.Format("Starting Decryption: {0}", _file.getPath()), Severity.DEBUG);
+                success = crypt.Decrypt(_file.getPath(), _password, ref _percentDecComplete);
+                Logging.Log(String.Format("Finished Decryption: {0}", _file.getPath()), Severity.DEBUG);
+            }
+            catch
+            {
+                throw new IOException("Error occured in the decryption of the FAES file.");
+            }
 
             File.SetAttributes(Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES), FileAttributes.Hidden);
 
@@ -600,7 +636,7 @@ namespace FAES
         public const string ExtentionUFAES = ".ufaes";
 
         private const bool IsPreReleaseBuild = true;
-        private const string PreReleaseTag = "DEV_20190405-3";
+        private const string PreReleaseTag = "DEV_20190416-1";
 
         private static string[] _supportedEncExtentions = new string[3] { ExtentionFAES, ".faes", ".mcrypt" };
         private static string _FileAES_TempRoot = Path.Combine(Path.GetTempPath(), "FileAES");
@@ -816,6 +852,8 @@ namespace FAES
                     return "ERROR: The chosen file(s) could not be compressed as a compressed version already exists in the Temp files! Consider using '--purgeTemp' if you are not using another instance of FileAES and this error persists.";
                 else if (exception.ToString().Contains("Error occured in encrypting the UFAES file."))
                     return "ERROR: The compressed file could not be encrypted. Please close any other instances of FileAES and try again. Consider using '--purgeTemp' if you are not using another instance of FileAES and this error persists.";
+                else if (exception.ToString().Contains("Error occured in the decryption of the FAES file."))
+                    return "ERROR: The encrypted file could not be decrypted. Please close any other instances of FileAES and try again. Consider using '--purgeTemp' if you are not using another instance of FileAES and this error persists.";
                 else if (exception.ToString().Contains("Error occured in deleting the UFAES file."))
                     return "ERROR: The compressed file could not be deleted. Please close any other instances of FileAES and try again. Consider using '--purgeTemp' if you are not using another instance of FileAES and this error persists.";
                 else if (exception.ToString().Contains("Error occured in moving the FAES file after encryption."))

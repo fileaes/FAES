@@ -70,10 +70,10 @@ namespace FAES.AES
         /// <param name="password">Password to encrypt the file</param>
         /// <param name="passwordHint">Hint for the password used on the file</param>
         /// <returns></returns>
-        internal bool Encrypt(string inputFile, string password, string compressionMode, string passwordHint = null)
+        internal bool Encrypt(string inputFile, string password, string compressionMode, ref decimal percentComplete, string passwordHint = null)
         {
             if (String.IsNullOrEmpty(passwordHint)) passwordHint = "No Password Hint Set";
-            //else if (passwordHint.Contains("¬")) throw new Exception("Password hint contains invalid characters.");
+
             MetaDataFAES fMD = new MetaDataFAES(passwordHint, compressionMode);
             string outputName;
             byte[] hash = Checksums.getSHA1(inputFile);
@@ -116,9 +116,18 @@ namespace FAES.AES
             byte[] buffer = new byte[1048576];
             int read;
 
+            long expectedComplete = fsIn.Length + hash.Length + salt.Length + faesCBCMode.Length + metaData.Length + AES.KeySize + AES.BlockSize;
+
             Logging.Log(String.Format("Beginning writing encrypted data..."), Severity.DEBUG);
             while ((read = fsIn.Read(buffer, 0, buffer.Length)) > 0)
             {
+                try
+                {
+                    percentComplete = Math.Ceiling((decimal)((Convert.ToDouble(fsCrypt.Length) / Convert.ToDouble(expectedComplete)) * 100));
+                    if (percentComplete > 100) percentComplete = 100;
+                }
+                catch { }
+
                 cs.Write(buffer, 0, read);
             }
             Logging.Log(String.Format("Finished writing encrypted data."), Severity.DEBUG);
@@ -136,7 +145,7 @@ namespace FAES.AES
         /// <param name="inputFile">Encrypted File</param>
         /// <param name="password">Password to decrypt the file</param>
         /// <returns>If the decryption was successful</returns>
-        internal bool Decrypt(string inputFile, string password)
+        internal bool Decrypt(string inputFile, string password, ref decimal percentComplete)
         {
             if (FileAES_Utilities.isFileDecryptable(inputFile))
             {
@@ -170,15 +179,25 @@ namespace FAES.AES
                     try
                     {
                         FileStream fsOut = new FileStream(outputName, FileMode.Create);
+                        File.SetAttributes(outputName, FileAttributes.Hidden);
 
                         int read;
                         byte[] buffer = new byte[1048576];
+
+                        long expectedComplete = fsCrypt.Length + hash.Length + salt.Length + faesCBCMode.Length + faesMetaData.Length + AES.KeySize + AES.BlockSize;
 
                         try
                         {
                             Logging.Log(String.Format("Beginning writing decrypted data..."), Severity.DEBUG);
                             while ((read = cs.Read(buffer, 0, buffer.Length)) > 0)
                             {
+                                try
+                                {
+                                    percentComplete = Math.Ceiling((decimal)((Convert.ToDouble(fsOut.Length) / Convert.ToDouble(expectedComplete)) * 100));
+                                    if (percentComplete > 100) percentComplete = 100;
+                                }
+                                catch { }
+
                                 fsOut.Write(buffer, 0, read);
                             }
                             Logging.Log(String.Format("Finished writing decrypted data."), Severity.DEBUG);
