@@ -113,7 +113,7 @@ namespace FAES.AES
 
             FileStream fsIn = new FileStream(inputFile, FileMode.Open);
 
-            byte[] buffer = new byte[1048576];
+            byte[] buffer = new byte[FileAES_Utilities.GetCryptoStreamBuffer()];
             int read;
 
             long expectedComplete = fsIn.Length + hash.Length + salt.Length + faesCBCMode.Length + metaData.Length + AES.KeySize + AES.BlockSize;
@@ -182,7 +182,7 @@ namespace FAES.AES
                         File.SetAttributes(outputName, FileAttributes.Hidden);
 
                         int read;
-                        byte[] buffer = new byte[1048576];
+                        byte[] buffer = new byte[FileAES_Utilities.GetCryptoStreamBuffer()];
 
                         long expectedComplete = fsCrypt.Length + hash.Length + salt.Length + faesCBCMode.Length + faesMetaData.Length + AES.KeySize + AES.BlockSize;
 

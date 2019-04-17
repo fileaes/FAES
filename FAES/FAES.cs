@@ -641,6 +641,7 @@ namespace FAES
         private static string[] _supportedEncExtentions = new string[3] { ExtentionFAES, ".faes", ".mcrypt" };
         private static string _FileAES_TempRoot = Path.Combine(Path.GetTempPath(), "FileAES");
         private static bool _verboseLogging = false;
+        private static uint _cryptoBuffer = 1048576;
 
         internal static List<TempPath> _instancedTempFolders = new List<TempPath>();
 
@@ -837,6 +838,24 @@ namespace FAES
         public static string GetCompressionMode(string filePath)
         {
             return new Crypt().GetCompressionMode(new FAES_File(filePath));
+        }
+
+        /// <summary>
+        /// Gets the size (in bytes) of the buffer used for the CryptoStream
+        /// </summary>
+        /// <returns>Size in bytes</returns>
+        public static uint GetCryptoStreamBuffer()
+        {
+            return _cryptoBuffer;
+        }
+
+        /// <summary>
+        /// Sets the size (in bytes) of the buffer used for the CryptoStream
+        /// </summary>
+        /// <param name="bufferSize">Size in bytes</param>
+        public static void SetCryptoStreamBuffer(uint bufferSize)
+        {
+            _cryptoBuffer = bufferSize;
         }
 
         /// <summary>
