@@ -6,30 +6,32 @@ namespace FAES.Packaging
     internal class LegacyZIP : ICompressedFAES
     {
         public LegacyZIP()
-        {
+        { }
 
-        }
-
-        
-        public string CompressFAESFile(FAES_File file)
+        /// <summary>
+        /// Compress (LGYZIP) an unencrypted FAES File.
+        /// </summary>
+        /// <param name="unencryptedFile">Unencrypted FAES File</param>
+        /// <returns>Path of the unencrypted, LGYZIP compressed file</returns>
+        public string CompressFAESFile(FAES_File unencryptedFile)
         {
-            string tempPath = FileAES_IntUtilities.CreateTempPath(file, "ZIP_Compress-" + FileAES_IntUtilities.GetDateTimeString());
+            string tempPath = FileAES_IntUtilities.CreateTempPath(unencryptedFile, "LGYZIP_Compress-" + FileAES_IntUtilities.GetDateTimeString());
             string tempRawPath = Path.Combine(tempPath, "contents");
-            string tempOutputPath = Path.Combine(Directory.GetParent(tempPath).FullName, Path.ChangeExtension(file.getFileName(), FileAES_Utilities.ExtentionUFAES));
+            string tempOutputPath = Path.Combine(Directory.GetParent(tempPath).FullName, Path.ChangeExtension(unencryptedFile.getFileName(), FileAES_Utilities.ExtentionUFAES));
 
-            if (file.isFile())
+            if (unencryptedFile.isFile())
             {
-                FileAES_IntUtilities.CreateTempPath(file);
+                FileAES_IntUtilities.CreateTempPath(unencryptedFile);
 
                 using (ZipArchive zip = ZipFile.Open(tempOutputPath, ZipArchiveMode.Create))
                 {
-                    zip.CreateEntryFromFile(file.getPath(), file.getFileName());
+                    zip.CreateEntryFromFile(unencryptedFile.getPath(), unencryptedFile.getFileName());
                     zip.Dispose();
                 }
             }
             else
             {
-                FileAES_IntUtilities.DirectoryCopy(file.getPath(), tempRawPath, true);
+                FileAES_IntUtilities.DirectoryCopy(unencryptedFile.getPath(), tempRawPath, true);
 
                 ZipFile.CreateFromDirectory(tempRawPath, tempOutputPath);
             }
@@ -37,9 +39,17 @@ namespace FAES.Packaging
             return tempOutputPath;
         }
 
-        public void UncompressFAESFile(FAES_File file, string unencryptedFile)
+        /// <summary>
+        /// Uncompress an encrypted FAES File.
+        /// </summary>
+        /// <param name="encryptedFile">Encrypted FAES File</param>
+        /// <returns>Path of the encrypted, uncompressed file</returns>
+        public string UncompressFAESFile(FAES_File encryptedFile)
         {
-            ZipFile.ExtractToDirectory(Path.ChangeExtension(file.getPath(), FileAES_Utilities.ExtentionUFAES), Directory.GetParent(file.getPath()).FullName);
+            string path = Path.ChangeExtension(encryptedFile.getPath(), FileAES_Utilities.ExtentionUFAES);
+            ZipFile.ExtractToDirectory(path, Directory.GetParent(encryptedFile.getPath()).FullName);
+
+            return path;
         }
     }
 }

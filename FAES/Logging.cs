@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FAES
 {
@@ -37,8 +33,7 @@ namespace FAES
                         }
                 }
             }
-            else if (severity > 0)
-                Console.WriteLine(log);
+            else if (severity > 0) Console.WriteLine(log);
         }
     }
 

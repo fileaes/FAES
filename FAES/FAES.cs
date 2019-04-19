@@ -3,7 +3,6 @@ using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using CoreChecksums;
 using FAES.AES;
 using FAES.Packaging;
 
@@ -35,6 +34,7 @@ namespace FAES
         protected Operation _op = Operation.NULL;
         protected FAES_Type _type = FAES_Type.NULL;
         protected string _sha1Hash;
+        protected MetaDataFAES faesMetaData;
 
         /// <summary>
         /// Creates a FAES File using a file path
@@ -47,7 +47,7 @@ namespace FAES
                 _filePath = filePath;
                 Initialise();
             }
-            else throw new FileNotFoundException();
+            else throw new FileNotFoundException("File/Folder not found at the specified path!");
         }
 
         /// <summary>
@@ -66,10 +66,8 @@ namespace FAES
                 _password = password;
                 _passwordHint = passwordHint;
                 Initialise();
-
-                if (isFileDecryptable()) _passwordHint = FileAES_Utilities.GetPasswordHint(_filePath);
             }
-            else throw new FileNotFoundException();
+            else throw new FileNotFoundException("File/Folder not found at the specified path!");
 
             Run(ref success);
         }
@@ -145,9 +143,15 @@ namespace FAES
             if (_op == Operation.NULL)
             {
                 if (FileAES_Utilities.isFileDecryptable(getPath()))
+                {
                     _op = Operation.DECRYPT;
+                    faesMetaData = new Crypt().GetAllMetaData(this);
+                }
                 else
+                {
                     _op = Operation.ENCRYPT;
+                    faesMetaData = null;
+                }
             }
 
             return (_op == Operation.DECRYPT);
@@ -161,7 +165,7 @@ namespace FAES
         {
             if (isFile())
             {
-                if (_sha1Hash == null) _sha1Hash = Checksums.convertHashToString(Checksums.getSHA1(getPath()));
+                if (_sha1Hash == null) _sha1Hash = Checksums.ConvertHashToString(Checksums.GetSHA1(getPath()));
                 return _sha1Hash;
             }
             else return null;
@@ -247,9 +251,62 @@ namespace FAES
         /// Gets the Password Hint for the current file
         /// </summary>
         /// <returns>Current files Password Hint</returns>
+        [Obsolete("getPasswordHint() has been renamed to GetPasswordHint()")]
         public string getPasswordHint()
         {
-            return _passwordHint;
+            return GetPasswordHint();
+        }
+
+        /// <summary>
+        /// Gets the Password Hint for the current file
+        /// </summary>
+        /// <returns>Current files Password Hint</returns>
+        public string GetPasswordHint()
+        {
+            if (faesMetaData != null)
+            {
+                return faesMetaData.GetPasswordHint();
+            }
+            else return _passwordHint;
+        }
+
+        /// <summary>
+        /// Gets the Version of FAES used to encrypt the file
+        /// </summary>
+        /// <returns>FAES Version</returns>
+        public string GetEncryptionVersion()
+        {
+            if (faesMetaData != null)
+            {
+                return faesMetaData.GetEncryptionVersion();
+            }
+            else throw new NotSupportedException("Cannot read MetaData of an unencryted file.");
+        }
+
+        /// <summary>
+        /// Gets the Compression Method used to compress the encrypted file
+        /// </summary>
+        /// <returns>Compression Mode Type</returns>
+        public string GetEncryptionCompressionMode()
+        {
+            if (faesMetaData != null)
+            {
+                return faesMetaData.GetCompressionMode();
+            }
+            else throw new NotSupportedException("Cannot read MetaData of an unencryted file.");
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public int GetEncryptionTimeStamp()
+        {
+            if (faesMetaData != null)
+            {
+                return faesMetaData.GetEncryptionTimestamp();
+            }
+            else throw new NotSupportedException("Cannot read MetaData of an unencryted file.");
         }
     }
 
@@ -587,7 +644,7 @@ namespace FAES
                 try
                 {
                     Logging.Log(String.Format("Starting Uncompression: {0}", Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES)), Severity.DEBUG);
-                    compress.UncompressFAESFile(_file, Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES));
+                    compress.UncompressFAESFile(_file);
                     Logging.Log(String.Format("Finished Uncompression: {0}", Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES)), Severity.DEBUG);
                 }
                 catch
@@ -636,7 +693,7 @@ namespace FAES
         public const string ExtentionUFAES = ".ufaes";
 
         private const bool IsPreReleaseBuild = true;
-        private const string PreReleaseTag = "DEV_20190416-1";
+        private const string PreReleaseTag = "BETA_2";
 
         private static string[] _supportedEncExtentions = new string[3] { ExtentionFAES, ".faes", ".mcrypt" };
         private static string _FileAES_TempRoot = Path.Combine(Path.GetTempPath(), "FileAES");
@@ -679,7 +736,7 @@ namespace FAES
         /// <returns>If the file is encryptable</returns>
         public static bool isFileEncryptable(string filePath)
         {
-            return !isFileDecryptable(filePath);
+            return !_supportedEncExtentions.Any(Path.GetExtension(filePath).Contains);
         }
         /// <summary>
         /// Gets if the chosen file is decryptable
@@ -688,7 +745,7 @@ namespace FAES
         /// <returns>If the file is decryptable</returns>
         public static bool isFileDecryptable(string filePath)
         {
-            return _supportedEncExtentions.Any(Path.GetExtension(filePath).Contains);
+            return (_supportedEncExtentions.Any(Path.GetExtension(filePath).Contains) && new Crypt().IsDecryptable(filePath));
         }
 
         /// <summary>
@@ -893,6 +950,8 @@ namespace FAES
                     return "ERROR: A file could not be deleted! Is the file in use?";
                 else if (exception.ToString().Contains("Error occured in SafeDeleteFolder."))
                     return "ERROR: A folder could not be deleted! Is the folder in use?";
+                else if (exception.ToString().Contains("File/Folder not found at the specified path!"))
+                    return "ERROR: A file/folder was not found at the specified path!";
                 else if (exception.ToString().Contains("Error occured since FAES file already exists."))
                     return "ERROR: FAES file already exists in destination and overwriting is disabled!";
             }
@@ -1019,17 +1078,30 @@ namespace FAES
         protected FAES_File _faesFile;
         protected string _tempPath;
 
+        /// <summary>
+        /// Creates a TempPath
+        /// </summary>
+        /// <param name="faesFile">FAES File to link to the TempPath</param>
+        /// <param name="tempPath">Actual path to link to the TempPath</param>
         internal TempPath(FAES_File faesFile, string tempPath)
         {
             _faesFile = faesFile;
             _tempPath = tempPath;
         }
 
+        /// <summary>
+        /// Gets the FAES File linked to the TempPath
+        /// </summary>
+        /// <returns>Linked FAES File</returns>
         internal FAES_File GetFaesFile()
         {
             return _faesFile;
         }
 
+        /// <summary>
+        /// Gets the actual path linked to the TempPath
+        /// </summary>
+        /// <returns>Temp path</returns>
         internal string GetTempPath()
         {
             return _tempPath;

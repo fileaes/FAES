@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FAES.Packaging
 {
@@ -95,7 +93,5 @@ namespace FAES.Packaging
         {
             return Enum.GetNames(typeof(Optimise)).ToList();
         }
-
-        
     }
 }
