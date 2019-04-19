@@ -4,28 +4,31 @@
     <TargetFrameworks>net45;netcoreapp2.1</TargetFrameworks>
     <Version>1.2.0</Version>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
-    <PackageReleaseNotes>- Added FAES version to encrypted file metadata
-- Added method to manually delete instanced temp paths
-- Added better compression handling (easier to add new compression algorithms)
+    <PackageReleaseNotes>- Added better compression handling (easier to add new compression algorithms)
 - Added new compression methods (ZIP/Deflate, LZMA, TAR/BZip2)
-- Changed password hint padding character
+- Added ability to get encryption/decryption progress (0-100)
+- Added ability to change the CryptoStream buffer used for encryption/decryption
+- Added ability to toggle the deletion of the original file
+- Added ability to toggle the overwriting of files
+- Added better logging functionality
+- Better temp folder management
 - Changed Compressed, Unencrypted file extention from '.faeszip' to '.ufaes'
-- Fully fixed invalid character showing up in password hints
 - Changed .NET Core 2.0 to .NET Core 2.1</PackageReleaseNotes>
     <Authors>mullak99</Authors>
     <Description>C# Library to encrypt/decrypt files using AES. With extra features.</Description>
     <FileVersion>1.2.0.0</FileVersion>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <RepositoryUrl>https://github.com/mullak99/FileAES</RepositoryUrl>
+    <RepositoryUrl>https://github.com/fileaes/FAES</RepositoryUrl>
+    <Copyright>Copyright © 2019 | mullak99</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Costura.Fody" Version="3.2.1" />
-    <PackageReference Include="Fody" Version="3.3.4">
+    <PackageReference Include="Costura.Fody" Version="3.3.3" />
+    <PackageReference Include="Fody" Version="4.2.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="SharpCompress" Version="0.22.0" />
+    <PackageReference Include="SharpCompress" Version="0.23.0" />
   </ItemGroup>
 
   <ItemGroup>

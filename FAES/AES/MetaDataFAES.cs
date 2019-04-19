@@ -4,23 +4,21 @@ using System.Text;
 
 namespace FAES.AES
 {
-    internal class MetaDataFAES
+    public class MetaDataFAES
     {
-        protected byte[] _passwordHint;
-        protected byte[] _encryptionTimestamp;
-        protected byte[] _encryptionVersion;
-        protected byte[] _compression;
+        protected byte[] _passwordHint, _encryptionTimestamp, _encryptionVersion, _compression;
 
         /// <summary>
         /// Converts various pieces of MetaData into easy-to-manage method calls
         /// </summary>
         /// <param name="passwordHint">Password Hint</param>
-        public MetaDataFAES(string passwordHint, string compressionUsed)
+        /// <param name="compressionModeUsed">Compression Mode</param>
+        public MetaDataFAES(string passwordHint, string compressionModeUsed)
         {
-            _passwordHint = ConvertStringToBytes(passwordHint);
+            _passwordHint = ConvertStringToBytes(passwordHint.TrimEnd('\n', '\r'));
             _encryptionTimestamp = BitConverter.GetBytes((int)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds);
             _encryptionVersion = ConvertStringToBytes(FileAES_Utilities.GetVersion(), 16);
-            _compression = ConvertStringToBytes(compressionUsed, 6);
+            _compression = ConvertStringToBytes(compressionModeUsed, 6);
         }
 
         /// <summary>
@@ -39,14 +37,10 @@ namespace FAES.AES
         /// Gets the Password Hint
         /// </summary>
         /// <returns>Password Hint stored in MetaData</returns>
-        public string getPasswordHint()
+        public string GetPasswordHint()
         {
             if (_passwordHint != null)
-            {
-                string converted = ConvertBytesToString(_passwordHint).Replace("¬", "");
-                if (converted.Contains("�")) converted = converted.Replace("�", "");
-                return converted;
-            }
+                return ConvertBytesToString(_passwordHint).TrimEnd('\n', '\r', '¬', '�'); //Removes the old padding character used in older FAES versions, as well as any newlines or special chars
             else
                 return "No Password Hint Set";
         }
@@ -55,7 +49,7 @@ namespace FAES.AES
         /// Gets the UNIX timestamp of when the file was encrypted (UTC time)
         /// </summary>
         /// <returns>UNIX timestamp (UTC)</returns>
-        public int getEncryptionTimestamp()
+        public int GetEncryptionTimestamp()
         {
             if (_encryptionTimestamp != null)
                 return BitConverter.ToInt32(_encryptionTimestamp, 0);
@@ -67,10 +61,17 @@ namespace FAES.AES
         /// Gets the Version of FAES used to encrypt the file
         /// </summary>
         /// <returns>FAES Version</returns>
-        public string getEncryptionVersion()
+        public string GetEncryptionVersion()
         {
             if (_encryptionVersion != null)
-                return ConvertBytesToString(_encryptionVersion);
+            {
+                string ver = ConvertBytesToString(_encryptionVersion);
+
+                if (ver.Contains("DEV"))
+                    return ver.Split('_')[0];
+                else
+                    return ver;
+            }
             else
                 return "v1.1.0 — v1.1.2";
         }
@@ -79,7 +80,7 @@ namespace FAES.AES
         /// Gets the Compression Method used to compress the encrypted file
         /// </summary>
         /// <returns>Compression Mode Type</returns>
-        public string getCompressionMode()
+        public string GetCompressionMode()
         {
             if (_compression != null)
             {
@@ -95,7 +96,7 @@ namespace FAES.AES
         /// Gets raw metadata
         /// </summary>
         /// <returns>MetaData byte array (256 bytes)</returns>
-        public byte[] getMetaData()
+        public byte[] GetMetaData()
         {
             byte[] formedMetaData = new byte[256];
             Buffer.BlockCopy(_passwordHint, 0, formedMetaData, 0, _passwordHint.Length);
@@ -128,8 +129,7 @@ namespace FAES.AES
         /// <returns>String</returns>
         private string ConvertBytesToString(byte[] value)
         {
-            string conv = Encoding.UTF8.GetString(value).TrimEnd('\0');
-            return conv.Replace("¬", "");
+            return Encoding.UTF8.GetString(value).TrimEnd('\0', '\n', '\r', '¬', '�'); //Removes the old padding character used in older FAES versions
         }
     }
 }

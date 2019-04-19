@@ -11,55 +11,55 @@ namespace FAES.Packaging
     internal class TAR : ICompressedFAES
     {
         public TAR()
+        { }
+
+        /// <summary>
+        /// Compress (TAR/BZip2) an unencrypted FAES File.
+        /// </summary>
+        /// <param name="unencryptedFile">Unencrypted FAES File</param>
+        /// <returns>Path of the unencrypted, TAR/BZip2 compressed file</returns>
+        public string CompressFAESFile(FAES_File unencryptedFile)
         {
-        }
+            string tempPath = FileAES_IntUtilities.CreateTempPath(unencryptedFile, "TAR_Compress-" + FileAES_IntUtilities.GetDateTimeString());
+            string tempRawPath = Path.Combine(tempPath, "contents");
+            string tempRawFile = Path.Combine(tempRawPath, unencryptedFile.getFileName());
+            string tempOutputPath = Path.Combine(Directory.GetParent(tempPath).FullName, Path.ChangeExtension(unencryptedFile.getFileName(), FileAES_Utilities.ExtentionUFAES));
 
-        public void CompressFAESFile(FAES_File file, string tempPath, string outputPath)
-        {
-            if (file.isFile())
-            {
-                string tempFolderName = FileAES_IntUtilities.genRandomTempFolder(file.getFileName().Substring(0, file.getFileName().Length - Path.GetExtension(file.getFileName()).Length));
-                FileAES_Utilities._instancedTempFolders.Add(tempFolderName);
-                if (Directory.Exists(Path.Combine(tempPath, tempFolderName))) Directory.Delete(Path.Combine(tempPath, tempFolderName), true);
+            if (!Directory.Exists(tempRawPath)) Directory.CreateDirectory(tempRawPath);
 
-                Directory.CreateDirectory(Path.Combine(tempPath, tempFolderName));
-                File.Copy(file.getPath(), Path.Combine(tempPath, tempFolderName, file.getFileName()));
-
-                TarWriterOptions wo = new TarWriterOptions(CompressionType.BZip2, true);
-
-                using (Stream stream = File.OpenWrite(outputPath))
-                using (var writer = new TarWriter(stream, wo))
-                {
-                    writer.WriteAll(Path.Combine(tempPath, tempFolderName), "*", SearchOption.AllDirectories);
-                }
-            }
+            if (unencryptedFile.isFile())
+                File.Copy(unencryptedFile.getPath(), tempRawFile);
             else
+                FileAES_IntUtilities.DirectoryCopy(unencryptedFile.getPath(), tempRawPath, true);
+
+            TarWriterOptions wo = new TarWriterOptions(CompressionType.BZip2, true);
+
+            using (Stream stream = File.OpenWrite(tempOutputPath))
+            using (var writer = new TarWriter(stream, wo))
             {
-                string tempFolderName = FileAES_IntUtilities.genRandomTempFolder(file.getFileName().Substring(0, file.getFileName().Length - Path.GetExtension(file.getFileName()).Length));
-                FileAES_Utilities._instancedTempFolders.Add(tempFolderName);
-                if (Directory.Exists(Path.Combine(tempPath, tempFolderName))) Directory.Delete(Path.Combine(tempPath, tempFolderName), true);
-                FileAES_IntUtilities.DirectoryCopy(file.getPath(), Path.Combine(tempPath, tempFolderName, file.getFileName()), true);
-
-                TarWriterOptions wo = new TarWriterOptions(CompressionType.BZip2, true);
-
-                using (Stream stream = File.OpenWrite(outputPath))
-                using (var writer = new TarWriter(stream, wo))
-                {
-                    writer.WriteAll(Path.Combine(tempPath, tempFolderName), "*", SearchOption.AllDirectories);
-                }
+                writer.WriteAll(tempRawPath, "*", SearchOption.AllDirectories);
             }
+            return tempOutputPath;
         }
 
-        public void UncompressFAESFile(FAES_File file, string unencryptedFile)
+        /// <summary>
+        /// Uncompress an encrypted FAES File.
+        /// </summary>
+        /// <param name="encryptedFile">Encrypted FAES File</param>
+        /// <returns>Path of the encrypted, uncompressed file</returns>
+        public string UncompressFAESFile(FAES_File encryptedFile)
         {
-            using (Stream stream = File.OpenRead(Path.Combine(Directory.GetParent(unencryptedFile).FullName, Path.GetFileName(unencryptedFile).Substring(0, Path.GetFileName(unencryptedFile).Length - Path.GetExtension(Path.GetFileName(unencryptedFile)).Length) + FileAES_Utilities.ExtentionUFAES)))
+            string path = Path.ChangeExtension(encryptedFile.getPath(), FileAES_Utilities.ExtentionUFAES);
+
+            using (Stream stream = File.OpenRead(path))
             {
                 var reader = ReaderFactory.Open(stream);
                 while (reader.MoveToNextEntry())
                 {
-                    reader.WriteEntryToDirectory(Path.GetFullPath(Directory.GetParent(unencryptedFile).FullName), new ExtractionOptions() { ExtractFullPath = true, Overwrite = true });
+                    reader.WriteEntryToDirectory(Path.GetFullPath(Directory.GetParent(Path.ChangeExtension(encryptedFile.getPath(), FileAES_Utilities.ExtentionUFAES)).FullName), new ExtractionOptions() { ExtractFullPath = true, Overwrite = true });
                 }
             }
+            return path;
         }
     }
 }

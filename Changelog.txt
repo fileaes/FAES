@@ -49,6 +49,12 @@
 
 - Added better compression handling (easier to add new compression algorithms)
 - Added new compression methods (ZIP/Deflate, LZMA, TAR/BZip2)
+- Added ability to get encryption/decryption progress (0-100)
+- Added ability to change the CryptoStream buffer used for encryption/decryption
+- Added ability to toggle the deletion of the original file
+- Added ability to toggle the overwriting of files
+- Added better logging functionality
+- Better temp folder management
 - Changed Compressed, Unencrypted file extention from '.faeszip' to '.ufaes'
 - Changed .NET Core 2.0 to .NET Core 2.1
 

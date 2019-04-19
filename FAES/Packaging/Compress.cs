@@ -62,69 +62,74 @@ namespace FAES.Packaging
         }
 
         /// <summary>
-        /// Compresses a FAES File
+        /// Compress an unencrypted FAES File.
         /// </summary>
-        /// <param name="file">FAES File to compress</param>
-        /// <param name="tempPath">Temporary File Path</param>
-        /// <param name="outputPath">Final Output Path</param>
-        public void CompressFAESFile(FAES_File file, string tempPath, string outputPath)
+        /// <param name="unencryptedFile">Unencrypted FAES File</param>
+        /// <returns>Path of the unencrypted, compressed file</returns>
+        public string CompressFAESFile(FAES_File unencryptedFile)
         {
             switch (_compressionMode)
             {
                 case CompressionMode.LZMA:
                     LZMA lzma = new LZMA();
-                    lzma.CompressFAESFile(file, tempPath, outputPath);
-                    break;
+                    Logging.Log(String.Format("Compression Mode: LZMA"), Severity.DEBUG);
+                    return lzma.CompressFAESFile(unencryptedFile);
                 case CompressionMode.TAR:
                     TAR tar = new TAR();
-                    tar.CompressFAESFile(file, tempPath, outputPath);
-                    break;
-                case CompressionMode.ZIP:
-                    {
-                        ZIP zip;
-                        if (_compressionLevelRaw < 0)
-                            zip = new ZIP(_compressionLevel);
-                        else
-                            zip = new ZIP(_compressionLevelRaw);
-
-                        zip.CompressFAESFile(file, tempPath, outputPath);
-                        break;
-                    }
+                    Logging.Log(String.Format("Compression Mode: LZMA"), Severity.DEBUG);
+                    return tar.CompressFAESFile(unencryptedFile);
                 case CompressionMode.LGYZIP:
                     LegacyZIP legacyZIP = new LegacyZIP();
-                    legacyZIP.CompressFAESFile(file, tempPath, outputPath);
-                    break;
+                    Logging.Log(String.Format("Compression Mode: LEGACYZIP"), Severity.DEBUG);
+                    return legacyZIP.CompressFAESFile(unencryptedFile);
+                case CompressionMode.ZIP:
+                default:
+                    {
+                        ZIP zip;
+                        Logging.Log(String.Format("Compression Mode: ZIP"), Severity.DEBUG);
+
+                        if (_compressionLevelRaw < 0)
+                        {
+                            Logging.Log(String.Format("Compression Level: {0}", _compressionLevel), Severity.DEBUG);
+                            zip = new ZIP(_compressionLevel);
+                        }
+                        else
+                        {
+                            Logging.Log(String.Format("Compression Level: {0}", _compressionLevelRaw), Severity.DEBUG);
+                            zip = new ZIP(_compressionLevelRaw);
+                        }
+                        return zip.CompressFAESFile(unencryptedFile);
+                    }
             }
         }
 
         /// <summary>
-        /// Uncompresses a FAES File
+        /// Uncompress an encrypted FAES File.
         /// </summary>
-        /// <param name="file">FAES File to uncompress</param>
-        public void UncompressFAESFile(FAES_File encryptedFile, string uFaesFile)
+        /// <param name="encryptedFile">Encrypted FAES File</param>
+        /// <returns>Path of the encrypted, uncompressed file</returns>
+        public string UncompressFAESFile(FAES_File encryptedFile)
         {
             string fileCompressionMode = FileAES_Utilities.GetCompressionMode(encryptedFile.getPath());
+
+            Logging.Log(String.Format("Compression Mode: {0}", fileCompressionMode), Severity.DEBUG);
 
             switch (fileCompressionMode)
             {
                 case "LZMA":
                     LZMA lzma = new LZMA();
-                    lzma.UncompressFAESFile(encryptedFile, uFaesFile);
-                    break;
+                    return lzma.UncompressFAESFile(encryptedFile);
                 case "TAR":
                     TAR tar = new TAR();
-                    tar.UncompressFAESFile(encryptedFile, uFaesFile);
-                    break;
+                    return tar.UncompressFAESFile(encryptedFile);
                 case "ZIP":
                     ZIP zip = new ZIP(_compressionLevel);
-                    zip.UncompressFAESFile(encryptedFile, uFaesFile);
-                    break;
+                    return zip.UncompressFAESFile(encryptedFile);
                 case "LEGACY":
                 case "LEGACYZIP":
                 case "LGYZIP":
                     LegacyZIP legacyZip = new LegacyZIP();
-                    legacyZip.UncompressFAESFile(encryptedFile, uFaesFile);
-                    break;
+                    return legacyZip.UncompressFAESFile(encryptedFile);
                 default:
                     throw new NotSupportedException("FAES File was compressed using an unsupported file format.");
             }
