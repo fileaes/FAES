@@ -689,11 +689,11 @@ namespace FAES
 
     public class FileAES_Utilities
     {
-        public const string ExtentionFAES = ".faes";
-        public const string ExtentionUFAES = ".ufaes";
+        public static string ExtentionFAES = ".faes";
+        public static string ExtentionUFAES = ".ufaes";
 
         private const bool IsPreReleaseBuild = true;
-        private const string PreReleaseTag = "BETA_2";
+        private const string PreReleaseTag = "DEV_190910-1";
 
         private static string[] _supportedEncExtentions = new string[3] { ExtentionFAES, ".faes", ".mcrypt" };
         private static string _FileAES_TempRoot = Path.Combine(Path.GetTempPath(), "FileAES");
@@ -701,6 +701,33 @@ namespace FAES
         private static uint _cryptoBuffer = 1048576;
 
         internal static List<TempPath> _instancedTempFolders = new List<TempPath>();
+
+
+        /// <summary>
+        /// Overrides the default extentions used by FAES. Useful if you are using FAES in a specialised environment
+        /// </summary>
+        /// <param name="encryptedFAES">Extension of the final, encrypted file</param>
+        /// <param name="unencryptedFAES">Extension of the compressed, but not encrypted, file</param>
+        /// <param name="limitSupportedExtensions">Limits the supported encryption file extensions to only the provided one</param>
+        public static void OverrideDefaultExtentions(string encryptedFAES, string unencryptedFAES, bool limitSupportedExtensions = false)
+        {
+            ExtentionFAES = encryptedFAES;
+            ExtentionUFAES = unencryptedFAES;
+
+            if (limitSupportedExtensions)
+                _supportedEncExtentions = new string[1] { ExtentionFAES };
+            else
+                _supportedEncExtentions = new string[3] { ExtentionFAES, ".faes", ".mcrypt" };
+        }
+
+        /// <summary>
+        /// Overrides the default temp folder used by FAES. Useful if you are using FAES in a specialised environment
+        /// </summary>
+        /// <param name="path">Path to use as FAES' temp folder</param>
+        public static void SetFaesTempFolder(string path)
+        {
+            _FileAES_TempRoot = path;
+        }
 
         /// <summary>
         /// Get FileAES temp folder path
