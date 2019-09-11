@@ -73,5 +73,13 @@ namespace FAES
             using (var stream = File.OpenRead(inputFile))
                 return sha512.ComputeHash(stream);
         }
+
+        public enum ChecksumType
+        {
+            NULL,
+            SHA1,
+            SHA256,
+            SHA512
+        }
     }
 }

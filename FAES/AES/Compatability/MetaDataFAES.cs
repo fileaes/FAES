@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text;
 
-namespace FAES.AES
+namespace FAES.AES.Compatability
 {
     public class MetaDataFAES
     {
