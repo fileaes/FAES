@@ -105,6 +105,8 @@ namespace FAES.AES
                 faesFileStream.Close();
 
                 _compatabilityMetadata = new LegacyCrypt().GetAllMetaData(filePath);
+
+                if (_compatabilityMetadata == null) _compatabilityMetadata = new MetaDataFAES(null);
             }
             catch (IOException)
             {

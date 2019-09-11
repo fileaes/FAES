@@ -27,10 +27,18 @@ namespace FAES.AES.Compatability
         /// <param name="metaData">Raw FAESv2 MetaData</param>
         public MetaDataFAES(byte[] metaData)
         {
-            _passwordHint = metaData.Take(64).ToArray();
-            _encryptionTimestamp = metaData.Skip(64).Take(4).ToArray();
-            _encryptionVersion = metaData.Skip(68).Take(16).ToArray();
-            _compression = metaData.Skip(84).Take(6).ToArray();
+            if (metaData != null)
+            {
+                try
+                {
+                    _passwordHint = metaData.Take(64).ToArray();
+                    _encryptionTimestamp = metaData.Skip(64).Take(4).ToArray();
+                    _encryptionVersion = metaData.Skip(68).Take(16).ToArray();
+                    _compression = metaData.Skip(84).Take(6).ToArray();
+                }
+                catch
+                { }
+            }
         }
 
         /// <summary>
