@@ -11,9 +11,9 @@ namespace FAES.AES
         private DynamicMetadata _dynamicMetadata;
         private MetaDataFAES _compatabilityMetadata;
 
-        public MetaData(Checksums.ChecksumType checksumHashType, byte[] originalFileHash, string passwordHint, string compressionModeUsed)
+        public MetaData(Checksums.ChecksumType checksumHashType, byte[] originalFileHash, string passwordHint, string compressionModeUsed, string originalFileName)
         {
-            _dynamicMetadata = new DynamicMetadata(checksumHashType, originalFileHash, passwordHint, compressionModeUsed);
+            _dynamicMetadata = new DynamicMetadata(checksumHashType, originalFileHash, passwordHint, compressionModeUsed, originalFileName);
         }
 
         public MetaData(byte[] metaData)
@@ -118,6 +118,18 @@ namespace FAES.AES
         {
             if (!_usingCompatabilityMode)
                 _dynamicMetadata = new DynamicMetadata(metaData);
+        }
+
+        /// <summary>
+        /// Gets the Password Hint
+        /// </summary>
+        /// <returns>Password Hint stored in MetaData</returns>
+        public string GetOriginalFileName()
+        {
+            if (_usingCompatabilityMode)
+                return null;
+            else
+                return _dynamicMetadata.GetOriginalFileName();
         }
 
         public bool IsLegacyVersion()

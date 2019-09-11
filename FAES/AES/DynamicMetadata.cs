@@ -5,14 +5,14 @@ namespace FAES.AES
     internal class DynamicMetadata
     {
         protected int _totalMetadataSize;
-        protected byte[] _metaData, _faesIdentifier, _hashType, _originalFileHash, _encryptionTimestamp, _passwordHint, _compressionMode, _encryptionVersion;
+        protected byte[] _metaData, _faesIdentifier, _hashType, _originalFileHash, _encryptionTimestamp, _passwordHint, _compressionMode, _encryptionVersion, _originalFileName;
         protected byte[] _unsupportedMetadata = null;
             
         /// <summary>
         /// Converts FAESv3 MetaData into easy-to-manage method calls
         /// </summary>
         /// <param name="metaData">Raw FAESv3 MetaData</param>
-        public DynamicMetadata(Checksums.ChecksumType checksumHashType, byte[] originalFileHash, string passwordHint, string compressionModeUsed)
+        public DynamicMetadata(Checksums.ChecksumType checksumHashType, byte[] originalFileHash, string passwordHint, string compressionModeUsed, string originalFileName)
         {
             _faesIdentifier = CryptUtils.ConvertStringToBytes(CryptUtils.GetCryptIdentifier());
             _hashType = CryptUtils.ConvertChecksumTypeToBytes(checksumHashType);
@@ -21,8 +21,9 @@ namespace FAES.AES
             _passwordHint = CryptUtils.ConvertStringToBytes(passwordHint.TrimEnd('\n', '\r'));
             _encryptionVersion = CryptUtils.ConvertStringToBytes(FileAES_Utilities.GetVersion());
             _compressionMode = CryptUtils.ConvertStringToBytes(compressionModeUsed);
+            _originalFileName = CryptUtils.ConvertStringToBytes(originalFileName);
 
-            _totalMetadataSize = (4 + 2 + _faesIdentifier.Length + 2 + _hashType.Length + 2 + _originalFileHash.Length + 2 + _encryptionTimestamp.Length + 2 + _passwordHint.Length + 2 + _encryptionVersion.Length + 2 + _compressionMode.Length);
+            _totalMetadataSize = (4 + 2 + _faesIdentifier.Length + 2 + _hashType.Length + 2 + _originalFileHash.Length + 2 + _encryptionTimestamp.Length + 2 + _passwordHint.Length + 2 + _encryptionVersion.Length + 2 + _compressionMode.Length + 2 + _originalFileName.Length);
         }
 
         /// <summary>
@@ -40,12 +41,18 @@ namespace FAES.AES
             //if (CryptUtils.ConvertBytesToString(_faesIdentifier) != CryptUtils.GetCryptIdentifier())
             //    throw new NotSupportedException(String.Format("'{0}' identifier not found!", CryptUtils.GetCryptIdentifier()));
 
-            _hashType = loadDynamicMetadataChunk(ref offset);
-            _originalFileHash = loadDynamicMetadataChunk(ref offset);
-            _encryptionTimestamp = loadDynamicMetadataChunk(ref offset);
-            _passwordHint = loadDynamicMetadataChunk(ref offset);
-            _encryptionVersion = loadDynamicMetadataChunk(ref offset);
-            _compressionMode = loadDynamicMetadataChunk(ref offset);
+            try
+            {
+                _hashType = loadDynamicMetadataChunk(ref offset);
+                _originalFileHash = loadDynamicMetadataChunk(ref offset);
+                _encryptionTimestamp = loadDynamicMetadataChunk(ref offset);
+                _passwordHint = loadDynamicMetadataChunk(ref offset);
+                _encryptionVersion = loadDynamicMetadataChunk(ref offset);
+                _compressionMode = loadDynamicMetadataChunk(ref offset);
+                _originalFileName = loadDynamicMetadataChunk(ref offset);
+            }
+            catch
+            { }
 
             if (offset != _totalMetadataSize)
             {
@@ -105,6 +112,7 @@ namespace FAES.AES
             MetaDataBlockCopy(_passwordHint, ref formedMetaData, ref offset);
             MetaDataBlockCopy(_encryptionVersion, ref formedMetaData, ref offset);
             MetaDataBlockCopy(_compressionMode, ref formedMetaData, ref offset);
+            MetaDataBlockCopy(_originalFileName, ref formedMetaData, ref offset);
 
             return formedMetaData;
         }
@@ -121,6 +129,15 @@ namespace FAES.AES
             offset += 2;
             Array.Copy(src, 0, dst, offset, src.Length);
             offset += src.Length;
+        }
+
+        /// <summary>
+        /// Gets the Original Filename
+        /// </summary>
+        /// <returns>Gets the Original Filename stored in MetaData</returns>
+        public string GetOriginalFileName()
+        {
+            return CryptUtils.ConvertBytesToString(_originalFileName);
         }
 
         /// <summary>

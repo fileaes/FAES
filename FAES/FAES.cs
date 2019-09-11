@@ -328,6 +328,15 @@ namespace FAES
             }
             else throw new NotSupportedException("Cannot read MetaData of an unencryted file.");
         }
+
+        public string GetOriginalFileName()
+        {
+            if (_faesMetaData != null)
+            {
+                return _faesMetaData.GetOriginalFileName();
+            }
+            else throw new NotSupportedException("Cannot read MetaData of an unencryted file.");
+        }
     }
 
     public class FileAES_Encrypt
@@ -524,7 +533,7 @@ namespace FAES
                 {
                     Logging.Log(String.Format("Starting Encryption: {0}", file), Severity.DEBUG);
 
-                    _faesMetaData = new MetaData(_checksumType, fileHash, _passwordHint, compress.GetCompressionModeAsString());
+                    _faesMetaData = new MetaData(_checksumType, fileHash, _passwordHint, compress.GetCompressionModeAsString(), Path.GetFileName(_file.getPath()));
 
                     success = crypt.Encrypt(_faesMetaData.GetMetaData(), file, Path.ChangeExtension(file, FileAES_Utilities.ExtentionFAES), _password, ref _percentEncComplete);
 
@@ -675,9 +684,14 @@ namespace FAES
 
             string fileInputPath = _file.getPath();
             string fileOutputPath = Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES);
+            string fileOverwritePath = Path.Combine(Path.GetDirectoryName(_file.getPath()), _file.GetOriginalFileName());
 
-            if (File.Exists(fileOutputPath) && _overwriteDuplicate) File.Delete(fileOutputPath);
-            else throw new IOException("Error occured since the file already exists.");
+            if(File.Exists(fileOverwritePath) && !String.IsNullOrWhiteSpace(_file.GetOriginalFileName()) && _overwriteDuplicate)
+                File.Delete(fileOverwritePath);
+            else if (String.IsNullOrWhiteSpace(_file.GetOriginalFileName()))
+                File.Delete(fileOverwritePath);
+            else if (File.Exists(fileOverwritePath))
+                throw new IOException("Error occured since the file already exists.");
 
             try
             {

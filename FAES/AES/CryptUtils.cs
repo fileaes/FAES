@@ -62,7 +62,9 @@ namespace FAES.AES
         /// <returns>String</returns>
         public static string ConvertBytesToString(byte[] value)
         {
-            return Encoding.UTF8.GetString(value).TrimEnd('\0', '\n', '\r');
+            if (value != null)
+                return Encoding.UTF8.GetString(value).TrimEnd('\0', '\n', '\r');
+            else return "";
         }
 
         /// <summary>
