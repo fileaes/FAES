@@ -548,7 +548,7 @@ namespace FAES
                 string faesOutputPath = Path.Combine(Directory.GetParent(_file.getPath()).FullName, Path.ChangeExtension(_file.getFileName(), FileAES_Utilities.ExtentionFAES));
 
                 if (File.Exists(faesOutputPath) && _overwriteDuplicate) FileAES_IntUtilities.SafeDeleteFile(faesOutputPath);
-                else if (File.Exists(faesOutputPath)) throw new IOException("Error occured since FAES file already exists.");
+                else if (File.Exists(faesOutputPath)) throw new IOException("Error occured since the file already exists.");
 
                 try
                 {
@@ -673,6 +673,12 @@ namespace FAES
             bool success;
             _percentDecComplete = 0;
 
+            string fileInputPath = _file.getPath();
+            string fileOutputPath = Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES);
+
+            if (File.Exists(fileOutputPath) && _overwriteDuplicate) File.Delete(fileOutputPath);
+            else throw new IOException("Error occured since the file already exists.");
+
             try
             {
                 Logging.Log(String.Format("Starting Decryption: {0}", _file.getPath()), Severity.DEBUG);
@@ -680,7 +686,7 @@ namespace FAES
 
                 if (!_faesMetaData.IsLegacyVersion())
                 {
-                    success = crypt.Decrypt(_faesMetaData, _file.getPath(), Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES), _password, ref _percentDecComplete);
+                    success = crypt.Decrypt(_faesMetaData, _file.getPath(), fileOutputPath, _password, ref _percentDecComplete);
                 }
                 else
                 {
@@ -1036,8 +1042,8 @@ namespace FAES
                     return "ERROR: A folder could not be deleted! Is the folder in use?";
                 else if (exception.ToString().Contains("File/Folder not found at the specified path!"))
                     return "ERROR: A file/folder was not found at the specified path!";
-                else if (exception.ToString().Contains("Error occured since FAES file already exists."))
-                    return "ERROR: FAES file already exists in destination and overwriting is disabled!";
+                else if (exception.ToString().Contains("Error occured since the file already exists."))
+                    return "ERROR: File already exists at destination and overwriting is disabled!";
             }
             return exception.ToString();
         }
