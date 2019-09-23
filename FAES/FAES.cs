@@ -770,7 +770,7 @@ namespace FAES
         public static string ExtentionUFAES = ".ufaes";
 
         private const bool IsPreReleaseBuild = true;
-        private const string PreReleaseTag = "DEV_190911-2";
+        private const string PreReleaseTag = "BETA_3";
 
         private static string[] _supportedEncExtentions = new string[3] { ExtentionFAES, ".faes", ".mcrypt" };
         private static string _FileAES_TempRoot = Path.Combine(Path.GetTempPath(), "FileAES");
@@ -778,7 +778,6 @@ namespace FAES
         private static uint _cryptoBuffer = 1048576;
 
         internal static List<TempPath> _instancedTempFolders = new List<TempPath>();
-
 
         /// <summary>
         /// Overrides the default extentions used by FAES. Useful if you are using FAES in a specialised environment

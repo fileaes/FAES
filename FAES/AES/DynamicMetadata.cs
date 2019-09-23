@@ -38,9 +38,6 @@ namespace FAES.AES
 
             _faesIdentifier = loadDynamicMetadataChunk(ref offset);
 
-            //if (CryptUtils.ConvertBytesToString(_faesIdentifier) != CryptUtils.GetCryptIdentifier())
-            //    throw new NotSupportedException(String.Format("'{0}' identifier not found!", CryptUtils.GetCryptIdentifier()));
-
             try
             {
                 _hashType = loadDynamicMetadataChunk(ref offset);
@@ -188,8 +185,7 @@ namespace FAES.AES
                 else
                     return ver;
             }
-            else
-                return "Unknown version!";
+            else return "Unknown version!";
         }
 
         /// <summary>

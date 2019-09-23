@@ -7,136 +7,13 @@ namespace FAES.AES.Compatability
 {
     internal class LegacyCrypt
     {
-        protected byte[] _specifiedSalt = null;
-
         private const string _faesCBCModeIdentifier = "FAESv2-CBC"; //Current FAES Encryption Mode
 
         /// <summary>
-        /// Legacy FAES Encrypt/Decrypt Handler. Using a randomly generated salt.
+        /// Legacy FAES Decrypt Handler.
         /// </summary>
         internal LegacyCrypt()
         { }
-
-        /// <summary>
-        /// Legacy FAES Encrypt/Decrypt Handler. Using a user-specified salt.
-        /// </summary>
-        /// <param name="salt">User-specified Salt</param>
-        internal LegacyCrypt(byte[] salt)
-        {
-            _specifiedSalt = salt;
-        }
-
-        /// <summary>
-        /// Sets the user specified salt.
-        /// </summary>
-        /// <param name="salt">User-specified salt</param>
-        internal void SetUserSalt(byte[] salt)
-        {
-            _specifiedSalt = salt;
-        }
-
-        /// <summary>
-        /// Gets the user specified salt.
-        /// </summary>
-        /// <returns>User-specified salt</returns>
-        internal byte[] GetUserSalt()
-        {
-            return _specifiedSalt;
-        }
-
-        /// <summary>
-        /// Removes the user specified salt and returns to using a randomly generated one each encryption.
-        /// </summary>
-        internal void RemoveUserSalt()
-        {
-            _specifiedSalt = null;
-        }
-
-        /// <summary>
-        /// Gets if the user specified salt is active.
-        /// </summary>
-        /// <returns>If the user-specified salt is active</returns>
-        internal bool IsUserSaltActive()
-        {
-            if (_specifiedSalt != null) return true;
-            return false;
-        }
-
-        /// <summary>
-        /// Encrypts the selected file using the given password
-        /// </summary>
-        /// <param name="inputFile">File to encrypt</param>
-        /// <param name="password">Password to encrypt the file</param>
-        /// <param name="passwordHint">Hint for the password used on the file</param>
-        /// <returns></returns>
-        internal bool Encrypt(string inputFile, string password, string compressionMode, ref decimal percentComplete, string passwordHint = null)
-        {
-            if (String.IsNullOrEmpty(passwordHint)) passwordHint = "No Password Hint Set";
-
-            MetaDataFAES fMD = new MetaDataFAES(passwordHint, compressionMode);
-            string outputName;
-            byte[] hash = Checksums.GetSHA1(inputFile);
-            byte[] salt;
-            byte[] metaData = fMD.GetMetaData();
-
-            if (_specifiedSalt != null) salt = _specifiedSalt;
-            else salt = CryptUtils.GenerateRandomSalt();
-
-            if (inputFile.Contains(FileAES_Utilities.ExtentionUFAES)) outputName = inputFile.Replace(FileAES_Utilities.ExtentionUFAES, "");
-            else outputName = inputFile;
-
-            outputName = Path.ChangeExtension(outputName, "faes");
-
-            FileStream fsCrypt = new FileStream(outputName, FileMode.Create);
-
-            byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
-            byte[] faesCBCMode = Encoding.UTF8.GetBytes(_faesCBCModeIdentifier);
-
-            RijndaelManaged AES = new RijndaelManaged();
-            AES.KeySize = 256;
-            AES.BlockSize = 128;
-            AES.Padding = PaddingMode.PKCS7;
-
-            var key = new Rfc2898DeriveBytes(passwordBytes, salt, 50000);
-            AES.Key = key.GetBytes(AES.KeySize / 8);
-            AES.IV = key.GetBytes(AES.BlockSize / 8);
-
-            AES.Mode = CipherMode.CBC;
-
-            fsCrypt.Write(hash, 0, hash.Length);
-            fsCrypt.Write(salt, 0, salt.Length);
-            fsCrypt.Write(faesCBCMode, 0, faesCBCMode.Length);
-            fsCrypt.Write(metaData, 0, metaData.Length);
-
-            CryptoStream cs = new CryptoStream(fsCrypt, AES.CreateEncryptor(), CryptoStreamMode.Write);
-
-            FileStream fsIn = new FileStream(inputFile, FileMode.Open);
-
-            byte[] buffer = new byte[FileAES_Utilities.GetCryptoStreamBuffer()];
-            int read;
-
-            long expectedComplete = fsIn.Length + hash.Length + salt.Length + faesCBCMode.Length + metaData.Length + AES.KeySize + AES.BlockSize;
-
-            Logging.Log(String.Format("Beginning writing encrypted data..."), Severity.DEBUG);
-            while ((read = fsIn.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                try
-                {
-                    percentComplete = Math.Ceiling((decimal)((Convert.ToDouble(fsCrypt.Length) / Convert.ToDouble(expectedComplete)) * 100));
-                    if (percentComplete > 100) percentComplete = 100;
-                }
-                catch { }
-
-                cs.Write(buffer, 0, read);
-            }
-            Logging.Log(String.Format("Finished writing encrypted data."), Severity.DEBUG);
-
-            fsIn.Close();
-            cs.Close();
-            fsCrypt.Close();
-
-            return true;
-        }
 
         /// <summary>
         /// Decrypts the selected file using the given password
