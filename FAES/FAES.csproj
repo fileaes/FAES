@@ -1,18 +1,23 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net45;netcoreapp2.1</TargetFrameworks>
     <Version>1.2.0</Version>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
-    <PackageReleaseNotes>- Added better compression handling (easier to add new compression algorithms)
+    <PackageReleaseNotes>- Replaced the FAESv2-CBC file structure with FAESv3. The MetaData is now dynamically sized, and not limited to 256 bytes
+- Added better compression handling (easier to add new compression algorithms)
 - Added new compression methods (ZIP/Deflate, LZMA, TAR/BZip2)
 - Added ability to get encryption/decryption progress (0-100)
 - Added ability to change the CryptoStream buffer used for encryption/decryption
 - Added ability to toggle the deletion of the original file
 - Added ability to toggle the overwriting of files
 - Added better logging functionality
+- Added ability to change file hashing algorithm (SHA1, SHA256 and SHA512 supported for now)
 - Better temp folder management
+- Password Hints are no longer limited to 64 bytes
+- Changed default file hashing algorithm to SHA256
 - Changed Compressed, Unencrypted file extention from '.faeszip' to '.ufaes'
+- Changed UNIX timestamp from Int32 to Int64
 - Changed .NET Core 2.0 to .NET Core 2.1</PackageReleaseNotes>
     <Authors>mullak99</Authors>
     <Description>C# Library to encrypt/decrypt files using AES. With extra features.</Description>
@@ -23,12 +28,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Costura.Fody" Version="3.3.3" />
-    <PackageReference Include="Fody" Version="4.2.1">
+    <PackageReference Include="Costura.Fody" Version="4.1.0" />
+    <PackageReference Include="Fody" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="SharpCompress" Version="0.23.0" />
+    <PackageReference Include="SharpCompress" Version="0.24.0" />
   </ItemGroup>
 
   <ItemGroup>

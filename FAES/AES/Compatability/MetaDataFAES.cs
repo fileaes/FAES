@@ -2,24 +2,11 @@
 using System.Linq;
 using System.Text;
 
-namespace FAES.AES
+namespace FAES.AES.Compatability
 {
-    public class MetaDataFAES
+    internal class MetaDataFAES
     {
         protected byte[] _passwordHint, _encryptionTimestamp, _encryptionVersion, _compression;
-
-        /// <summary>
-        /// Converts various pieces of MetaData into easy-to-manage method calls
-        /// </summary>
-        /// <param name="passwordHint">Password Hint</param>
-        /// <param name="compressionModeUsed">Compression Mode</param>
-        public MetaDataFAES(string passwordHint, string compressionModeUsed)
-        {
-            _passwordHint = ConvertStringToBytes(passwordHint.TrimEnd('\n', '\r'));
-            _encryptionTimestamp = BitConverter.GetBytes((int)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds);
-            _encryptionVersion = ConvertStringToBytes(FileAES_Utilities.GetVersion(), 16);
-            _compression = ConvertStringToBytes(compressionModeUsed, 6);
-        }
 
         /// <summary>
         /// Converts FAESv2 MetaData into easy-to-manage method calls
@@ -27,10 +14,18 @@ namespace FAES.AES
         /// <param name="metaData">Raw FAESv2 MetaData</param>
         public MetaDataFAES(byte[] metaData)
         {
-            _passwordHint = metaData.Take(64).ToArray();
-            _encryptionTimestamp = metaData.Skip(64).Take(4).ToArray();
-            _encryptionVersion = metaData.Skip(68).Take(16).ToArray();
-            _compression = metaData.Skip(84).Take(6).ToArray();
+            if (metaData != null)
+            {
+                try
+                {
+                    _passwordHint = metaData.Take(64).ToArray();
+                    _encryptionTimestamp = metaData.Skip(64).Take(4).ToArray();
+                    _encryptionVersion = metaData.Skip(68).Take(16).ToArray();
+                    _compression = metaData.Skip(84).Take(6).ToArray();
+                }
+                catch
+                { }
+            }
         }
 
         /// <summary>
