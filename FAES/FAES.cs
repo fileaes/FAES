@@ -684,14 +684,17 @@ namespace FAES
 
             string fileInputPath = _file.getPath();
             string fileOutputPath = Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES);
-            string fileOverwritePath = Path.Combine(Path.GetDirectoryName(_file.getPath()), _file.GetOriginalFileName());
 
-            if(File.Exists(fileOverwritePath) && !String.IsNullOrWhiteSpace(_file.GetOriginalFileName()) && _overwriteDuplicate)
-                File.Delete(fileOverwritePath);
-            else if (String.IsNullOrWhiteSpace(_file.GetOriginalFileName()))
-                File.Delete(fileOverwritePath);
-            else if (File.Exists(fileOverwritePath))
-                throw new IOException("Error occured since the file already exists.");
+            if (!String.IsNullOrEmpty(_file.GetOriginalFileName()))
+            {
+                string fileOverwritePath = Path.Combine(Path.GetDirectoryName(_file.getPath()), _file.GetOriginalFileName());
+
+                if (File.Exists(fileOverwritePath) && !String.IsNullOrWhiteSpace(_file.GetOriginalFileName()) && _overwriteDuplicate)
+                    File.Delete(fileOverwritePath);
+                else if (File.Exists(fileOverwritePath))
+                    throw new IOException("Error occured since the file already exists.");
+            }
+            else Logging.Log(String.Format("Could not find the original filename for '{0}' (). This may cause some problems if the decrypted file(s) already exist in this location!", _file.getFileName()), Severity.WARN);
 
             try
             {
@@ -770,7 +773,7 @@ namespace FAES
         public static string ExtentionUFAES = ".ufaes";
 
         private const bool IsPreReleaseBuild = true;
-        private const string PreReleaseTag = "BETA_3";
+        private const string PreReleaseTag = "BETA_4";
 
         private static string[] _supportedEncExtentions = new string[3] { ExtentionFAES, ".faes", ".mcrypt" };
         private static string _FileAES_TempRoot = Path.Combine(Path.GetTempPath(), "FileAES");
