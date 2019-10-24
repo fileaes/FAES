@@ -47,6 +47,7 @@
 
 |---| 1.2.0 |---|
 
+- Replaced the FAESv2-CBC file structure with FAESv3. The MetaData is now dynamically sized, and not limited to 256 bytes
 - Added better compression handling (easier to add new compression algorithms)
 - Added new compression methods (ZIP/Deflate, LZMA, TAR/BZip2)
 - Added ability to get encryption/decryption progress (0-100)
@@ -54,10 +55,14 @@
 - Added ability to toggle the deletion of the original file
 - Added ability to toggle the overwriting of files
 - Added better logging functionality
+- Added ability to change file hashing algorithm (SHA1, SHA256 and SHA512 supported for now)
 - Better temp folder management
+- Password Hints are no longer limited to 64 bytes
+- Changed default file hashing algorithm to SHA256
 - Changed Compressed, Unencrypted file extention from '.faeszip' to '.ufaes'
-- Changed .NET Core 2.0 to .NET Core 2.1
+- Changed UNIX timestamp from Int32 to Int64
+- Changed target frameworks to .NET Framework 4.5, .NET Standard (2.0 and 2.1)
 
-~ FAES Encryption Mode: FAESv2-CBC
-~ Supported FAES Encryption Modes: Legacy, FAESv1-CBC and FAESv2-CBC
+~ FAES Encryption Mode: FAESv3
+~ Supported FAES Encryption Modes: Legacy, FAESv1-CBC, FAESv2-CBC and FAESv3
 ~ Supported FAES Compression Modes: ZIP, TAR, LZMA and LegacyZIP

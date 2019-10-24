@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>net45;netstandard2.0;netstandard2.1</TargetFrameworks>
     <Version>1.2.0</Version>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <PackageReleaseNotes>- Replaced the FAESv2-CBC file structure with FAESv3. The MetaData is now dynamically sized, and not limited to 256 bytes
@@ -18,7 +18,7 @@
 - Changed default file hashing algorithm to SHA256
 - Changed Compressed, Unencrypted file extention from '.faeszip' to '.ufaes'
 - Changed UNIX timestamp from Int32 to Int64
-- Changed .NET Core 2.0 to .NET Core 2.1</PackageReleaseNotes>
+- Changed target frameworks to .NET Framework 4.5, .NET Standard (2.0 and 2.1)</PackageReleaseNotes>
     <Authors>mullak99</Authors>
     <Description>C# Library to encrypt/decrypt files using AES. With extra features.</Description>
     <FileVersion>1.2.0.0</FileVersion>
@@ -29,15 +29,18 @@
 
   <ItemGroup>
     <PackageReference Include="Costura.Fody" Version="4.1.0" />
-    <PackageReference Include="Fody" Version="6.0.0">
+    <PackageReference Include="Fody" Version="6.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <PackageReference Include="SharpCompress" Version="0.24.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="System.IO.Compression" />
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+    <Reference Include="System.IO.Compression">
+      <SpecificVersion></SpecificVersion>
+      <Private></Private>
+    </Reference>
   </ItemGroup>
 
 </Project>
