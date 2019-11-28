@@ -1,16 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;netcoreapp2.0</TargetFrameworks>
-    <Version>1.1.3</Version>
-    <AssemblyVersion>1.1.3.0</AssemblyVersion>
-    <PackageReleaseNotes>- Added FAES version to encrypted file metadata
-- Added method to manually delete instanced temp paths
-- Changed password hint padding character
-- Fully fixed invalid character showing up in password hints</PackageReleaseNotes>
+    <TargetFrameworks>net45;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <Version>1.1.4</Version>
+    <AssemblyVersion>1.1.4.0</AssemblyVersion>
+    <PackageReleaseNotes>- Changed targeted frameworks to NET Framework 4.5, NET Standard 2.0 and NET Standard 2.1</PackageReleaseNotes>
     <Authors>mullak99</Authors>
     <Description>C# Library to encrypt/decrypt files using AES. With extra features.</Description>
-    <FileVersion>1.1.3.0</FileVersion>
+    <FileVersion>1.1.4.0</FileVersion>
+    <Product>FAES</Product>
+    <PackageId>FAES</PackageId>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/fileaes/FAES</PackageProjectUrl>
+    <PackageTags>faes, faes-library, aes, encryption, decryption</PackageTags>
+    <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+    <Company>mullak99</Company>
   </PropertyGroup>
 
   <ItemGroup>
