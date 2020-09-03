@@ -187,14 +187,28 @@ namespace FAES.AES
                     crypto.Close();
                     outputDataStream.Close();
                     inputDataStream.Close();
-                    /*
-                    if (Checksums.ConvertHashToString(hash) != Checksums.ConvertHashToString(Checksums.GetSHA1(outputName)))
+
+                    bool doesHashMatch = false;
+
+                    switch (faesMetaData.GetHashType())
+                    {
+                        case Checksums.ChecksumType.SHA1:
+                            doesHashMatch = Checksums.CompareHash(faesMetaData.GetOrigHash(), Checksums.GetSHA1(outputFilePath));
+                            break;
+                        case Checksums.ChecksumType.SHA256:
+                            doesHashMatch = Checksums.CompareHash(faesMetaData.GetOrigHash(), Checksums.GetSHA256(outputFilePath));
+                            break;
+                        case Checksums.ChecksumType.SHA512:
+                            doesHashMatch = Checksums.CompareHash(faesMetaData.GetOrigHash(), Checksums.GetSHA512(outputFilePath));
+                            break;
+                    }
+                    if (!doesHashMatch)
                     {
                         Logging.Log(String.Format("Invalid Checksum detected! Assuming password is incorrect."), Severity.DEBUG);
-                        FileAES_IntUtilities.SafeDeleteFile(outputName);
+                        //FileAES_IntUtilities.SafeDeleteFile(outputFilePath);
                         return false;
                     }
-                    Logging.Log(String.Format("Valid Checksum detected!"), Severity.DEBUG);*/
+                    Logging.Log(String.Format("Valid Checksum detected!"), Severity.DEBUG);
                     return true;
                 }
                 catch

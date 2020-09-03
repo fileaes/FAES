@@ -129,6 +129,24 @@ namespace FAES.AES
         }
 
         /// <summary>
+        /// Gets the Checksum Hash Type used to hash the original file
+        /// </summary>
+        /// <returns>The original hash type</returns>
+        public Checksums.ChecksumType GetHashType()
+        {
+            return CryptUtils.ConvertBytesToChecksumType(_hashType);
+        }
+
+        /// <summary>
+        /// Gets thge original file hash
+        /// </summary>
+        /// <returns>Original file hash</returns>
+        public byte[] GetOrigHash()
+        {
+            return _originalFileHash;
+        }
+
+        /// <summary>
         /// Gets the Original Filename
         /// </summary>
         /// <returns>Gets the Original Filename stored in MetaData</returns>
