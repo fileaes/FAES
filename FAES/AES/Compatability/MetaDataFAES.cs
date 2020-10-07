@@ -23,8 +23,15 @@ namespace FAES.AES.Compatability
                     _encryptionVersion = metaData.Skip(68).Take(16).ToArray();
                     _compression = metaData.Skip(84).Take(6).ToArray();
                 }
-                catch
-                { }
+                catch (Exception e)
+                {
+                    string msg = "MetaData (FAESv2) was shorter than expected! This probably means you are decrypting an older file; If so, this isnt a problem. If not, something is wrong.";
+
+                    if (FileAES_Utilities.GetVerboseLogging())
+                        Logging.Log(String.Format("{0} | {1}", msg, e.ToString()), Severity.WARN);
+                    else
+                        Logging.Log(msg, Severity.WARN);
+                }
             }
         }
 

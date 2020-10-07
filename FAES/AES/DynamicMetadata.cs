@@ -9,9 +9,13 @@ namespace FAES.AES
         protected byte[] _unsupportedMetadata = null;
             
         /// <summary>
-        /// Converts FAESv3 MetaData into easy-to-manage method calls
+        /// Converts variables into easy-to-manage method calls to create a byte array for metadata
         /// </summary>
-        /// <param name="metaData">Raw FAESv3 MetaData</param>
+        /// <param name="checksumHashType">Type of checksum used to generate the file hash</param>
+        /// <param name="originalFileHash">File hash of the original file (checksum generated using previous hash type)</param>
+        /// <param name="passwordHint">A password hint for the password used to encrypt the file</param>
+        /// <param name="compressionModeUsed">Compression mode used to compress the file</param>
+        /// <param name="originalFileName">The name of the original file</param>
         public DynamicMetadata(Checksums.ChecksumType checksumHashType, byte[] originalFileHash, string passwordHint, string compressionModeUsed, string originalFileName)
         {
             _faesIdentifier = CryptUtils.ConvertStringToBytes(CryptUtils.GetCryptIdentifier());
@@ -36,20 +40,27 @@ namespace FAES.AES
             _totalMetadataSize = Convert.ToUInt16(_metaData.Length);
             int offset = 4;
 
-            _faesIdentifier = loadDynamicMetadataChunk(ref offset);
+            _faesIdentifier = loadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
 
             try
             {
-                _hashType = loadDynamicMetadataChunk(ref offset);
-                _originalFileHash = loadDynamicMetadataChunk(ref offset);
-                _encryptionTimestamp = loadDynamicMetadataChunk(ref offset);
-                _passwordHint = loadDynamicMetadataChunk(ref offset);
-                _encryptionVersion = loadDynamicMetadataChunk(ref offset);
-                _compressionMode = loadDynamicMetadataChunk(ref offset);
-                _originalFileName = loadDynamicMetadataChunk(ref offset);
+                _hashType = loadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
+                _originalFileHash = loadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
+                _encryptionTimestamp = loadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
+                _passwordHint = loadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
+                _encryptionVersion = loadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
+                _compressionMode = loadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
+                _originalFileName = loadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
             }
-            catch
-            { }
+            catch (Exception e)
+            {
+                string msg = "MetaData (FAESv3) was shorter than expected! This probably means you are decrypting an older file; If so, this isnt a problem. If not, something is wrong.";
+
+                if (FileAES_Utilities.GetVerboseLogging())
+                    Logging.Log(String.Format("{0} | {1}", msg, e.ToString()), Severity.WARN);
+                else
+                    Logging.Log(msg, Severity.WARN);
+            }
 
             if (offset != _totalMetadataSize)
             {
@@ -62,15 +73,16 @@ namespace FAES.AES
         /// </summary>
         /// <param name="offset">Offset from the beginning of the metadata</param>
         /// <returns>Data at the current offset</returns>
-        private byte[] loadDynamicMetadataChunk(ref int offset)
+        private byte[] loadDynamicMetadataChunk(ref int offset, ref int totalSize)
         {
-            ushort chunkSize;
-            byte[] chunkSizeBytes = new byte[2];
-
-            byte[] metaDataChunk;
-
-            try
+            if (offset < totalSize)
             {
+                ushort chunkSize;
+                int origOffset = offset;
+                byte[] chunkSizeBytes = new byte[2];
+
+                byte[] metaDataChunk;
+
                 Array.Copy(_metaData, offset, chunkSizeBytes, 0, 2);
                 chunkSize = BitConverter.ToUInt16(chunkSizeBytes, 0);
                 metaDataChunk = new byte[chunkSize];
@@ -79,11 +91,13 @@ namespace FAES.AES
                 Array.Copy(_metaData, offset, metaDataChunk, 0, chunkSize);
                 offset += chunkSize;
 
+                Logging.Log(String.Format("MetaDataChunkSize: {0}, MetaDataChunk: {1}, InitialOffset: {2}, FinalOffset: {3}", chunkSize, BitConverter.ToString(metaDataChunk), origOffset, offset), Severity.DEBUG);
+
                 return metaDataChunk;
             }
-            catch
+            else
             {
-                return null;
+                throw new IndexOutOfRangeException("Metadata cannot be found at this offset!");
             }
         }
 
@@ -102,14 +116,21 @@ namespace FAES.AES
             offset += totalSizeBytes.Length;
 
             // Metadata Chunks
-            MetaDataBlockCopy(_faesIdentifier, ref formedMetaData, ref offset);
-            MetaDataBlockCopy(_hashType, ref formedMetaData, ref offset);
-            MetaDataBlockCopy(_originalFileHash, ref formedMetaData, ref offset);
-            MetaDataBlockCopy(_encryptionTimestamp, ref formedMetaData, ref offset);
-            MetaDataBlockCopy(_passwordHint, ref formedMetaData, ref offset);
-            MetaDataBlockCopy(_encryptionVersion, ref formedMetaData, ref offset);
-            MetaDataBlockCopy(_compressionMode, ref formedMetaData, ref offset);
-            MetaDataBlockCopy(_originalFileName, ref formedMetaData, ref offset);
+            try
+            {
+                MetaDataBlockCopy(_faesIdentifier, ref formedMetaData, ref offset);
+                MetaDataBlockCopy(_hashType, ref formedMetaData, ref offset);
+                MetaDataBlockCopy(_originalFileHash, ref formedMetaData, ref offset);
+                MetaDataBlockCopy(_encryptionTimestamp, ref formedMetaData, ref offset);
+                MetaDataBlockCopy(_passwordHint, ref formedMetaData, ref offset);
+                MetaDataBlockCopy(_encryptionVersion, ref formedMetaData, ref offset);
+                MetaDataBlockCopy(_compressionMode, ref formedMetaData, ref offset);
+                MetaDataBlockCopy(_originalFileName, ref formedMetaData, ref offset);
+            }
+            catch (Exception e)
+            {
+                throw new Exception("An error occured when creating the FAESv3 metadata: " + e.ToString());
+            }
 
             return formedMetaData;
         }
@@ -122,10 +143,15 @@ namespace FAES.AES
         /// <param name="offset">Current offset</param>
         private void MetaDataBlockCopy(byte[] src, ref byte[] dst, ref int offset)
         {
-            Array.Copy(BitConverter.GetBytes(Convert.ToUInt16(src.Length)), 0, dst, offset, 2);
+            ushort srcLen = Convert.ToUInt16(src.Length);
+            int origOffset = offset;
+
+            Array.Copy(BitConverter.GetBytes(srcLen), 0, dst, offset, 2);
             offset += 2;
             Array.Copy(src, 0, dst, offset, src.Length);
             offset += src.Length;
+
+            Logging.Log(String.Format("MetaDataSize: {0}, MetaData: {1}, InitialOffset: {2}, FinalOffset: {3}", srcLen, BitConverter.ToString(src), origOffset, offset), Severity.DEBUG);
         }
 
         /// <summary>
@@ -230,5 +256,6 @@ namespace FAES.AES
         {
             return _totalMetadataSize;
         }
+
     }
 }
