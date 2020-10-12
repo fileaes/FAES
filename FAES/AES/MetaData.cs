@@ -152,6 +152,31 @@ namespace FAES.AES
                 return false;
         }
 
+
+        /// <summary>
+        /// Gets the Checksum Hash Type used to hash the original file
+        /// </summary>
+        /// <returns>The original hash type</returns>
+        public Checksums.ChecksumType GetHashType()
+        {
+            if (_usingCompatabilityMode)
+                return Checksums.ChecksumType.SHA1;
+            else
+                return _dynamicMetadata.GetHashType();
+        }
+
+        /// <summary>
+        /// Gets thge original file hash
+        /// </summary>
+        /// <returns>Original file hash</returns>
+        public byte[] GetOrigHash()
+        {
+            if (_usingCompatabilityMode)
+                return null;
+            else
+                return _dynamicMetadata.GetOrigHash();
+        }
+
         /// <summary>
         /// Gets the Password Hint
         /// </summary>

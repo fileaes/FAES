@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;netcoreapp2.1</TargetFrameworks>
-    <Version>1.2.0</Version>
+    <TargetFrameworks>net45;net46;netstandard2.0</TargetFrameworks>
+    <Version>1.2.0-beta5</Version>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <PackageReleaseNotes>- Replaced the FAESv2-CBC file structure with FAESv3. The MetaData is now dynamically sized, and not limited to 256 bytes
 - Added better compression handling (easier to add new compression algorithms)
@@ -18,26 +18,36 @@
 - Changed default file hashing algorithm to SHA256
 - Changed Compressed, Unencrypted file extention from '.faeszip' to '.ufaes'
 - Changed UNIX timestamp from Int32 to Int64
-- Changed .NET Core 2.0 to .NET Core 2.1</PackageReleaseNotes>
+- Changed target frameworks to .NET Framework 4.5, .NET Framework 4.6, and .NET Standard 2.0</PackageReleaseNotes>
     <Authors>mullak99</Authors>
     <Description>C# Library to encrypt/decrypt files using AES. With extra features.</Description>
     <FileVersion>1.2.0.0</FileVersion>
-    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
     <RepositoryUrl>https://github.com/fileaes/FAES</RepositoryUrl>
-    <Copyright>Copyright © 2019 | mullak99</Copyright>
+    <Copyright>Copyright © 2020 | mullak99</Copyright>
+    <PackageTags>faes, faes-library, aes, aes-encryption, aes-decryption, encryption, decryption</PackageTags>
+    <PackageProjectUrl>https://github.com/fileaes/FAES</PackageProjectUrl>
+    <Product>FAES</Product>
+    <PackageId>FAES</PackageId>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <Company>mullak99</Company>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Costura.Fody" Version="4.1.0" />
-    <PackageReference Include="Fody" Version="6.0.0">
+    <PackageReference Include="Fody" Version="6.2.6">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="SharpCompress" Version="0.24.0" />
+	<PackageReference Include="SharpCompress" Version="0.24.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="System.IO.Compression" />
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+	<Reference Include="System.IO.Compression" />
+  </ItemGroup>
+  
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
+	<Reference Include="System.IO.Compression" />
   </ItemGroup>
 
 </Project>

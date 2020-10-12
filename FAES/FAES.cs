@@ -348,6 +348,8 @@ namespace FAES
         protected MetaData _faesMetaData;
         protected Checksums.ChecksumType _checksumType = Checksums.ChecksumType.SHA256;
 
+        protected bool _debugMode = false;
+
         internal Crypt crypt = new Crypt();
         internal Compress compress;
 
@@ -376,6 +378,15 @@ namespace FAES
                 if (UserSpecifiedSalt != null) crypt.SetUserSalt(UserSpecifiedSalt);
             }
             else throw new Exception("This filetype cannot be encrypted!");
+        }
+
+        /// <summary>
+        /// Shows full exception messages if FAES fails for whatever reason
+        /// </summary>
+        public bool DebugMode
+        {
+            get { return _debugMode; }
+            set { _debugMode = value; }
         }
 
         /// <summary>
@@ -502,31 +513,33 @@ namespace FAES
             {
                 try
                 {
-                    Logging.Log(String.Format("Getting File Hash: {0}", _file.getPath()), Severity.DEBUG);
+                    Logging.Log(String.Format("Starting Compression: {0}", _file.getPath()), Severity.DEBUG);
+                    file = compress.CompressFAESFile(_file);
+                    Logging.Log(String.Format("Finished Compression: {0}", _file.getPath()), Severity.DEBUG);
+
+                    Logging.Log(String.Format("Getting File Hash: {0}", file), Severity.DEBUG);
                     
                     switch (_checksumType)
                     {
                         case Checksums.ChecksumType.SHA1:
-                            fileHash = Checksums.GetSHA1(_file.getPath());
+                            fileHash = Checksums.GetSHA1(file);
                             break;
                         case Checksums.ChecksumType.SHA256:
-                            fileHash = Checksums.GetSHA256(_file.getPath());
+                            fileHash = Checksums.GetSHA256(file);
                             break;
                         case Checksums.ChecksumType.SHA512:
-                            fileHash = Checksums.GetSHA512(_file.getPath());
+                            fileHash = Checksums.GetSHA512(file);
                             break;
                         default:
-                            fileHash = Checksums.GetSHA256(_file.getPath());
+                            fileHash = Checksums.GetSHA256(file);
                             break;
                     }
-
-                    Logging.Log(String.Format("Starting Compression: {0}", _file.getPath()), Severity.DEBUG);
-                    file = compress.CompressFAESFile(_file);
-                    Logging.Log(String.Format("Finished Compression: {0}", _file.getPath()), Severity.DEBUG);
                 }
-                catch
+                catch (Exception e)
                 {
-                    throw new IOException("Error occured in creating the UFAES file.");
+                    if (!_debugMode)
+                        throw new IOException("Error occured in creating the UFAES file.");
+                    else throw e;
                 }
 
                 try
@@ -539,18 +552,22 @@ namespace FAES
 
                     Logging.Log(String.Format("Finished Encryption: {0}", file), Severity.DEBUG);
                 }
-                catch
+                catch (Exception e)
                 {
-                    throw new IOException("Error occured in encrypting the UFAES file.");
+                    if (!_debugMode)
+                        throw new IOException("Error occured in encrypting the UFAES file.");
+                    else throw e;
                 }
                 
                 try
                 {
                     FileAES_IntUtilities.SafeDeleteFile(file);
                 }
-                catch
+                catch (Exception e)
                 {
-                    throw new IOException("Error occured in deleting the UFAES file.");
+                    if (!_debugMode)
+                        throw new IOException("Error occured in deleting the UFAES file.");
+                    else throw e;
                 }
 
                 string faesInputPath = Path.ChangeExtension(file, FileAES_Utilities.ExtentionFAES);
@@ -564,9 +581,11 @@ namespace FAES
                     File.SetAttributes(faesInputPath, FileAttributes.Encrypted);
                     File.Move(faesInputPath, faesOutputPath);
                 }
-                catch
+                catch (Exception e)
                 {
-                    throw new IOException("Error occured in moving the FAES file after encryption.");
+                    if (!_debugMode)
+                        throw new IOException("Error occured in moving the FAES file after encryption.");
+                    else throw e;
                 }
 
                 try
@@ -581,9 +600,11 @@ namespace FAES
                 {
                     throw new UnauthorizedAccessException(e.Message);
                 }
-                catch
+                catch (Exception e)
                 {
-                    throw new IOException("Error occured while deleting the original file/folder.");
+                    if (!_debugMode)
+                        throw new IOException("Error occured while deleting the original file/folder.");
+                    else throw e;
                 }
 
             }
@@ -602,6 +623,8 @@ namespace FAES
         protected bool _deletePost, _overwriteDuplicate;
         protected decimal _percentDecComplete = 0;
         protected MetaData _faesMetaData;
+
+        protected bool _debugMode = false;
 
         internal Crypt crypt = new Crypt();
         internal Compress compress = new Compress(Optimise.Balanced);
@@ -626,6 +649,15 @@ namespace FAES
                 _faesMetaData = new MetaData(_file);
             }
             else throw new Exception("This filetype cannot be decrypted!");
+        }
+
+        /// <summary>
+        /// Shows full exception messages if FAES fails for whatever reason
+        /// </summary>
+        public bool DebugMode
+        {
+            get { return _debugMode; }
+            set { _debugMode = value; }
         }
 
         /// <summary>
@@ -712,9 +744,11 @@ namespace FAES
                 }
                 Logging.Log(String.Format("Finished Decryption: {0}", _file.getPath()), Severity.DEBUG);
             }
-            catch
+            catch (Exception e)
             {
-                throw new IOException("Error occured in the decryption of the FAES file.");
+                if (!_debugMode)
+                    throw new IOException("Error occured in the decryption of the FAES file.");
+                else throw e;
             }
 
             File.SetAttributes(Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES), FileAttributes.Hidden);
@@ -727,9 +761,11 @@ namespace FAES
                     compress.UncompressFAESFile(_file);
                     Logging.Log(String.Format("Finished Uncompression: {0}", Path.ChangeExtension(_file.getPath(), FileAES_Utilities.ExtentionUFAES)), Severity.DEBUG);
                 }
-                catch
+                catch (Exception e)
                 {
-                    throw new IOException("Error occured in extracting the UFAES file.");
+                    if (!_debugMode)
+                        throw new IOException("Error occured in extracting the UFAES file.");
+                    else throw e;
                 }
 
                 try
@@ -737,18 +773,22 @@ namespace FAES
                     File.SetAttributes(Directory.GetParent(_file.getPath()).FullName, FileAttributes.Normal);
                     FileAES_IntUtilities.SafeDeleteFile(Path.Combine(Directory.GetParent(_file.getPath()).FullName, _file.getFileName().Substring(0, _file.getFileName().Length - Path.GetExtension(_file.getFileName()).Length) + FileAES_Utilities.ExtentionUFAES));
                 }
-                catch
+                catch (Exception e)
                 {
-                    throw new IOException("Error occured in deleting the UFAES file.");
+                    if (!_debugMode)
+                        throw new IOException("Error occured in deleting the UFAES file.");
+                    else throw e;
                 }
 
                 try
                 {
                     if (_deletePost) FileAES_IntUtilities.SafeDeleteFile(_file.getPath());
                 }
-                catch
+                catch (Exception e)
                 {
-                    throw new IOException("Error occured while deleting the original file/folder.");
+                    if (!_debugMode)
+                        throw new IOException("Error occured while deleting the original file/folder.");
+                    else throw e;
                 }
             }
 
@@ -773,7 +813,7 @@ namespace FAES
         public static string ExtentionUFAES = ".ufaes";
 
         private const bool IsPreReleaseBuild = true;
-        private const string PreReleaseTag = "BETA_4";
+        private const string PreReleaseTag = "BETA_7";
 
         private static string[] _supportedEncExtentions = new string[3] { ExtentionFAES, ".faes", ".mcrypt" };
         private static string _FileAES_TempRoot = Path.Combine(Path.GetTempPath(), "FileAES");
@@ -1129,7 +1169,7 @@ namespace FAES
         /// <param name="sourceDirName">Source directory to copy</param>
         /// <param name="destDirName">Destination directory</param>
         /// <param name="copySubDirs">Recursively copy sub-directories</param>
-        internal static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
+        internal static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs, bool firstPass = true)
         {
             DirectoryInfo dir = new DirectoryInfo(sourceDirName);
 
@@ -1138,11 +1178,17 @@ namespace FAES
             DirectoryInfo[] dirs = dir.GetDirectories();
 
             if (!Directory.Exists(destDirName)) Directory.CreateDirectory(destDirName);
+            if (firstPass)
+            {
+                string newDest = Path.Combine(destDirName, new DirectoryInfo(sourceDirName).Name);
+                Directory.CreateDirectory(newDest);
+                destDirName = newDest;
+            }
 
             FileInfo[] files = dir.GetFiles();
 
             foreach (FileInfo file in files) file.CopyTo(Path.Combine(destDirName, file.Name), false);
-            if (copySubDirs) foreach (DirectoryInfo subdir in dirs) DirectoryCopy(subdir.FullName, Path.Combine(destDirName, subdir.Name), copySubDirs);
+            if (copySubDirs) foreach (DirectoryInfo subdir in dirs) DirectoryCopy(subdir.FullName, Path.Combine(destDirName, subdir.Name), copySubDirs, false);
         }
 
         /// <summary>
