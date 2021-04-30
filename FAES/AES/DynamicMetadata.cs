@@ -40,24 +40,24 @@ namespace FAES.AES
             _totalMetadataSize = Convert.ToUInt16(_metaData.Length);
             int offset = 4;
 
-            _faesIdentifier = loadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
+            _faesIdentifier = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
 
             try
             {
-                _hashType = loadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
-                _originalFileHash = loadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
-                _encryptionTimestamp = loadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
-                _passwordHint = loadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
-                _encryptionVersion = loadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
-                _compressionMode = loadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
-                _originalFileName = loadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
+                _hashType = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
+                _originalFileHash = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
+                _encryptionTimestamp = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
+                _passwordHint = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
+                _encryptionVersion = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
+                _compressionMode = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
+                _originalFileName = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
             }
             catch (Exception e)
             {
                 string msg = "MetaData (FAESv3) was shorter than expected! This probably means you are decrypting an older file; If so, this isnt a problem. If not, something is wrong.";
 
                 if (FileAES_Utilities.GetVerboseLogging())
-                    Logging.Log(String.Format("{0} | {1}", msg, e.ToString()), Severity.WARN);
+                    Logging.Log(String.Format("{0} | {1}", msg, e), Severity.WARN);
                 else
                     Logging.Log(msg, Severity.WARN);
             }
@@ -72,8 +72,9 @@ namespace FAES.AES
         /// Gets the data at the current offset
         /// </summary>
         /// <param name="offset">Offset from the beginning of the metadata</param>
+        /// <param name="totalSize">Total metadata size</param>
         /// <returns>Data at the current offset</returns>
-        private byte[] loadDynamicMetadataChunk(ref int offset, ref int totalSize)
+        private byte[] LoadDynamicMetadataChunk(ref int offset, ref int totalSize)
         {
             if (offset < totalSize)
             {
@@ -129,7 +130,7 @@ namespace FAES.AES
             }
             catch (Exception e)
             {
-                throw new Exception("An error occured when creating the FAESv3 metadata: " + e.ToString());
+                throw new Exception("An error occurred when creating the FAESv3 metadata: " + e);
             }
 
             return formedMetaData;

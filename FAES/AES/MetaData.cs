@@ -1,4 +1,4 @@
-﻿using FAES.AES.Compatability;
+﻿using FAES.AES.Compatibility;
 using System;
 using System.IO;
 
@@ -6,10 +6,9 @@ namespace FAES.AES
 {
     public class MetaData
     {
-        private bool _usingCompatabilityMode = false;
-
+        private bool _usingCompatibilityMode;
         private DynamicMetadata _dynamicMetadata;
-        private MetaDataFAES _compatabilityMetadata;
+        private MetaDataFAES _CompatibilityMetadata;
 
         public MetaData(Checksums.ChecksumType checksumHashType, byte[] originalFileHash, string passwordHint, string compressionModeUsed, string originalFileName)
         {
@@ -94,7 +93,7 @@ namespace FAES.AES
 
         private void LoadLegacyMetaDataFromFile(string filePath)
         {
-            _usingCompatabilityMode = true;
+            _usingCompatibilityMode = true;
 
             try
             {
@@ -104,9 +103,9 @@ namespace FAES.AES
                 faesFileStream.Read(metaSizeBytes, 0, 256);
                 faesFileStream.Close();
 
-                _compatabilityMetadata = new LegacyCrypt().GetAllMetaData(filePath);
+                _CompatibilityMetadata = new LegacyCrypt().GetAllMetaData(filePath);
 
-                if (_compatabilityMetadata == null) _compatabilityMetadata = new MetaDataFAES(null);
+                if (_CompatibilityMetadata == null) _CompatibilityMetadata = new MetaDataFAES(null);
             }
             catch (IOException)
             {
@@ -116,7 +115,7 @@ namespace FAES.AES
 
         private void InitWithBytes(byte[] metaData)
         {
-            if (!_usingCompatabilityMode)
+            if (!_usingCompatibilityMode)
                 _dynamicMetadata = new DynamicMetadata(metaData);
         }
 
@@ -126,7 +125,7 @@ namespace FAES.AES
         /// <returns>Password Hint stored in MetaData</returns>
         public string GetOriginalFileName()
         {
-            if (_usingCompatabilityMode)
+            if (_usingCompatibilityMode)
                 return null;
             else
                 return _dynamicMetadata.GetOriginalFileName();
@@ -134,17 +133,17 @@ namespace FAES.AES
 
         public bool IsLegacyVersion()
         {
-            return _usingCompatabilityMode;
+            return _usingCompatibilityMode;
         }
 
         /// <summary>
         /// Checks the metadata to see if the file can be decrypted
         /// </summary>
-        /// <param name="filePath">Path to file (Compatability)</param>
+        /// <param name="filePath">Path to file (Compatibility)</param>
         /// <returns>If the file can be decrypted</returns>
         public bool IsDecryptable(string filePath)
         {
-            if (_usingCompatabilityMode)
+            if (_usingCompatibilityMode)
                 return new LegacyCrypt().IsDecryptable(filePath);
             else if (_dynamicMetadata.GetFaesIdentifier() == CryptUtils.GetCryptIdentifier())
                 return true;
@@ -159,7 +158,7 @@ namespace FAES.AES
         /// <returns>The original hash type</returns>
         public Checksums.ChecksumType GetHashType()
         {
-            if (_usingCompatabilityMode)
+            if (_usingCompatibilityMode)
                 return Checksums.ChecksumType.SHA1;
             else
                 return _dynamicMetadata.GetHashType();
@@ -171,7 +170,7 @@ namespace FAES.AES
         /// <returns>Original file hash</returns>
         public byte[] GetOrigHash()
         {
-            if (_usingCompatabilityMode)
+            if (_usingCompatibilityMode)
                 return null;
             else
                 return _dynamicMetadata.GetOrigHash();
@@ -183,8 +182,8 @@ namespace FAES.AES
         /// <returns>Password Hint stored in MetaData</returns>
         public string GetPasswordHint()
         {
-            if (_usingCompatabilityMode)
-                return _compatabilityMetadata.GetPasswordHint();
+            if (_usingCompatibilityMode)
+                return _CompatibilityMetadata.GetPasswordHint();
             else
                 return _dynamicMetadata.GetPasswordHint();
         }
@@ -195,8 +194,8 @@ namespace FAES.AES
         /// <returns>UNIX timestamp (UTC)</returns>
         public long GetEncryptionTimestamp()
         {
-            if (_usingCompatabilityMode)
-                return _compatabilityMetadata.GetEncryptionTimestamp();
+            if (_usingCompatibilityMode)
+                return _CompatibilityMetadata.GetEncryptionTimestamp();
             else
                 return _dynamicMetadata.GetEncryptionTimestamp();
         }
@@ -207,8 +206,8 @@ namespace FAES.AES
         /// <returns>FAES Version</returns>
         public string GetEncryptionVersion()
         {
-            if (_usingCompatabilityMode)
-                return _compatabilityMetadata.GetEncryptionVersion();
+            if (_usingCompatibilityMode)
+                return _CompatibilityMetadata.GetEncryptionVersion();
             else
                 return _dynamicMetadata.GetEncryptionVersion();
         }
@@ -219,8 +218,8 @@ namespace FAES.AES
         /// <returns>Compression Mode Type</returns>
         public string GetCompressionMode()
         {
-            if (_usingCompatabilityMode)
-                return _compatabilityMetadata.GetCompressionMode();
+            if (_usingCompatibilityMode)
+                return _CompatibilityMetadata.GetCompressionMode();
             else
                 return _dynamicMetadata.GetCompressionMode();
         }
@@ -231,8 +230,8 @@ namespace FAES.AES
         /// <returns>MetaData byte array (256 bytes)</returns>
         public byte[] GetMetaData()
         {
-            if (_usingCompatabilityMode)
-                return _compatabilityMetadata.GetMetaData();
+            if (_usingCompatibilityMode)
+                return _CompatibilityMetadata.GetMetaData();
             else
                 return _dynamicMetadata.GetMetaData();
         }
@@ -243,7 +242,7 @@ namespace FAES.AES
         /// <returns>MetaData size (bytes)</returns>
         public int GetLength()
         {
-            if (_usingCompatabilityMode) return 256;
+            if (_usingCompatibilityMode) return 256;
             else return _dynamicMetadata.GetLength();
         }
     }

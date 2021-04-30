@@ -10,10 +10,10 @@
         string CompressFAESFile(FAES_File unencryptedFile);
 
         /// <summary>
-        /// Uncompress an encrypted FAES File.
+        /// Decompress an encrypted FAES File.
         /// </summary>
         /// <param name="encryptedFile">Encrypted FAES File</param>
-        /// <returns>Path of the encrypted, uncompressed file</returns>
-        string UncompressFAESFile(FAES_File encryptedFile);
+        /// <returns>Path of the encrypted, decompressed file</returns>
+        string DecompressFAESFile(FAES_File encryptedFile, string overridePath = "");
     }
 }

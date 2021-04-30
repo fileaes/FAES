@@ -3,11 +3,11 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace FAES.AES.Compatability
+namespace FAES.AES.Compatibility
 {
     internal class LegacyCrypt
     {
-        private const string _faesCBCModeIdentifier = "FAESv2-CBC"; //Current FAES Encryption Mode
+        //private const string _faesCBCModeIdentifier = "FAESv2-CBC"; //Current FAES Encryption Mode
 
         /// <summary>
         /// Legacy FAES Decrypt Handler.
@@ -20,6 +20,7 @@ namespace FAES.AES.Compatability
         /// </summary>
         /// <param name="inputFile">Encrypted File</param>
         /// <param name="password">Password to decrypt the file</param>
+        /// <param name="percentComplete">Percent of completion</param>
         /// <returns>If the decryption was successful</returns>
         internal bool Decrypt(string inputFile, string password, ref decimal percentComplete)
         {
@@ -35,19 +36,22 @@ namespace FAES.AES.Compatability
 
             fsCrypt = DecryptModeHandler(fsCrypt, ref hash, ref salt, ref faesCBCMode, ref faesMetaData, ref cipher);
 
-            RijndaelManaged AES = new RijndaelManaged();
-            AES.KeySize = 256;
-            AES.BlockSize = 128;
-            var key = new Rfc2898DeriveBytes(passwordBytes, salt, 50000);
-            AES.Key = key.GetBytes(AES.KeySize / 8);
-            AES.IV = key.GetBytes(AES.BlockSize / 8);
-            AES.Padding = PaddingMode.PKCS7;
-            AES.Mode = cipher;
-
+            int keySize = 256;
+            int blockSize = 128;
+            Rfc2898DeriveBytes key = new Rfc2898DeriveBytes(passwordBytes, salt, 50000);
+            RijndaelManaged AES = new RijndaelManaged
+            {
+                KeySize = keySize,
+                BlockSize = blockSize,
+                Key = key.GetBytes(keySize / 8),
+                IV = key.GetBytes(blockSize / 8),
+                Padding = PaddingMode.PKCS7,
+                Mode = cipher
+            };
+            
             try
             {
                 CryptoStream cs = new CryptoStream(fsCrypt, AES.CreateDecryptor(), CryptoStreamMode.Read);
-
                 outputName = Path.ChangeExtension(inputFile, FileAES_Utilities.ExtentionUFAES);
 
                 try
@@ -55,13 +59,12 @@ namespace FAES.AES.Compatability
                     FileStream fsOut = new FileStream(outputName, FileMode.Create);
                     File.SetAttributes(outputName, FileAttributes.Hidden);
 
-                    int read;
                     byte[] buffer = new byte[FileAES_Utilities.GetCryptoStreamBuffer()];
-
                     long expectedComplete = fsCrypt.Length + hash.Length + salt.Length + faesCBCMode.Length + faesMetaData.Length + AES.KeySize + AES.BlockSize;
 
                     try
                     {
+                        int read;
                         Logging.Log(String.Format("Beginning writing decrypted data..."), Severity.DEBUG);
                         while ((read = cs.Read(buffer, 0, buffer.Length)) > 0)
                         {
@@ -70,7 +73,10 @@ namespace FAES.AES.Compatability
                                 percentComplete = Math.Ceiling((decimal)((Convert.ToDouble(fsOut.Length) / Convert.ToDouble(expectedComplete)) * 100));
                                 if (percentComplete > 100) percentComplete = 100;
                             }
-                            catch { }
+                            catch
+                            {
+                                Logging.Log(String.Format("Percentage completion calculation failed!"), Severity.WARN);
+                            }
 
                             fsOut.Write(buffer, 0, read);
                         }
@@ -111,7 +117,7 @@ namespace FAES.AES.Compatability
         }
 
         /// <summary>
-        /// Handles which Decryption Mode should be used when decrypting the file. Ensures compatability with previous FAES versions.
+        /// Handles which Decryption Mode should be used when decrypting the file. Ensures Compatibility with previous FAES versions.
         /// </summary>
         /// <param name="fsCrypt">Encrypted Files FileStream</param>
         /// <param name="dHash">Output of original file hash</param>
@@ -119,7 +125,7 @@ namespace FAES.AES.Compatability
         /// <param name="dFaesMode">Output of the FAES Decryption Mode used on the file</param>
         /// <param name="dMetaData">Output of the FAES MetaData contained in the file</param>
         /// <param name="cipherMode">Output of the Cipher Mode used on the file</param>
-        /// <param name="hideWriteLine">Disables pushing the FAES Encryption Mode to console</param>
+        /// <param name="suppressLog">Disables pushing the FAES Encryption Mode to console</param>
         /// <returns></returns>
         private FileStream DecryptModeHandler(FileStream fsCrypt, ref byte[] dHash, ref byte[] dSalt, ref byte[] dFaesMode, ref byte[] dMetaData, ref CipherMode cipherMode, bool suppressLog = false)
         {

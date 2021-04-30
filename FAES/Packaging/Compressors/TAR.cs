@@ -6,13 +6,10 @@ using System;
 using System.IO;
 
 
-namespace FAES.Packaging
+namespace FAES.Packaging.Compressors
 {
     internal class TAR : ICompressedFAES
     {
-        public TAR()
-        { }
-
         /// <summary>
         /// Compress (TAR/BZip2) an unencrypted FAES File.
         /// </summary>
@@ -43,20 +40,28 @@ namespace FAES.Packaging
         }
 
         /// <summary>
-        /// Uncompress an encrypted FAES File.
+        /// Decompress an encrypted FAES File.
         /// </summary>
         /// <param name="encryptedFile">Encrypted FAES File</param>
-        /// <returns>Path of the encrypted, uncompressed file</returns>
-        public string UncompressFAESFile(FAES_File encryptedFile)
+        /// <returns>Path of the encrypted, Decompressed file</returns>
+        public string DecompressFAESFile(FAES_File encryptedFile, string overridePath = "")
         {
-            string path = Path.ChangeExtension(encryptedFile.getPath(), FileAES_Utilities.ExtentionUFAES);
+            string path;
+            if (!String.IsNullOrWhiteSpace(overridePath))
+            {
+                path = overridePath;
+            }
+            else
+            {
+                path = Path.ChangeExtension(encryptedFile.getPath(), FileAES_Utilities.ExtentionUFAES);
+            }
 
             using (Stream stream = File.OpenRead(path))
             {
                 var reader = ReaderFactory.Open(stream);
                 while (reader.MoveToNextEntry())
                 {
-                    reader.WriteEntryToDirectory(Path.GetFullPath(Directory.GetParent(Path.ChangeExtension(encryptedFile.getPath(), FileAES_Utilities.ExtentionUFAES)).FullName), new ExtractionOptions() { ExtractFullPath = true, Overwrite = true });
+                    reader.WriteEntryToDirectory(Directory.GetParent(Path.ChangeExtension(path, Path.GetExtension(encryptedFile.GetOriginalFileName()))).FullName, new ExtractionOptions() { ExtractFullPath = true, Overwrite = true });
                 }
             }
             return path;

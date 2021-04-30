@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text;
 
-namespace FAES.AES.Compatability
+namespace FAES.AES.Compatibility
 {
     internal class MetaDataFAES
     {
@@ -28,7 +28,7 @@ namespace FAES.AES.Compatability
                     string msg = "MetaData (FAESv2) was shorter than expected! This probably means you are decrypting an older file; If so, this isnt a problem. If not, something is wrong.";
 
                     if (FileAES_Utilities.GetVerboseLogging())
-                        Logging.Log(String.Format("{0} | {1}", msg, e.ToString()), Severity.WARN);
+                        Logging.Log(String.Format("{0} | {1}", msg, e), Severity.WARN);
                     else
                         Logging.Log(msg, Severity.WARN);
                 }
@@ -107,21 +107,6 @@ namespace FAES.AES.Compatability
             Buffer.BlockCopy(_compression, 0, formedMetaData, 84, _compression.Length);
 
             return formedMetaData;
-        }
-
-        /// <summary>
-        /// Converts a string into a padded/truncated byte array
-        /// </summary>
-        /// <param name="value">String to convert</param>
-        /// <param name="maxLength">Max length of the string</param>
-        /// <param name="paddingChar">Character used to pad the string if required</param>
-        /// <returns>Byte Array</returns>
-        private byte[] ConvertStringToBytes(string value, int maxLength = 64)
-        {
-            if (value.Length > maxLength)
-                return Encoding.UTF8.GetBytes(value.Substring(0, maxLength));
-            else
-                return Encoding.UTF8.GetBytes(value.PadRight(maxLength, '\0'));
         }
 
         /// <summary>

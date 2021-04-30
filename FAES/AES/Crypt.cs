@@ -77,16 +77,18 @@ namespace FAES.AES
             if (_specifiedSalt != null) salt = _specifiedSalt;
             else salt = CryptUtils.GenerateRandomSalt();
 
-            RijndaelManaged AES = new RijndaelManaged();
-            AES.KeySize = 256;
-            AES.BlockSize = 128;
-            AES.Padding = PaddingMode.PKCS7;
-
-            var key = new Rfc2898DeriveBytes(passwordBytes, salt, 51200);
-            AES.Key = key.GetBytes(AES.KeySize / 8);
-            AES.IV = key.GetBytes(AES.BlockSize / 8);
-
-            AES.Mode = CipherMode.CBC;
+            int keySize = 256;
+            int blockSize = 128;
+            Rfc2898DeriveBytes key = new Rfc2898DeriveBytes(passwordBytes, salt, 51200);
+            RijndaelManaged AES = new RijndaelManaged
+            {
+                KeySize = keySize,
+                BlockSize = blockSize,
+                Padding = PaddingMode.PKCS7,
+                Key = key.GetBytes(keySize / 8),
+                IV = key.GetBytes(blockSize / 8),
+                Mode = CipherMode.CBC
+            };
 
             FileStream outputDataStream = new FileStream(outputFilePath, FileMode.Create);
             outputDataStream.Write(metaData, 0, metaData.Length);
@@ -142,14 +144,18 @@ namespace FAES.AES
             inputDataStream.Read(metaData, 0, faesMetaData.GetLength());
             inputDataStream.Read(salt, 0, salt.Length);
 
-            RijndaelManaged AES = new RijndaelManaged();
-            AES.KeySize = 256;
-            AES.BlockSize = 128;
-            var key = new Rfc2898DeriveBytes(passwordBytes, salt, 51200);
-            AES.Key = key.GetBytes(AES.KeySize / 8);
-            AES.IV = key.GetBytes(AES.BlockSize / 8);
-            AES.Padding = PaddingMode.PKCS7;
-            AES.Mode = cipher;
+            int keySize = 256;
+            int blockSize = 128;
+            Rfc2898DeriveBytes key = new Rfc2898DeriveBytes(passwordBytes, salt, 51200);
+            RijndaelManaged AES = new RijndaelManaged
+            {
+                KeySize = blockSize,
+                BlockSize = 128,
+                Key = key.GetBytes(keySize / 8),
+                IV = key.GetBytes(blockSize / 8),
+                Padding = PaddingMode.PKCS7,
+                Mode = cipher
+            };
 
             try
             {
@@ -195,9 +201,11 @@ namespace FAES.AES
                         case Checksums.ChecksumType.SHA1:
                             doesHashMatch = Checksums.CompareHash(faesMetaData.GetOrigHash(), Checksums.GetSHA1(outputFilePath));
                             break;
+
                         case Checksums.ChecksumType.SHA256:
                             doesHashMatch = Checksums.CompareHash(faesMetaData.GetOrigHash(), Checksums.GetSHA256(outputFilePath));
                             break;
+
                         case Checksums.ChecksumType.SHA512:
                             doesHashMatch = Checksums.CompareHash(faesMetaData.GetOrigHash(), Checksums.GetSHA512(outputFilePath));
                             break;
