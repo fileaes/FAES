@@ -54,7 +54,7 @@ namespace FAES.Packaging.Compressors
                 path = Path.ChangeExtension(encryptedFile.getPath(), FileAES_Utilities.ExtentionUFAES);
             }
 
-            ZipFile.ExtractToDirectory(Directory.GetParent(Path.ChangeExtension(path, Path.GetExtension(encryptedFile.GetOriginalFileName()))).FullName, Directory.GetParent(path).FullName);
+            ZipFile.ExtractToDirectory(path, Directory.GetParent(path).FullName);
 
             return path;
         }
