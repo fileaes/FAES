@@ -13,13 +13,11 @@ namespace FAES.Packaging.Compressors
         /// <returns>Path of the unencrypted, LGYZIP compressed file</returns>
         public string CompressFAESFile(FAES_File unencryptedFile)
         {
-            string tempPath = FileAES_IntUtilities.CreateTempPath(unencryptedFile, "LGYZIP_Compress-" + FileAES_IntUtilities.GetDateTimeString());
-            string tempRawPath = Path.Combine(tempPath, "contents");
-            string tempOutputPath = Path.Combine(Directory.GetParent(tempPath).FullName, Path.ChangeExtension(unencryptedFile.getFileName(), FileAES_Utilities.ExtentionUFAES));
+            FileAES_IntUtilities.CreateEncryptionFilePath(unencryptedFile, "LGYZIP", out string tempRawPath, out string tempRawFile, out string tempOutputPath);
 
             if (unencryptedFile.isFile())
             {
-                FileAES_IntUtilities.CreateTempPath(unencryptedFile);
+                //FileAES_IntUtilities.CreateTempPath(unencryptedFile);
 
                 using (ZipArchive zip = ZipFile.Open(tempOutputPath, ZipArchiveMode.Create))
                 {

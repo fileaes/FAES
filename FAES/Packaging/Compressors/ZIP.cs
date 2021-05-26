@@ -45,17 +45,7 @@ namespace FAES.Packaging.Compressors
         /// <returns>Path of the unencrypted, ZIP compressed file</returns>
         public string CompressFAESFile(FAES_File unencryptedFile)
         {
-            string tempPath = FileAES_IntUtilities.CreateTempPath(unencryptedFile, "ZIP_Compress-" + FileAES_IntUtilities.GetDateTimeString());
-            string tempRawPath = Path.Combine(tempPath, "contents");
-            string tempRawFile = Path.Combine(tempRawPath, unencryptedFile.getFileName());
-            string tempOutputPath = Path.Combine(Directory.GetParent(tempPath).FullName, Path.ChangeExtension(unencryptedFile.getFileName(), FileAES_Utilities.ExtentionUFAES));
-
-            if (!Directory.Exists(tempRawPath)) Directory.CreateDirectory(tempRawPath);
-
-            if (unencryptedFile.isFile())
-                File.Copy(unencryptedFile.getPath(), tempRawFile);
-            else
-                FileAES_IntUtilities.DirectoryCopy(unencryptedFile.getPath(), tempRawPath, true);
+            FileAES_IntUtilities.CreateEncryptionFilePath(unencryptedFile, "ZIP", out string tempRawPath, out string tempRawFile, out string tempOutputPath);
 
             ZipWriterOptions wo = new ZipWriterOptions(CompressionType.Deflate)
             {
@@ -67,7 +57,6 @@ namespace FAES.Packaging.Compressors
             {
                 writer.WriteAll(tempRawPath, "*", SearchOption.AllDirectories);
             }
-
             return tempOutputPath;
         }
 

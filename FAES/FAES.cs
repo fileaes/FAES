@@ -615,7 +615,7 @@ namespace FAES
             }
             finally
             {
-                FileAES_Utilities.PurgeInstancedTempFolders();
+                FileAES_Utilities.RemoveInstancedTempFolder(_file);
             }
             return success;
         }
@@ -825,30 +825,63 @@ namespace FAES
         public static string ExtentionUFAES = ".ufaes";
 
         private const bool IsPreReleaseBuild = true;
-        private const string PreReleaseTag = "BETA_9";
+        private const string PreReleaseTag = "RC_1";
 
-        private static string[] _supportedEncExtentions = new string[3] { ExtentionFAES, ".faes", ".mcrypt" };
+        private static string[] _supportedEncExtensions = new string[3] { ExtentionFAES, ".faes", ".mcrypt" };
         private static string _FileAES_TempRoot = Path.Combine(Path.GetTempPath(), "FileAES");
         private static bool _verboseLogging = false;
         private static uint _cryptoBuffer = 1048576;
+        private static bool _localEncrypt = true;
 
         internal static List<TempPath> _instancedTempFolders = new List<TempPath>();
 
         /// <summary>
-        /// Overrides the default extentions used by FAES. Useful if you are using FAES in a specialised environment
+        /// Overrides the default extensions used by FAES. Useful if you are using FAES in a specialised environment
         /// </summary>
         /// <param name="encryptedFAES">Extension of the final, encrypted file</param>
         /// <param name="unencryptedFAES">Extension of the compressed, but not encrypted, file</param>
         /// <param name="limitSupportedExtensions">Limits the supported encryption file extensions to only the provided one</param>
-        public static void OverrideDefaultExtentions(string encryptedFAES, string unencryptedFAES, bool limitSupportedExtensions = false)
+        public static void OverrideDefaultExtensions(string encryptedFAES, string unencryptedFAES, bool limitSupportedExtensions = false)
         {
             ExtentionFAES = encryptedFAES;
             ExtentionUFAES = unencryptedFAES;
 
             if (limitSupportedExtensions)
-                _supportedEncExtentions = new string[1] { ExtentionFAES };
+                _supportedEncExtensions = new string[1] { ExtentionFAES };
             else
-                _supportedEncExtentions = new string[3] { ExtentionFAES, ".faes", ".mcrypt" };
+                _supportedEncExtensions = new string[3] { ExtentionFAES, ".faes", ".mcrypt" };
+        }
+
+        /// <summary>
+        /// Whether files should be encrypted in the local folder
+        /// </summary>
+        public static bool LocalEncrypt
+        {
+            get
+            {
+                return _localEncrypt;
+            }
+            set
+            {
+                _localEncrypt = value;
+                Logging.Log(String.Format("Use Local Encryption: {0}", _localEncrypt), Severity.DEBUG);
+            }
+        }
+
+        /// <summary>
+        /// Whether files should be encrypted in the OS' Temp folder
+        /// </summary>
+        public static bool TempEncrypt
+        {
+            get
+            {
+                return !_localEncrypt;
+            }
+            set
+            {
+                _localEncrypt = !value;
+                Logging.Log(String.Format("Use Local Encryption: {0}", _localEncrypt), Severity.DEBUG);
+            }
         }
 
         /// <summary>
@@ -894,7 +927,7 @@ namespace FAES
         /// <returns>If the file is encryptable</returns>
         public static bool isFileEncryptable(string filePath)
         {
-            return !_supportedEncExtentions.Any(Path.GetExtension(filePath).Contains);
+            return !_supportedEncExtensions.Any(Path.GetExtension(filePath).Contains);
         }
 
         /// <summary>
@@ -904,7 +937,7 @@ namespace FAES
         /// <returns>If the file is decryptable</returns>
         public static bool isFileDecryptable(string filePath)
         {
-            return (_supportedEncExtentions.Any(Path.GetExtension(filePath).Contains) && new MetaData(filePath).IsDecryptable(filePath));
+            return (_supportedEncExtensions.Any(Path.GetExtension(filePath).Contains) && new MetaData(filePath).IsDecryptable(filePath));
         }
 
         /// <summary>
@@ -928,7 +961,7 @@ namespace FAES
         /// <returns>If a value was successfully removed</returns>
         public static bool RemoveInstancedTempFolder(string tempPath)
         {
-            TempPath tmp = _instancedTempFolders.Where(tPath => tPath.GetTempPath() == tempPath).First();
+            TempPath tmp = _instancedTempFolders.First(tPath => tPath.GetTempPath() == tempPath);
 
             return RemoveInstancedTempPath(tmp);
         }
@@ -940,15 +973,21 @@ namespace FAES
         /// <returns>If a value was successfully removed</returns>
         public static bool RemoveInstancedTempFolder(FAES_File faesFile)
         {
-            TempPath tmp = _instancedTempFolders.Where(tPath => tPath.GetFaesFile().getFileName() == faesFile.getFileName()).First();
+            TempPath tmp = _instancedTempFolders.First(tPath => tPath.GetFaesFile().getFileName() == faesFile.getFileName());
 
             return RemoveInstancedTempPath(tmp);
         }
 
+        /// <summary>
+        /// Remove InstancedTempFolder with specific TempPath
+        /// </summary>
+        /// <param name="tmp">Temp Path</param>
+        /// <returns></returns>
         private static bool RemoveInstancedTempPath(TempPath tmp)
         {
             if (tmp != null)
             {
+                FileAES_IntUtilities.SafeDeleteFolder(tmp.GetTempPath(), true);
                 _instancedTempFolders.Remove(tmp);
                 Logging.Log(String.Format("Deleted InstancedTempFolder: {0}", tmp.GetTempPath()), Severity.DEBUG);
 
@@ -1078,6 +1117,7 @@ namespace FAES
         /// Attempts to convert an Exception Thrown by FAES into a human-readable error
         /// </summary>
         /// <param name="exception">Exception</param>
+        /// <param name="showRawException">Show the full exception message</param>
         /// <returns>Human-Readable Error</returns>
         public static string FAES_ExceptionHandling(Exception exception, bool showRawException = false)
         {
@@ -1120,7 +1160,11 @@ namespace FAES
 
     internal class FileAES_IntUtilities
     {
-        internal static string GetDateTimeString()
+        /// <summary>
+        /// Gets current Unix time as a string 
+        /// </summary>
+        /// <returns>String representing total seconds since Unix Epoch</returns>
+        internal static string GetUnixTime()
         {
             return DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds.ToString();
         }
@@ -1203,36 +1247,92 @@ namespace FAES
         }
 
         /// <summary>
-        /// Creates a new temp path and adds it to the instancedTempFolders list
+        /// Create the path for a local temp path
         /// </summary>
-        internal static string CreateTempPath(FAES_File file, string InstanceFolder)
+        /// <param name="file">FAES File</param>
+        /// <returns>Temp path</returns>
+        internal static string CreateLocalTempPath(FAES_File file)
         {
-            string dateTime = GetDateTimeString();
-            string tempPath = Path.Combine(FileAES_Utilities.GetFaesTempFolder(), dateTime, InstanceFolder);
-
-            if (FileAES_Utilities._instancedTempFolders.Where(tPath => tPath.GetFaesFile().getFileName() == file.getFileName()).Count() == 0)
-            {
-                tempPath = Path.Combine(tempPath, dateTime);
-                FileAES_Utilities._instancedTempFolders.Add(new TempPath(file, Path.Combine(FileAES_Utilities.GetFaesTempFolder(), dateTime)));
-
-                Logging.Log(String.Format("Created TempPath: {0}", tempPath), Severity.DEBUG);
-            }
-            else
-            {
-                tempPath = FileAES_Utilities._instancedTempFolders.Where(tPath => tPath.GetFaesFile().getFileName() == file.getFileName()).First().GetTempPath();
-            }
-
-            if (!Directory.Exists(tempPath)) Directory.CreateDirectory(tempPath);
-
-            return tempPath;
+            return Path.Combine(Directory.GetParent(file.getPath()).FullName, ".faesEncrypt");
         }
 
         /// <summary>
         /// Creates a new temp path and adds it to the instancedTempFolders list
         /// </summary>
-        internal static string CreateTempPath(FAES_File file)
+        /// <param name="file">FAES File</param>
+        /// <param name="tempFolder">Temp Folder Root</param>
+        /// <param name="InstanceFolder">Folder for current instance of FAES</param>
+        /// <param name="mergeDateTime">Merge DateTime folder into the temp folder name</param>
+        /// <returns>Temp path created</returns>
+        internal static string CreateTempPath(FAES_File file, string tempFolder, string InstanceFolder, bool mergeDateTime = false)
         {
-            return CreateTempPath(file, GetDateTimeString());
+            string dateTime = GetUnixTime();
+            string tempPath, tempInstancePath;
+
+            if (mergeDateTime)
+                tempInstancePath = tempFolder + dateTime;
+            else
+                tempInstancePath = Path.Combine(tempFolder, dateTime);
+
+            tempPath = Path.Combine(tempInstancePath, InstanceFolder);
+
+            if (FileAES_Utilities._instancedTempFolders.All(tPath => tPath.GetFaesFile().getFileName() != file.getFileName()))
+            {
+                AddToInstancedFolder(file, tempInstancePath);
+                Logging.Log(String.Format("Created TempPath: {0}", tempPath), Severity.DEBUG);
+            }
+            else
+            {
+                tempPath = FileAES_Utilities._instancedTempFolders.First(tPath => tPath.GetFaesFile().getFileName() == file.getFileName()).GetTempPath();
+            }
+
+            if (!Directory.Exists(tempPath))
+            {
+                Directory.CreateDirectory(tempPath);
+                File.SetAttributes(tempInstancePath, FileAttributes.Hidden);
+            }
+
+            return tempPath;
+        }
+
+        /// <summary>
+        /// Add a FAES File to the instanced folders
+        /// </summary>
+        /// <param name="file">FAES file</param>
+        /// <param name="dateTime">Unix timestamp</param>
+        internal static void AddToInstancedFolder(FAES_File file, string folder)
+        {
+            TempPath path = new TempPath(file, folder);
+            FileAES_Utilities._instancedTempFolders.Add(path);
+        }
+
+        /// <summary>
+        /// Creates the various paths required when encrypting a file
+        /// </summary>
+        /// <param name="file">FAES File to encrypt</param>
+        /// <param name="compressionType">Compression Type</param>
+        /// <param name="tempRawPath">Raw temp filepath</param>
+        /// <param name="tempRawFile">Raw filepath for file</param>
+        /// <param name="tempOutputPath">Raw output filepath</param>
+        internal static void CreateEncryptionFilePath(FAES_File file, string compressionType, out string tempRawPath, out string tempRawFile, out string tempOutputPath)
+        {
+            string tempPath;
+            if (FileAES_Utilities.LocalEncrypt)
+                tempPath = FileAES_IntUtilities.CreateTempPath(file, FileAES_IntUtilities.CreateLocalTempPath(file), compressionType + "_Compress-" + FileAES_IntUtilities.GetUnixTime(), true);
+            else
+                tempPath = FileAES_IntUtilities.CreateTempPath(file, FileAES_Utilities.GetFaesTempFolder(), compressionType + "_Compress-" + FileAES_IntUtilities.GetUnixTime(), false);
+
+            tempRawPath = Path.Combine(tempPath, "contents");
+            tempRawFile = Path.Combine(tempRawPath, file.getFileName());
+            tempOutputPath = Path.Combine(Directory.GetParent(tempPath).FullName, Path.ChangeExtension(file.getFileName(), FileAES_Utilities.ExtentionUFAES));
+
+            if (!Directory.Exists(tempRawPath))
+                Directory.CreateDirectory(tempRawPath);
+
+            if (file.isFile())
+                File.Copy(file.getPath(), tempRawFile);
+            else
+                FileAES_IntUtilities.DirectoryCopy(file.getPath(), tempRawPath, true);
         }
     }
 
