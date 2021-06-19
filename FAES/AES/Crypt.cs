@@ -7,7 +7,7 @@ namespace FAES.AES
 {
     internal class Crypt
     {
-        protected byte[] _specifiedSalt = null;
+        protected byte[] _specifiedSalt;
 
         /// <summary>
         /// FAES Encrypt/Decrypt Handler. Using a randomly generated salt.
@@ -71,14 +71,11 @@ namespace FAES.AES
         /// <returns>If the encryption was successful</returns>
         internal bool Encrypt(byte[] metaData, string inputFilePath, string outputFilePath, string encryptionPassword, ref decimal percentComplete)
         {
-            byte[] salt;
+            byte[] salt = _specifiedSalt ?? CryptUtils.GenerateRandomSalt();
             byte[] passwordBytes = Encoding.UTF8.GetBytes(encryptionPassword);
 
-            if (_specifiedSalt != null) salt = _specifiedSalt;
-            else salt = CryptUtils.GenerateRandomSalt();
-
-            int keySize = 256;
-            int blockSize = 128;
+            const int keySize = 256;
+            const int blockSize = 128;
             Rfc2898DeriveBytes key = new Rfc2898DeriveBytes(passwordBytes, salt, 51200);
             RijndaelManaged AES = new RijndaelManaged
             {
@@ -102,7 +99,7 @@ namespace FAES.AES
 
             long expectedComplete = metaData.Length + AES.KeySize + AES.BlockSize;
 
-            Logging.Log(String.Format("Beginning writing encrypted data..."), Severity.DEBUG);
+            Logging.Log("Beginning writing encrypted data...", Severity.DEBUG);
             while ((read = inputDataStream.Read(buffer, 0, buffer.Length)) > 0)
             {
                 try
@@ -110,11 +107,14 @@ namespace FAES.AES
                     percentComplete = Math.Ceiling((decimal)((Convert.ToDouble(outputDataStream.Length) / Convert.ToDouble(expectedComplete)) * 100));
                     if (percentComplete > 100) percentComplete = 100;
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
 
                 crypto.Write(buffer, 0, read);
             }
-            Logging.Log(String.Format("Finished writing encrypted data."), Severity.DEBUG);
+            Logging.Log("Finished writing encrypted data.", Severity.DEBUG);
 
             inputDataStream.Close();
             crypto.Close();
@@ -144,8 +144,8 @@ namespace FAES.AES
             inputDataStream.Read(metaData, 0, faesMetaData.GetLength());
             inputDataStream.Read(salt, 0, salt.Length);
 
-            int keySize = 256;
-            int blockSize = 128;
+            const int keySize = 256;
+            const int blockSize = 128;
             Rfc2898DeriveBytes key = new Rfc2898DeriveBytes(passwordBytes, salt, 51200);
             RijndaelManaged AES = new RijndaelManaged
             {
@@ -164,14 +164,13 @@ namespace FAES.AES
 
                 try
                 {
-                    int read;
                     byte[] buffer = new byte[FileAES_Utilities.GetCryptoStreamBuffer()];
-
                     long expectedComplete = salt.Length + AES.KeySize + AES.BlockSize;
 
                     try
                     {
-                        Logging.Log(String.Format("Beginning writing decrypted data..."), Severity.DEBUG);
+                        Logging.Log("Beginning writing decrypted data...", Severity.DEBUG);
+                        int read;
                         while ((read = crypto.Read(buffer, 0, buffer.Length)) > 0)
                         {
                             try
@@ -179,11 +178,14 @@ namespace FAES.AES
                                 percentComplete = Math.Ceiling((decimal)((Convert.ToDouble(outputDataStream.Length) / Convert.ToDouble(expectedComplete)) * 100));
                                 if (percentComplete > 100) percentComplete = 100;
                             }
-                            catch { }
+                            catch
+                            {
+                                // ignored
+                            }
 
                             outputDataStream.Write(buffer, 0, read);
                         }
-                        Logging.Log(String.Format("Finished writing decrypted data."), Severity.DEBUG);
+                        Logging.Log("Finished writing decrypted data.", Severity.DEBUG);
                     }
                     catch
                     {
@@ -209,14 +211,17 @@ namespace FAES.AES
                         case Checksums.ChecksumType.SHA512:
                             doesHashMatch = Checksums.CompareHash(faesMetaData.GetOrigHash(), Checksums.GetSHA512(outputFilePath));
                             break;
+
+                        case Checksums.ChecksumType.SHA384:
+                            doesHashMatch = Checksums.CompareHash(faesMetaData.GetOrigHash(), Checksums.GetSHA384(outputFilePath));
+                            break;
                     }
                     if (!doesHashMatch)
                     {
-                        Logging.Log(String.Format("Invalid Checksum detected! Assuming password is incorrect."), Severity.DEBUG);
-                        //FileAES_IntUtilities.SafeDeleteFile(outputFilePath);
+                        Logging.Log("Invalid Checksum detected! Assuming password is incorrect.", Severity.DEBUG);
                         return false;
                     }
-                    Logging.Log(String.Format("Valid Checksum detected!"), Severity.DEBUG);
+                    Logging.Log("Valid Checksum detected!", Severity.DEBUG);
                     return true;
                 }
                 catch

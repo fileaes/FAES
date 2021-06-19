@@ -8,7 +8,6 @@ namespace FAES.AES
     {
         private const string _faesCryptIdentifier = "FAESv3";
 
-
         /// <summary>
         /// Gets the current FAES file format
         /// </summary>
@@ -40,8 +39,8 @@ namespace FAES.AES
         /// Converts a string into a padded/truncated byte array
         /// </summary>
         /// <param name="value">String to convert</param>
+        /// <param name="limitLength">Limit the length of the password</param>
         /// <param name="maxLength">Max length of the string</param>
-        /// <param name="paddingChar">Character used to pad the string if required</param>
         /// <returns>Byte Array</returns>
         public static byte[] ConvertStringToBytes(string value, bool limitLength = false, int maxLength = 64)
         {
@@ -78,10 +77,16 @@ namespace FAES.AES
             {
                 case Checksums.ChecksumType.SHA1:
                     return BitConverter.GetBytes(1);
+
                 case Checksums.ChecksumType.SHA256:
                     return BitConverter.GetBytes(2);
+
                 case Checksums.ChecksumType.SHA512:
                     return BitConverter.GetBytes(3);
+
+                case Checksums.ChecksumType.SHA384:
+                    return BitConverter.GetBytes(4);
+
                 default:
                     return BitConverter.GetBytes(0);
             }
@@ -98,10 +103,16 @@ namespace FAES.AES
             {
                 case 1:
                     return Checksums.ChecksumType.SHA1;
+
                 case 2:
                     return Checksums.ChecksumType.SHA256;
+
                 case 3:
                     return Checksums.ChecksumType.SHA512;
+
+                case 4:
+                    return Checksums.ChecksumType.SHA384;
+
                 default:
                     return Checksums.ChecksumType.NULL;
             }

@@ -22,7 +22,7 @@ namespace FAES.AES
 
         public MetaData(FAES_File faesFile)
         {
-            LoadMetaDataFromFile(faesFile.getPath());
+            LoadMetaDataFromFile(faesFile.GetPath());
         }
 
         public MetaData(string filePath)
@@ -104,8 +104,6 @@ namespace FAES.AES
                 faesFileStream.Close();
 
                 _CompatibilityMetadata = new LegacyCrypt().GetAllMetaData(filePath);
-
-                if (_CompatibilityMetadata == null) _CompatibilityMetadata = new MetaDataFAES(null);
             }
             catch (IOException)
             {

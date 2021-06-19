@@ -13,6 +13,7 @@
         /// Decompress an encrypted FAES File.
         /// </summary>
         /// <param name="encryptedFile">Encrypted FAES File</param>
+        /// <param name="overridePath">Override the read path</param>
         /// <returns>Path of the encrypted, decompressed file</returns>
         string DecompressFAESFile(FAES_File encryptedFile, string overridePath = "");
     }

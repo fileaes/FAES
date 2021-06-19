@@ -37,24 +37,24 @@ namespace FAES.AES
         public DynamicMetadata(byte[] metaData)
         {
             _metaData = metaData;
-            _totalMetadataSize = Convert.ToUInt16(_metaData.Length);
-            int offset = 4;
+            _totalMetadataSize = _metaData.Length; // Get the size of the entire metadata
+            int offset = 4; // Skip ahead 4 bytes (the length of the totalMetadataSize chunk)
 
-            _faesIdentifier = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
+            _faesIdentifier = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize); // This should always exist. Get the current FAES Identifier (e.g. FAESv3)
 
             try
             {
-                _hashType = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
-                _originalFileHash = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
-                _encryptionTimestamp = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
-                _passwordHint = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
-                _encryptionVersion = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
-                _compressionMode = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
-                _originalFileName = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize);
+                _hashType = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize); // Hash types used to hash the original .ufaes file (e.g. SHA256)
+                _originalFileHash = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize); // Hash of the original .ufaes file
+                _encryptionTimestamp = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize); // Unix timestamp of encryption time
+                _passwordHint = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize); // Password Hint
+                _encryptionVersion = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize); // FAES version used to encrypt the file
+                _compressionMode = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize); // Compression mode used when compressing the original file
+                _originalFileName = LoadDynamicMetadataChunk(ref offset, ref _totalMetadataSize); // Original filename of the unencrypted file
             }
             catch (Exception e)
             {
-                string msg = "MetaData (FAESv3) was shorter than expected! This probably means you are decrypting an older file; If so, this isnt a problem. If not, something is wrong.";
+                string msg = "MetaData (FAESv3) was shorter than expected! This probably means you are decrypting an older file; If so, this isn't a problem. If not, something is wrong.";
 
                 if (FileAES_Utilities.GetVerboseLogging())
                     Logging.Log(String.Format("{0} | {1}", msg, e), Severity.WARN);
@@ -62,8 +62,10 @@ namespace FAES.AES
                     Logging.Log(msg, Severity.WARN);
             }
 
+            // The file contains unsupported metadata, this is likely from using an older version of FAES on a file encrypted with a newer version
             if (offset != _totalMetadataSize)
             {
+                Logging.Log("Unsupported metadata detected! You are likely decrypting a file from a newer FAES version. This shouldn't cause any issues, although this newer metadata will not be readable!", Severity.WARN);
                 Array.Copy(_metaData, offset, _unsupportedMetadata, 0, _totalMetadataSize - offset);
             }
         }
@@ -78,27 +80,24 @@ namespace FAES.AES
         {
             if (offset < totalSize)
             {
-                ushort chunkSize;
-                int origOffset = offset;
-                byte[] chunkSizeBytes = new byte[2];
+                int origOffset = offset; // Saves the starting offset
+                byte[] chunkSizeBytes = new byte[2]; // chunkSize's are always 2 bytes (ushort)
 
-                byte[] metaDataChunk;
+                Array.Copy(_metaData, offset, chunkSizeBytes, 0, 2); // Gets the size of the next chunk (the data chunk) from the chunkSize
+                ushort chunkSize = BitConverter.ToUInt16(chunkSizeBytes, 0); // Size of the data chunk
+                byte[] metaDataChunk = new byte[chunkSize];
+                offset += 2; // Increase offset to be past the chunkSize chunk
 
-                Array.Copy(_metaData, offset, chunkSizeBytes, 0, 2);
-                chunkSize = BitConverter.ToUInt16(chunkSizeBytes, 0);
-                metaDataChunk = new byte[chunkSize];
-                offset += 2;
+                Array.Copy(_metaData, offset, metaDataChunk, 0, chunkSize); // Gets the data (for the size of the data chunk) from the metadata
+                offset += chunkSize; // Increase offset to be past the data chunk
 
-                Array.Copy(_metaData, offset, metaDataChunk, 0, chunkSize);
-                offset += chunkSize;
+                Logging.Log(String.Format("MetaData | Size: {0}, Converted: {2}, InitialOffset: {3}, FinalOffset: {4}, Raw: {1}", chunkSize, BitConverter.ToString(metaDataChunk), CryptUtils.ConvertBytesToString(metaDataChunk), origOffset, offset), Severity.DEBUG);
 
-                Logging.Log(String.Format("MetaDataChunkSize: {0}, MetaDataChunk: {1}, InitialOffset: {2}, FinalOffset: {3}", chunkSize, BitConverter.ToString(metaDataChunk), origOffset, offset), Severity.DEBUG);
-
-                return metaDataChunk;
+                return metaDataChunk; // Return the data from the data chunk
             }
             else
             {
-                throw new IndexOutOfRangeException("Metadata cannot be found at this offset!");
+                throw new IndexOutOfRangeException("Metadata cannot be found at this offset!"); // Something is fucked, this shouldn't happen. Corrupted file?
             }
         }
 
@@ -144,15 +143,15 @@ namespace FAES.AES
         /// <param name="offset">Current offset</param>
         private void MetaDataBlockCopy(byte[] src, ref byte[] dst, ref int offset)
         {
-            ushort srcLen = Convert.ToUInt16(src.Length);
+            ushort chunkSize = Convert.ToUInt16(src.Length); // Size of the data chunk (to store within the chunkSize)
             int origOffset = offset;
 
-            Array.Copy(BitConverter.GetBytes(srcLen), 0, dst, offset, 2);
-            offset += 2;
-            Array.Copy(src, 0, dst, offset, src.Length);
-            offset += src.Length;
+            Array.Copy(BitConverter.GetBytes(chunkSize), 0, dst, offset, 2); // Store the data chunk size (size of the data within the data chunk)
+            offset += 2; // Increase offset to be past the chunkSize chunk
+            Array.Copy(src, 0, dst, offset, src.Length); // Store the data chunk data
+            offset += src.Length; // Increase offset to be past the data chunk
 
-            Logging.Log(String.Format("MetaDataSize: {0}, MetaData: {1}, InitialOffset: {2}, FinalOffset: {3}", srcLen, BitConverter.ToString(src), origOffset, offset), Severity.DEBUG);
+            Logging.Log(String.Format("MetaData | Size: {0}, Converted: {2}, InitialOffset: {3}, FinalOffset: {4}, Raw: {1}", chunkSize, BitConverter.ToString(src), CryptUtils.ConvertBytesToString(src), origOffset, offset), Severity.DEBUG);
         }
 
         /// <summary>
@@ -165,7 +164,7 @@ namespace FAES.AES
         }
 
         /// <summary>
-        /// Gets thge original file hash
+        /// Gets the original file hash
         /// </summary>
         /// <returns>Original file hash</returns>
         public byte[] GetOrigHash()
@@ -198,7 +197,8 @@ namespace FAES.AES
         public string GetPasswordHint()
         {
             if (_passwordHint != null)
-                return CryptUtils.ConvertBytesToString(_passwordHint).TrimEnd('\n', '\r', '¬', '�'); //Removes the old padding character used in older FAES versions, as well as any newlines or special chars
+                //Removes the old padding character used in older FAES versions, as well as any newlines or special chars. I wish I wasn't stupid and actually zero-padded + checked for special characters in older v1.1.x versions...
+                return CryptUtils.ConvertBytesToString(_passwordHint).TrimEnd('\n', '\r', '¬', '�'); 
             else
                 return "No Password Hint Set";
         }
@@ -227,10 +227,9 @@ namespace FAES.AES
 
                 if (ver.Contains("DEV"))
                     return ver.Split('_')[0];
-                else
-                    return ver;
+                return ver;
             }
-            else return "Unknown version!";
+            return "Unknown version!";
         }
 
         /// <summary>
@@ -257,6 +256,5 @@ namespace FAES.AES
         {
             return _totalMetadataSize;
         }
-
     }
 }

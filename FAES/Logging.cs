@@ -11,26 +11,20 @@ namespace FAES
                 switch (severity)
                 {
                     case Severity.DEBUG:
-                        {
-                            Console.WriteLine("[DEBUG] {0}", log);
-                            break;
-                        }
+                        Console.WriteLine("[DEBUG] {0}", log);
+                        break;
+
                     case Severity.WARN:
-                        {
-                            Console.WriteLine("[WARN] {0}", log);
+                        Console.WriteLine("[WARN] {0}", log);
                             break;
-                        }
+
                     case Severity.ERROR:
-                        {
-                            Console.WriteLine("[ERROR] {0}", log);
+                        Console.WriteLine("[ERROR] {0}", log);
                             break;
-                        }
-                    case Severity.INFO:
+
                     default:
-                        {
-                            Console.WriteLine("[INFO] {0}", log);
+                        Console.WriteLine("[INFO] {0}", log);
                             break;
-                        }
                 }
             }
             else if (severity > 0) Console.WriteLine(log);

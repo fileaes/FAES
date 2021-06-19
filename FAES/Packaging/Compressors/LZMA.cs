@@ -15,7 +15,7 @@ namespace FAES.Packaging.Compressors
         /// <returns>Path of the unencrypted, LZMA compressed file</returns>
         public string CompressFAESFile(FAES_File unencryptedFile)
         {
-            FileAES_IntUtilities.CreateEncryptionFilePath(unencryptedFile, "LZMA", out string tempRawPath, out string tempRawFile, out string tempOutputPath);
+            FileAES_IntUtilities.CreateEncryptionFilePath(unencryptedFile, "LZMA", out string tempRawPath, out _, out string tempOutputPath);
 
             WriterOptions wo = new WriterOptions(CompressionType.LZMA);
 
@@ -32,25 +32,22 @@ namespace FAES.Packaging.Compressors
         /// Decompress an encrypted FAES File.
         /// </summary>
         /// <param name="encryptedFile">Encrypted FAES File</param>
+        /// <param name="overridePath">Override the read path</param>
         /// <returns>Path of the encrypted, Decompressed file</returns>
         public string DecompressFAESFile(FAES_File encryptedFile, string overridePath = "")
         {
             string path;
             if (!String.IsNullOrWhiteSpace(overridePath))
-            {
                 path = overridePath;
-            }
             else
-            {
-                path = Path.ChangeExtension(encryptedFile.getPath(), FileAES_Utilities.ExtentionUFAES);
-            }
+                path = Path.ChangeExtension(encryptedFile.GetPath(), FileAES_Utilities.ExtentionUFAES);
 
             using (Stream stream = File.OpenRead(path))
             {
                 var reader = ReaderFactory.Open(stream);
                 while (reader.MoveToNextEntry())
                 {
-                    reader.WriteEntryToDirectory(Directory.GetParent(Path.ChangeExtension(path, Path.GetExtension(encryptedFile.GetOriginalFileName()))).FullName, new ExtractionOptions() { ExtractFullPath = true, Overwrite = true });
+                    reader.WriteEntryToDirectory(Directory.GetParent(Path.ChangeExtension(path, Path.GetExtension(encryptedFile.GetOriginalFileName())))?.FullName, new ExtractionOptions() { ExtractFullPath = true, Overwrite = true });
                 }
             }
             return path;

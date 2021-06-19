@@ -73,20 +73,20 @@ namespace FAES.Packaging
             {
                 case CompressionMode.LZMA:
                     LZMA lzma = new LZMA();
-                    Logging.Log(String.Format("Compression Mode: LZMA"), Severity.DEBUG);
+                    Logging.Log("Compression Mode: LZMA", Severity.DEBUG);
                     return lzma.CompressFAESFile(unencryptedFile);
                 case CompressionMode.TAR:
                     TAR tar = new TAR();
-                    Logging.Log(String.Format("Compression Mode: LZMA"), Severity.DEBUG);
+                    Logging.Log("Compression Mode: TAR", Severity.DEBUG);
                     return tar.CompressFAESFile(unencryptedFile);
                 case CompressionMode.LGYZIP:
                     LegacyZIP legacyZIP = new LegacyZIP();
-                    Logging.Log(String.Format("Compression Mode: LEGACYZIP"), Severity.DEBUG);
+                    Logging.Log("Compression Mode: LEGACYZIP", Severity.DEBUG);
                     return legacyZIP.CompressFAESFile(unencryptedFile);
                 default:
                     {
                         ZIP zip;
-                        Logging.Log(String.Format("Compression Mode: ZIP"), Severity.DEBUG);
+                        Logging.Log("Compression Mode: ZIP", Severity.DEBUG);
 
                         if (_compressionLevelRaw < 0)
                         {
@@ -107,10 +107,11 @@ namespace FAES.Packaging
         /// Decompress an encrypted FAES File.
         /// </summary>
         /// <param name="encryptedFile">Encrypted FAES File</param>
+        /// <param name="overridePath">Override the read path</param>
         /// <returns>Path of the encrypted, Decompressed file</returns>
         public string DecompressFAESFile(FAES_File encryptedFile, string overridePath = "")
         {
-            string fileCompressionMode = FileAES_Utilities.GetCompressionMode(encryptedFile.getPath());
+            string fileCompressionMode = FileAES_Utilities.GetCompressionMode(encryptedFile.GetPath());
 
             Logging.Log(String.Format("Compression Mode: {0}", fileCompressionMode), Severity.DEBUG);
 

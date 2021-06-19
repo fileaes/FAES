@@ -63,6 +63,18 @@ namespace FAES
         }
 
         /// <summary>
+        /// Gets the SHA384 Hash of a selected file
+        /// </summary>
+        /// <param name="inputFile">File to get SHA384 Hash of</param>
+        /// <returns>The Files SHA256 Hash</returns>
+        public static byte[] GetSHA384(string inputFile)
+        {
+            using (var sha256 = SHA384.Create())
+            using (var stream = File.OpenRead(inputFile))
+                return sha256.ComputeHash(stream);
+        }
+
+        /// <summary>
         /// Gets the SHA512 Hash of a selected file
         /// </summary>
         /// <param name="inputFile">File to get SHA512 Hash of</param>
@@ -79,7 +91,8 @@ namespace FAES
             NULL,
             SHA1,
             SHA256,
-            SHA512
+            SHA512,
+            SHA384
         }
     }
 }

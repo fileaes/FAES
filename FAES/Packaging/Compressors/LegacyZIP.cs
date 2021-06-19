@@ -13,21 +13,19 @@ namespace FAES.Packaging.Compressors
         /// <returns>Path of the unencrypted, LGYZIP compressed file</returns>
         public string CompressFAESFile(FAES_File unencryptedFile)
         {
-            FileAES_IntUtilities.CreateEncryptionFilePath(unencryptedFile, "LGYZIP", out string tempRawPath, out string tempRawFile, out string tempOutputPath);
+            FileAES_IntUtilities.CreateEncryptionFilePath(unencryptedFile, "LGYZIP", out string tempRawPath, out _, out string tempOutputPath);
 
-            if (unencryptedFile.isFile())
+            if (unencryptedFile.IsFile())
             {
-                //FileAES_IntUtilities.CreateTempPath(unencryptedFile);
-
                 using (ZipArchive zip = ZipFile.Open(tempOutputPath, ZipArchiveMode.Create))
                 {
-                    zip.CreateEntryFromFile(unencryptedFile.getPath(), unencryptedFile.getFileName());
+                    zip.CreateEntryFromFile(unencryptedFile.GetPath(), unencryptedFile.GetFileName());
                     zip.Dispose();
                 }
             }
             else
             {
-                FileAES_IntUtilities.DirectoryCopy(unencryptedFile.getPath(), tempRawPath, true);
+                FileAES_IntUtilities.DirectoryCopy(unencryptedFile.GetPath(), tempRawPath);
 
                 ZipFile.CreateFromDirectory(tempRawPath, tempOutputPath);
             }
@@ -39,6 +37,7 @@ namespace FAES.Packaging.Compressors
         /// Decompress an encrypted FAES File.
         /// </summary>
         /// <param name="encryptedFile">Encrypted FAES File</param>
+        /// <param name="overridePath">Override the read path</param>
         /// <returns>Path of the encrypted, Decompressed file</returns>
         public string DecompressFAESFile(FAES_File encryptedFile, string overridePath = "")
         {
@@ -49,10 +48,10 @@ namespace FAES.Packaging.Compressors
             }
             else
             {
-                path = Path.ChangeExtension(encryptedFile.getPath(), FileAES_Utilities.ExtentionUFAES);
+                path = Path.ChangeExtension(encryptedFile.GetPath(), FileAES_Utilities.ExtentionUFAES);
             }
 
-            ZipFile.ExtractToDirectory(path, Directory.GetParent(path).FullName);
+            ZipFile.ExtractToDirectory(path, Directory.GetParent(path)?.FullName);
 
             return path;
         }

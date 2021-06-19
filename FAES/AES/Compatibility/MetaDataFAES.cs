@@ -7,6 +7,7 @@ namespace FAES.AES.Compatibility
     internal class MetaDataFAES
     {
         protected byte[] _passwordHint, _encryptionTimestamp, _encryptionVersion, _compression;
+        protected string _faesMode;
 
         /// <summary>
         /// Converts FAESv2 MetaData into easy-to-manage method calls
@@ -22,10 +23,11 @@ namespace FAES.AES.Compatibility
                     _encryptionTimestamp = metaData.Skip(64).Take(4).ToArray();
                     _encryptionVersion = metaData.Skip(68).Take(16).ToArray();
                     _compression = metaData.Skip(84).Take(6).ToArray();
+                    _faesMode = "FAESv2";
                 }
                 catch (Exception e)
                 {
-                    string msg = "MetaData (FAESv2) was shorter than expected! This probably means you are decrypting an older file; If so, this isnt a problem. If not, something is wrong.";
+                    string msg = "MetaData (FAESv2) was shorter than expected! This probably means you are decrypting an older file; If so, this isn't a problem. If not, something is wrong.";
 
                     if (FileAES_Utilities.GetVerboseLogging())
                         Logging.Log(String.Format("{0} | {1}", msg, e), Severity.WARN);
@@ -33,6 +35,15 @@ namespace FAES.AES.Compatibility
                         Logging.Log(msg, Severity.WARN);
                 }
             }
+        }
+
+        /// <summary>
+        /// Manually sets the FAES Mode
+        /// </summary>
+        /// <param name="faesMode">FAES Mode</param>
+        public MetaDataFAES(string faesMode)
+        {
+            _faesMode = faesMode;
         }
 
         /// <summary>
@@ -65,17 +76,26 @@ namespace FAES.AES.Compatibility
         /// <returns>FAES Version</returns>
         public string GetEncryptionVersion()
         {
-            if (_encryptionVersion != null)
+            switch (_faesMode)
             {
-                string ver = ConvertBytesToString(_encryptionVersion);
+                case "FAESv2":
+                    if (_encryptionVersion != null)
+                    {
+                        string ver = ConvertBytesToString(_encryptionVersion);
 
-                if (ver.Contains("DEV"))
-                    return ver.Split('_')[0];
-                else
-                    return ver;
+                        if (ver.Contains("DEV"))
+                            return ver.Split('_')[0];
+                        else if (!String.IsNullOrEmpty(ver))
+                            return ver;
+                    }
+                    return "v1.1.0 — v1.1.2";
+
+                case "FAESv1":
+                    return "v1.0.0";
+
+                default:
+                    return "Pre-v1.0.0";
             }
-            else
-                return "v1.1.0 — v1.1.2";
         }
 
         /// <summary>
