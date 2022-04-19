@@ -1,8 +1,36 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Weavers xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="FodyWeavers.xsd">
-  <Costura>
-	<IncludeAssemblies>
-		SharpCompress
-	</IncludeAssemblies>
-  </Costura>
+	<Costura>
+		<IncludeAssemblies>
+			SharpCompress
+			Microsoft.Win32.Primitives
+			System.AppContext
+			System.Buffers
+			System.Console
+			System.Diagnostics.DiagnosticSource
+			System.Diagnostics.Tracing
+			System.Globalization.Calendars
+			System.IO.Compression
+			System.IO.Compression.ZipFile
+			System.IO
+			System.IO.FileSystem
+			System.IO.FileSystem.Primitives
+			System.Memory
+			System.Net.Http
+			System.Net.Sockets
+			System.Numerics.Vectors
+			System.Reflection
+			System.Runtime.CompilerServices.Unsafe
+			System.Runtime
+			System.Runtime.Extensions
+			System.Runtime.InteropServices
+			System.Runtime.InteropServices.RuntimeInformation
+			System.Security.Cryptography.Algorithms
+			System.Security.Cryptography.Encoding
+			System.Security.Cryptography.Primitives
+			System.Security.Cryptography.X509Certificates
+			System.Text.Encoding.CodePages
+			System.Xml.ReaderWriter
+		</IncludeAssemblies>
+	</Costura>
 </Weavers>

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net462;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net462</TargetFrameworks>
     <Version>1.2.0-rc3</Version>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <PackageReleaseNotes>- Replaced the FAESv2-CBC file structure with FAESv3. The MetaData is now dynamically sized, and not limited to 256 bytes
