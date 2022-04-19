@@ -7,7 +7,7 @@ namespace FAES.AES
         protected int _totalMetadataSize;
         protected byte[] _metaData, _faesIdentifier, _hashType, _originalFileHash, _encryptionTimestamp, _passwordHint, _compressionMode, _encryptionVersion, _originalFileName;
         protected byte[] _unsupportedMetadata = null;
-            
+
         /// <summary>
         /// Converts variables into easy-to-manage method calls to create a byte array for metadata
         /// </summary>
@@ -57,7 +57,7 @@ namespace FAES.AES
                 string msg = "MetaData (FAESv3) was shorter than expected! This probably means you are decrypting an older file; If so, this isn't a problem. If not, something is wrong.";
 
                 if (FileAES_Utilities.GetVerboseLogging())
-                    Logging.Log(String.Format("{0} | {1}", msg, e), Severity.WARN);
+                    Logging.Log($"{msg} | {e}", Severity.WARN);
                 else
                     Logging.Log(msg, Severity.WARN);
             }
@@ -91,14 +91,11 @@ namespace FAES.AES
                 Array.Copy(_metaData, offset, metaDataChunk, 0, chunkSize); // Gets the data (for the size of the data chunk) from the metadata
                 offset += chunkSize; // Increase offset to be past the data chunk
 
-                Logging.Log(String.Format("MetaData | Size: {0}, Converted: {2}, InitialOffset: {3}, FinalOffset: {4}, Raw: {1}", chunkSize, BitConverter.ToString(metaDataChunk), CryptUtils.ConvertBytesToString(metaDataChunk), origOffset, offset), Severity.DEBUG);
+                //Logging.Log(String.Format("MetaData | Size: {0}, Converted: {2}, InitialOffset: {3}, FinalOffset: {4}, Raw: {1}", chunkSize, BitConverter.ToString(metaDataChunk), CryptUtils.ConvertBytesToString(metaDataChunk), origOffset, offset), Severity.DEBUG);
 
                 return metaDataChunk; // Return the data from the data chunk
             }
-            else
-            {
-                throw new IndexOutOfRangeException("Metadata cannot be found at this offset!"); // Something is fucked, this shouldn't happen. Corrupted file?
-            }
+            throw new IndexOutOfRangeException("Metadata cannot be found at this offset!"); // Something is fucked, this shouldn't happen. Corrupted file?
         }
 
         /// <summary>
@@ -131,7 +128,6 @@ namespace FAES.AES
             {
                 throw new Exception("An error occurred when creating the FAESv3 metadata: " + e);
             }
-
             return formedMetaData;
         }
 
@@ -150,8 +146,6 @@ namespace FAES.AES
             offset += 2; // Increase offset to be past the chunkSize chunk
             Array.Copy(src, 0, dst, offset, src.Length); // Store the data chunk data
             offset += src.Length; // Increase offset to be past the data chunk
-
-            Logging.Log(String.Format("MetaData | Size: {0}, Converted: {2}, InitialOffset: {3}, FinalOffset: {4}, Raw: {1}", chunkSize, BitConverter.ToString(src), CryptUtils.ConvertBytesToString(src), origOffset, offset), Severity.DEBUG);
         }
 
         /// <summary>
@@ -197,10 +191,12 @@ namespace FAES.AES
         public string GetPasswordHint()
         {
             if (_passwordHint != null)
-                //Removes the old padding character used in older FAES versions, as well as any newlines or special chars. I wish I wasn't stupid and actually zero-padded + checked for special characters in older v1.1.x versions...
-                return CryptUtils.ConvertBytesToString(_passwordHint).TrimEnd('\n', '\r', '¬', '�'); 
-            else
-                return "No Password Hint Set";
+            {
+                string passwordHint = CryptUtils.ConvertBytesToString(_passwordHint);
+                if (!String.IsNullOrWhiteSpace(passwordHint))
+                    return passwordHint;
+            }
+            return "No Password Hint Set";
         }
 
         /// <summary>
@@ -211,8 +207,7 @@ namespace FAES.AES
         {
             if (_encryptionTimestamp != null)
                 return BitConverter.ToInt64(_encryptionTimestamp, 0);
-            else
-                return -1;
+            return -1;
         }
 
         /// <summary>

@@ -16,6 +16,7 @@ namespace FAES.Tests
             string password = "password";
             string hint = "Example Hint";
             string decFilePath = Path.ChangeExtension(encFilePath, FileAES_Utilities.ExtentionFAES);
+            long finalFilesizeBytes = 0;
 
             try
             {
@@ -30,15 +31,16 @@ namespace FAES.Tests
                 if (testCompression)
                     encrypt.SetCompressionMode(compressionMode, compressionLevel);
 
-                bool encryptSuccess = encrypt.encryptFile();
+                bool encryptSuccess = encrypt.EncryptFile();
 
                 if (!encryptSuccess)
                     throw new Exception("Encryption Failed! 'encryptFile' was false.");
 
+                finalFilesizeBytes = new FileInfo(decFilePath).Length;
                 FAES_File decFile = new FAES_File(decFilePath);
 
                 FileAES_Decrypt decrypt = new FileAES_Decrypt(decFile, password);
-                bool decryptSuccess = decrypt.decryptFile();
+                bool decryptSuccess = decrypt.DecryptFile();
 
                 if (!decryptSuccess)
                     throw new Exception("Decryption Failed! 'decryptFile' was false.");
@@ -62,6 +64,7 @@ namespace FAES.Tests
                 Console.WriteLine("decFilePath: {0}", decFilePath);
                 Console.WriteLine("Initial Contents: {0}", originalFileContents.Replace("\r\n", "\\r\\n"));
                 Console.WriteLine("Final Contents: {0}", finalFileContents.Replace("\r\n", "\\r\\n"));
+                Console.WriteLine("File Size: {0} bytes", finalFilesizeBytes);
             }
         }
 
@@ -74,6 +77,8 @@ namespace FAES.Tests
             string finalFileContents = string.Empty;
             string password = "password";
             string hint = "Example Hint";
+            string decFilePath = Path.ChangeExtension(encPath, FileAES_Utilities.ExtentionFAES);
+            long finalFilesizeBytes = 0;
 
             try
             {
@@ -89,16 +94,16 @@ namespace FAES.Tests
                 if (testCompression)
                     encrypt.SetCompressionMode(compressionMode, compressionLevel);
 
-                bool encryptSuccess = encrypt.encryptFile();
+                bool encryptSuccess = encrypt.EncryptFile();
 
                 if (!encryptSuccess)
                     throw new Exception("Encryption Failed! 'encryptFile' was false.");
 
-                string decFilePath = Path.ChangeExtension(encPath, FileAES_Utilities.ExtentionFAES);
+                finalFilesizeBytes = new FileInfo(decFilePath).Length;
                 FAES_File decFile = new FAES_File(decFilePath);
 
                 FileAES_Decrypt decrypt = new FileAES_Decrypt(decFile, password);
-                bool decryptSuccess = decrypt.decryptFile();
+                bool decryptSuccess = decrypt.DecryptFile();
 
                 if (!decryptSuccess)
                     throw new Exception("Decryption Failed! 'decryptFile' was false.");
@@ -122,6 +127,7 @@ namespace FAES.Tests
                 Console.WriteLine("encPath: {0}", encPath);
                 Console.WriteLine("Initial Contents: {0}", originalFileContents.Replace("\r\n", "\\r\\n"));
                 Console.WriteLine("Final Contents: {0}", finalFileContents.Replace("\r\n", "\\r\\n"));
+                Console.WriteLine("File Size: {0} bytes", finalFilesizeBytes);
             }
         }
 
@@ -144,6 +150,32 @@ namespace FAES.Tests
             try
             {
                 Folder_EncryptDecrypt(false, 0, 0);
+            }
+            catch (Exception e)
+            {
+                Assert.Fail(e.Message);
+            }
+        }
+
+        [TestMethod]
+        public void FAESv3_File_GZIP()
+        {
+            try
+            {
+                File_EncryptDecrypt(true, CompressionMode.GZIP, CompressionLevel.Fastest);
+            }
+            catch (Exception e)
+            {
+                Assert.Fail(e.Message);
+            }
+        }
+
+        [TestMethod]
+        public void FAESv3_Folder_GZIP()
+        {
+            try
+            {
+                Folder_EncryptDecrypt(true, CompressionMode.GZIP, CompressionLevel.Fastest);
             }
             catch (Exception e)
             {

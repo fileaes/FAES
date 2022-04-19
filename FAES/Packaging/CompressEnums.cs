@@ -12,6 +12,7 @@ namespace FAES.Packaging
         ZIP,
         TAR,
         LZMA,
+        GZIP,
         LGYZIP
     };
 

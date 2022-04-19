@@ -10,10 +10,10 @@ namespace FAES.Packaging
         private readonly int _compressionLevelRaw = -1;
 
         /// <summary>
-        /// Allows for the compression/decompression of FAES Files using a prefered Compression Mode
+        /// Allows for the compression/decompression of FAES Files using a preferred Compression Mode
         /// </summary>
         /// <param name="compressionMode">Compression Mode to use during Compression</param>
-        /// <param name="compressionLevel">Compression Level to use during Compression</param>
+        /// <param name="compressionLevel">Compression Level to use during Compression (ZIP only)</param>
         public Compress(CompressionMode compressionMode, CompressionLevel compressionLevel = CompressionLevel.Fastest)
         {
             _compressionMode = compressionMode;
@@ -21,10 +21,10 @@ namespace FAES.Packaging
         }
 
         /// <summary>
-        /// Allows for the compression/decompression of FAES Files using a prefered Compression Mode
+        /// Allows for the compression/decompression of FAES Files using a preferred Compression Mode
         /// </summary>
         /// <param name="compressionMode">Compression Mode to use during Compression</param>
-        /// <param name="compressionLevel">Compression Level to use during Compression</param>
+        /// <param name="compressionLevel">Compression Level to use during Compression (ZIP only)</param>
         public Compress(CompressionMode compressionMode, int compressionLevel)
         {
             _compressionMode = compressionMode;
@@ -32,7 +32,7 @@ namespace FAES.Packaging
         }
 
         /// <summary>
-        /// Allows for the compression/decompression of FAES Files using a prefered Compression Mode
+        /// Allows for the compression/decompression of FAES Files using a preferred Compression Mode
         /// </summary>
         /// <param name="optimisedChoice">A predefined Compression Mode and Level to use during Compression</param>
         public Compress(Optimise optimisedChoice)
@@ -47,10 +47,6 @@ namespace FAES.Packaging
                     _compressionMode = CompressionMode.ZIP;
                     _compressionLevel = CompressionLevel.Slowest;
                     break;
-                case Optimise.Balanced:
-                    _compressionMode = CompressionMode.ZIP;
-                    _compressionLevel = CompressionLevel.Optimal;
-                    break;
                 case Optimise.Store:
                     _compressionMode = CompressionMode.ZIP;
                     _compressionLevel = CompressionLevel.None;
@@ -59,6 +55,11 @@ namespace FAES.Packaging
                     _compressionMode = CompressionMode.LGYZIP;
                     _compressionLevel = CompressionLevel.None;
                     break;
+                case Optimise.Balanced:
+                default:
+                    _compressionMode = CompressionMode.ZIP;
+                    _compressionLevel = CompressionLevel.Optimal;
+                    break;
             }
         }
 
@@ -66,39 +67,44 @@ namespace FAES.Packaging
         /// Compress an unencrypted FAES File.
         /// </summary>
         /// <param name="unencryptedFile">Unencrypted FAES File</param>
+        /// <param name="percentComplete">Percent complete for compression</param>
         /// <returns>Path of the unencrypted, compressed file</returns>
-        public string CompressFAESFile(FAES_File unencryptedFile)
+        public string CompressFAESFile(FAES_File unencryptedFile, ref decimal percentComplete) // TODO: Diagnose Compression Progression not updating till finished
         {
             switch (_compressionMode)
             {
+                case CompressionMode.GZIP:
+                    GZIP gZip = new GZIP();
+                    Logging.Log("Compression Mode: GZIP");
+                    return gZip.CompressFAESFile(unencryptedFile, ref percentComplete);
                 case CompressionMode.LZMA:
                     LZMA lzma = new LZMA();
-                    Logging.Log("Compression Mode: LZMA", Severity.DEBUG);
-                    return lzma.CompressFAESFile(unencryptedFile);
+                    Logging.Log("Compression Mode: LZMA");
+                    return lzma.CompressFAESFile(unencryptedFile, ref percentComplete);
                 case CompressionMode.TAR:
                     TAR tar = new TAR();
-                    Logging.Log("Compression Mode: TAR", Severity.DEBUG);
-                    return tar.CompressFAESFile(unencryptedFile);
+                    Logging.Log("Compression Mode: TAR");
+                    return tar.CompressFAESFile(unencryptedFile, ref percentComplete);
                 case CompressionMode.LGYZIP:
                     LegacyZIP legacyZIP = new LegacyZIP();
-                    Logging.Log("Compression Mode: LEGACYZIP", Severity.DEBUG);
-                    return legacyZIP.CompressFAESFile(unencryptedFile);
+                    Logging.Log("Compression Mode: LEGACYZIP");
+                    return legacyZIP.CompressFAESFile(unencryptedFile, ref percentComplete);
                 default:
                     {
                         ZIP zip;
-                        Logging.Log("Compression Mode: ZIP", Severity.DEBUG);
+                        Logging.Log("Compression Mode: ZIP");
 
                         if (_compressionLevelRaw < 0)
                         {
-                            Logging.Log(String.Format("Compression Level: {0}", _compressionLevel), Severity.DEBUG);
+                            Logging.Log($"Compression Level: {_compressionLevel}", Severity.DEBUG);
                             zip = new ZIP(_compressionLevel);
                         }
                         else
                         {
-                            Logging.Log(String.Format("Compression Level: {0}", _compressionLevelRaw), Severity.DEBUG);
+                            Logging.Log($"Compression Level: {_compressionLevelRaw}", Severity.DEBUG);
                             zip = new ZIP(_compressionLevelRaw);
                         }
-                        return zip.CompressFAESFile(unencryptedFile);
+                        return zip.CompressFAESFile(unencryptedFile, ref percentComplete);
                     }
             }
         }
@@ -107,30 +113,34 @@ namespace FAES.Packaging
         /// Decompress an encrypted FAES File.
         /// </summary>
         /// <param name="encryptedFile">Encrypted FAES File</param>
+        /// <param name="percentComplete">Percent complete for decompression</param>
         /// <param name="overridePath">Override the read path</param>
         /// <returns>Path of the encrypted, Decompressed file</returns>
-        public string DecompressFAESFile(FAES_File encryptedFile, string overridePath = "")
+        public string DecompressFAESFile(FAES_File encryptedFile, ref decimal percentComplete, string overridePath = "")
         {
             string fileCompressionMode = FileAES_Utilities.GetCompressionMode(encryptedFile.GetPath());
 
-            Logging.Log(String.Format("Compression Mode: {0}", fileCompressionMode), Severity.DEBUG);
+            Logging.Log($"Compression Mode: {fileCompressionMode}");
 
             switch (fileCompressionMode)
             {
+                case "GZIP":
+                    GZIP gZip = new GZIP();
+                    return gZip.DecompressFAESFile(encryptedFile, ref percentComplete, overridePath);
                 case "LZMA":
                     LZMA lzma = new LZMA();
-                    return lzma.DecompressFAESFile(encryptedFile, overridePath);
+                    return lzma.DecompressFAESFile(encryptedFile, ref percentComplete, overridePath);
                 case "TAR":
                     TAR tar = new TAR();
-                    return tar.DecompressFAESFile(encryptedFile, overridePath);
+                    return tar.DecompressFAESFile(encryptedFile, ref percentComplete, overridePath);
                 case "ZIP":
                     ZIP zip = new ZIP(_compressionLevel);
-                    return zip.DecompressFAESFile(encryptedFile, overridePath);
+                    return zip.DecompressFAESFile(encryptedFile, ref percentComplete, overridePath);
                 case "LEGACY":
                 case "LEGACYZIP":
                 case "LGYZIP":
                     LegacyZIP legacyZip = new LegacyZIP();
-                    return legacyZip.DecompressFAESFile(encryptedFile, overridePath);
+                    return legacyZip.DecompressFAESFile(encryptedFile, ref percentComplete, overridePath);
                 default:
                     throw new NotSupportedException("FAES File was compressed using an unsupported file format.");
             }

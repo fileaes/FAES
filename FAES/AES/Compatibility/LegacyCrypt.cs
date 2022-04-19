@@ -50,13 +50,15 @@ namespace FAES.AES.Compatibility
                     try
                     {
                         int read;
-                        Logging.Log("Beginning writing decrypted data...", Severity.DEBUG);
+                        Logging.Log("Beginning writing decrypted data...");
                         while ((read = cs.Read(buffer, 0, buffer.Length)) > 0)
                         {
                             try
                             {
                                 percentComplete = Math.Ceiling((decimal)((Convert.ToDouble(fsOut.Length) / Convert.ToDouble(expectedComplete)) * 100));
                                 if (percentComplete > 100) percentComplete = 100;
+
+                                //Logging.Log(String.Format("Progress: {0}% (Current Bytes: {1} | Expected Bytes: {2})", percentComplete, fsOut.Length, expectedComplete), Severity.DEBUG);
                             }
                             catch
                             {
@@ -65,7 +67,7 @@ namespace FAES.AES.Compatibility
 
                             fsOut.Write(buffer, 0, read);
                         }
-                        Logging.Log("Finished writing decrypted data.", Severity.DEBUG);
+                        Logging.Log("Finished writing decrypted data.");
                     }
                     catch
                     {
@@ -78,11 +80,11 @@ namespace FAES.AES.Compatibility
 
                     if (Checksums.ConvertHashToString(hash) != Checksums.ConvertHashToString(Checksums.GetSHA1(outputName)))
                     {
-                        Logging.Log("Invalid Checksum detected! Assuming password is incorrect.", Severity.DEBUG);
+                        Logging.Log("Invalid Checksum detected! Assuming password is incorrect.");
                         FileAES_IntUtilities.SafeDeleteFile(outputName);
                         return false;
                     }
-                    Logging.Log("Valid Checksum detected!", Severity.DEBUG);
+                    Logging.Log("Valid Checksum detected!");
                     return true;
                 }
                 catch

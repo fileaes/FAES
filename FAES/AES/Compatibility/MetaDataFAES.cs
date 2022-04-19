@@ -30,7 +30,7 @@ namespace FAES.AES.Compatibility
                     string msg = "MetaData (FAESv2) was shorter than expected! This probably means you are decrypting an older file; If so, this isn't a problem. If not, something is wrong.";
 
                     if (FileAES_Utilities.GetVerboseLogging())
-                        Logging.Log(String.Format("{0} | {1}", msg, e), Severity.WARN);
+                        Logging.Log($"{msg} | {e}", Severity.WARN);
                     else
                         Logging.Log(msg, Severity.WARN);
                 }

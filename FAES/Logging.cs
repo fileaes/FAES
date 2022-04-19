@@ -13,15 +13,13 @@ namespace FAES
                     case Severity.DEBUG:
                         Console.WriteLine("[DEBUG] {0}", log);
                         break;
-
                     case Severity.WARN:
                         Console.WriteLine("[WARN] {0}", log);
                             break;
-
                     case Severity.ERROR:
                         Console.WriteLine("[ERROR] {0}", log);
                             break;
-
+                    case Severity.INFO:
                     default:
                         Console.WriteLine("[INFO] {0}", log);
                             break;

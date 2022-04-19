@@ -7,6 +7,12 @@ namespace FAES.AES
 {
     internal class Crypt
     {
+        private const int _keySize = 256;
+        private const int _blockSize = 128;
+        private const PaddingMode _paddingMode = PaddingMode.PKCS7;
+        private const CipherMode _cipher = CipherMode.CBC;
+        private const int _keyIterations = 51200;
+
         protected byte[] _specifiedSalt;
 
         /// <summary>
@@ -69,22 +75,20 @@ namespace FAES.AES
         /// <param name="encryptionPassword">Encryption Password</param>
         /// <param name="percentComplete">Percent completion of the encryption process</param>
         /// <returns>If the encryption was successful</returns>
-        internal bool Encrypt(byte[] metaData, string inputFilePath, string outputFilePath, string encryptionPassword, ref decimal percentComplete)
+        internal bool Encrypt(byte[] metaData, string inputFilePath, string outputFilePath, string encryptionPassword, ref decimal percentComplete) // TODO: Diagnose Encryption Progression not updating till finished
         {
             byte[] salt = _specifiedSalt ?? CryptUtils.GenerateRandomSalt();
             byte[] passwordBytes = Encoding.UTF8.GetBytes(encryptionPassword);
 
-            const int keySize = 256;
-            const int blockSize = 128;
-            Rfc2898DeriveBytes key = new Rfc2898DeriveBytes(passwordBytes, salt, 51200);
+            Rfc2898DeriveBytes key = new Rfc2898DeriveBytes(passwordBytes, salt, _keyIterations);
             RijndaelManaged AES = new RijndaelManaged
             {
-                KeySize = keySize,
-                BlockSize = blockSize,
-                Padding = PaddingMode.PKCS7,
-                Key = key.GetBytes(keySize / 8),
-                IV = key.GetBytes(blockSize / 8),
-                Mode = CipherMode.CBC
+                KeySize = _keySize,
+                BlockSize = _blockSize,
+                Padding = _paddingMode,
+                Key = key.GetBytes(_keySize / 8),
+                IV = key.GetBytes(_blockSize / 8),
+                Mode = _cipher
             };
 
             FileStream outputDataStream = new FileStream(outputFilePath, FileMode.Create);
@@ -97,7 +101,7 @@ namespace FAES.AES
             byte[] buffer = new byte[FileAES_Utilities.GetCryptoStreamBuffer()];
             int read;
 
-            long expectedComplete = metaData.Length + AES.KeySize + AES.BlockSize;
+            long expectedComplete = metaData.Length + AES.KeySize + AES.BlockSize + inputDataStream.Length;
 
             Logging.Log("Beginning writing encrypted data...", Severity.DEBUG);
             while ((read = inputDataStream.Read(buffer, 0, buffer.Length)) > 0)
@@ -111,10 +115,10 @@ namespace FAES.AES
                 {
                     // ignored
                 }
-
                 crypto.Write(buffer, 0, read);
             }
             Logging.Log("Finished writing encrypted data.", Severity.DEBUG);
+            percentComplete = 100;
 
             inputDataStream.Close();
             crypto.Close();
@@ -132,9 +136,8 @@ namespace FAES.AES
         /// <param name="encryptionPassword">Encryption Password</param>
         /// <param name="percentComplete">Percent completion of the encryption process</param>
         /// <returns>If the decryption was successful</returns>
-        internal bool Decrypt(MetaData faesMetaData, string inputFilePath, string outputFilePath, string encryptionPassword, ref decimal percentComplete)
+        internal bool Decrypt(MetaData faesMetaData, string inputFilePath, string outputFilePath, string encryptionPassword, ref decimal percentComplete) // TODO: Diagnose Decryption Progression not updating till finished
         {
-            CipherMode cipher = CipherMode.CBC;
             byte[] metaData = new byte[faesMetaData.GetLength()];
             byte[] salt = new byte[32];
             byte[] passwordBytes = Encoding.UTF8.GetBytes(encryptionPassword);
@@ -144,17 +147,15 @@ namespace FAES.AES
             inputDataStream.Read(metaData, 0, faesMetaData.GetLength());
             inputDataStream.Read(salt, 0, salt.Length);
 
-            const int keySize = 256;
-            const int blockSize = 128;
-            Rfc2898DeriveBytes key = new Rfc2898DeriveBytes(passwordBytes, salt, 51200);
+            Rfc2898DeriveBytes key = new Rfc2898DeriveBytes(passwordBytes, salt, _keyIterations);
             RijndaelManaged AES = new RijndaelManaged
             {
-                KeySize = blockSize,
-                BlockSize = 128,
-                Key = key.GetBytes(keySize / 8),
-                IV = key.GetBytes(blockSize / 8),
-                Padding = PaddingMode.PKCS7,
-                Mode = cipher
+                KeySize = _keySize,
+                BlockSize = _blockSize,
+                Key = key.GetBytes(_keySize / 8),
+                IV = key.GetBytes(_blockSize / 8),
+                Padding = _paddingMode,
+                Mode = _cipher
             };
 
             try
@@ -165,11 +166,11 @@ namespace FAES.AES
                 try
                 {
                     byte[] buffer = new byte[FileAES_Utilities.GetCryptoStreamBuffer()];
-                    long expectedComplete = salt.Length + AES.KeySize + AES.BlockSize;
+                    long expectedComplete = salt.Length + AES.KeySize + AES.BlockSize + inputDataStream.Length;
 
                     try
                     {
-                        Logging.Log("Beginning writing decrypted data...", Severity.DEBUG);
+                        Logging.Log("Beginning writing decrypted data...");
                         int read;
                         while ((read = crypto.Read(buffer, 0, buffer.Length)) > 0)
                         {
@@ -185,7 +186,8 @@ namespace FAES.AES
 
                             outputDataStream.Write(buffer, 0, read);
                         }
-                        Logging.Log("Finished writing decrypted data.", Severity.DEBUG);
+                        Logging.Log("Finished writing decrypted data.");
+                        percentComplete = 100;
                     }
                     catch
                     {
@@ -197,31 +199,30 @@ namespace FAES.AES
                     inputDataStream.Close();
 
                     bool doesHashMatch = false;
-
                     switch (faesMetaData.GetHashType())
                     {
                         case Checksums.ChecksumType.SHA1:
                             doesHashMatch = Checksums.CompareHash(faesMetaData.GetOrigHash(), Checksums.GetSHA1(outputFilePath));
                             break;
-
                         case Checksums.ChecksumType.SHA256:
                             doesHashMatch = Checksums.CompareHash(faesMetaData.GetOrigHash(), Checksums.GetSHA256(outputFilePath));
                             break;
-
+                        case Checksums.ChecksumType.SHA384:
+                            doesHashMatch = Checksums.CompareHash(faesMetaData.GetOrigHash(), Checksums.GetSHA384(outputFilePath));
+                            break;
                         case Checksums.ChecksumType.SHA512:
                             doesHashMatch = Checksums.CompareHash(faesMetaData.GetOrigHash(), Checksums.GetSHA512(outputFilePath));
                             break;
-
-                        case Checksums.ChecksumType.SHA384:
-                            doesHashMatch = Checksums.CompareHash(faesMetaData.GetOrigHash(), Checksums.GetSHA384(outputFilePath));
+                        default:
+                            Logging.Log($"{faesMetaData.GetHashType()} is an unknown checksum type! Ensure you are using an updated version of FAES!", Severity.WARN);
                             break;
                     }
                     if (!doesHashMatch)
                     {
-                        Logging.Log("Invalid Checksum detected! Assuming password is incorrect.", Severity.DEBUG);
+                        Logging.Log("Invalid Checksum detected! Assuming password is incorrect.");
                         return false;
                     }
-                    Logging.Log("Valid Checksum detected!", Severity.DEBUG);
+                    Logging.Log("Valid Checksum detected!");
                     return true;
                 }
                 catch

@@ -1,31 +1,29 @@
 ﻿using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Writers;
-using SharpCompress.Writers.Tar;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-
 namespace FAES.Packaging.Compressors
 {
-    internal class TAR : ICompressedFAES
+    internal class GZIP : ICompressedFAES
     {
         /// <summary>
-        /// Compress (TAR/BZip2) an unencrypted FAES File.
+        /// Compress (GZIP) an unencrypted FAES File.
         /// </summary>
         /// <param name="unencryptedFile">Unencrypted FAES File</param>
         /// <param name="percentComplete">Percent complete for compression</param>
-        /// <returns>Path of the unencrypted, TAR/BZip2 compressed file</returns>
+        /// <returns>Path of the unencrypted, GZIP compressed file</returns>
         public string CompressFAESFile(FAES_File unencryptedFile, ref decimal percentComplete)
         {
-            FileAES_IntUtilities.CreateEncryptionFilePath(unencryptedFile, "TAR", out string tempRawPath, out _, out string tempOutputPath);
+            FileAES_IntUtilities.CreateEncryptionFilePath(unencryptedFile, "GZIP", out string tempRawPath, out _, out string tempOutputPath);
 
-            TarWriterOptions wo = new TarWriterOptions(CompressionType.BZip2, true);
+            WriterOptions wo = new WriterOptions(CompressionType.GZip);
 
             using (Stream stream = File.OpenWrite(tempOutputPath))
-            using (var writer = new TarWriter(stream, wo))
+            using (var writer = WriterFactory.Open(stream, ArchiveType.GZip, wo))
             {
                 List<string> filesList = Directory.EnumerateFiles(tempRawPath, "*", SearchOption.AllDirectories).ToList();
                 int maxFiles = filesList.Count;
